@@ -33,5 +33,4 @@ qbot
 # IntelliJ
 *.iml
 .idea
-
-
+out
