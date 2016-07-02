@@ -10,8 +10,8 @@ func (e QueueError) Error() string {
 
 // Item represents a person with a job in the queue
 type Item struct {
-	name string
-	reason string
+	Name   string
+	Reason string
 }
 
 // Queue represents a list of waiting items
