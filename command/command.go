@@ -4,7 +4,18 @@ import (
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/notification"
 	"strings"
+	"fmt"
 )
+
+func findItem(q queue.Queue, name, reason string) queue.Item {
+	var i queue.Item
+	for ix := len(q) - 1; ix >= 0; ix-- {
+		if q[ix].Name == name && strings.HasPrefix(q[ix].Reason, reason) {
+			return q[ix]
+		}
+	}
+	return i
+}
 
 // Join adds an item to the queue
 func Join(q queue.Queue, name, reason string) (queue.Queue, string) {
@@ -23,12 +34,9 @@ func Join(q queue.Queue, name, reason string) (queue.Queue, string) {
 
 // Leave removes an item from the queue
 func Leave(q queue.Queue, name, reason string) (queue.Queue, string) {
-	var i queue.Item
-	for ix := len(q) - 1; ix >= 0; ix-- {
-		if q[ix].Name == name && strings.HasPrefix(q[ix].Reason, reason) {
-			i = q[ix]
-			break
-		}
+	i := findItem(q, name, reason)
+	if i.Name == "" {
+		return q, ""
 	}
 
 	active := q.Active() == i
@@ -80,8 +88,76 @@ func Yield(q queue.Queue, name string) (queue.Queue, string) {
 	return q, notification.Yield(i, q)
 }
 
-// Barge
+// Barge adds a user to the front of the queue
+func Barge(q queue.Queue, name, reason string) (queue.Queue, string) {
+	i := queue.Item{name, reason}
+	q = q.Barge(i)
+	if q.Active() == i {
+		return q, notification.JoinActive(i)
+	}
+	return q, notification.Barge(i)
+}
+
 // Boot
+func Boot(q queue.Queue, booter, name, reason string) (queue.Queue, string) {
+	if len(q) == 0 {
+		return q, ""
+	}
+
+	i := findItem(q, name, reason)
+	if i.Name == "" {
+		return q, ""
+	}
+
+	if q.Active() == i {
+		return q, notification.OustNotBoot(booter)
+	}
+
+	if q.Contains(i) {
+		q = q.Remove(i)
+		return q, notification.Boot(booter, i)
+	}
+	return q, ""
+}
+
 // Oust
+func Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
+	if len(q) == 0 {
+		return q, ""
+	}
+
+	i := findItem(q, name, reason)
+	if i.Name == "" {
+		return q, ""
+	}
+
+	if q.Active() != i {
+		return q, notification.OustNotActive(ouster)
+	}
+
+	q = q.Remove(i)
+
+	if len(q) == 1 {
+		return q, notification.OustNoOthers(ouster, i)
+	}
+	return q, notification.Oust(ouster, i, q)
+}
+
 // List
+func List(q queue.Queue) string {
+	if len(q) == 0 {
+		return "Nobody has the token, and nobody is waiting"
+	}
+
+	s := fmt.Sprintf("%s has the token", q.Active().Name)
+	if len(q) == 1 {
+		return fmt.Sprintf("%s, and nobody is waiting", s)
+	}
+
+	for _, i := range q.Waiting() {
+		s += fmt.Sprintf("\n* %s (%s)", i.Name, i.Reason)
+	}
+	return s
+}
+
 // Help
