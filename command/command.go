@@ -15,7 +15,7 @@ func Join(q queue.Queue, name, reason string) (queue.Queue, string) {
 
 	q = q.Add(i)
 	if q.Active() == i {
-		return q, notification.Active(i)
+		return q, notification.JoinActive(i)
 	}
 
 	return q, notification.Join(i)

@@ -16,8 +16,8 @@ func TestJoinEmptyQueue(t *testing.T) {
 	if len(q) < 1 || q.Active() != Mick {
 		t.Errorf("Expected %v to be active but queue was empty", Mick)
 	}
-	if m != notification.Active(Mick) {
-		t.Errorf("Expected notification of '%s' but got '%s'", notification.Active(Mick), m)
+	if m != notification.JoinActive(Mick) {
+		t.Errorf("Expected notification of '%s' but got '%s'", notification.JoinActive(Mick), m)
 	}
 }
 
