@@ -88,11 +88,13 @@ func slackStart(token string) (wsurl, id string, err error) {
 // required only for writing.
 
 type Message struct {
-	Id      uint64 `json:"id"`
-	Type    string `json:"type"`
-	Channel string `json:"channel"`
-	User    string `json:"user"`
-	Text    string `json:"text"`
+	Id        uint64 `json:"id"`
+	Type      string `json:"type"`
+	Channel   string `json:"channel"`
+	User      string `json:"user"`
+	Text      string `json:"text"`
+	LinkNames int    `json:"link_names"`
+	AsUser    bool   `json:"as_user"`
 }
 
 func getMessage(ws *websocket.Conn) (m Message, err error) {
@@ -103,6 +105,8 @@ func getMessage(ws *websocket.Conn) (m Message, err error) {
 var counter uint64
 
 func postMessage(ws *websocket.Conn, m Message) error {
+	m.LinkNames = 1
+	m.AsUser = true
 	m.Id = atomic.AddUint64(&counter, 1)
 	return websocket.JSON.Send(ws, m)
 }
