@@ -17,6 +17,10 @@ func upForGrabs() string {
 	return fmt.Sprint("The token is up for grabs")
 }
 
+func yielded(i queue.Item) string {
+	return fmt.Sprintf("@%s (%s) has yielded the token", i.Name, i.Reason)
+}
+
 func Join(i queue.Item) string {
 	return fmt.Sprintf("@%s (%s) has joined the queue", i.Name, i.Reason)
 }
@@ -51,4 +55,17 @@ func DoneNoOthers(i queue.Item) string {
 
 func DoneNotActive(i queue.Item) string {
 	return fmt.Sprintf("@%s You cannot be done if you don't have the token")
+}
+
+func Yield(i queue.Item, q queue.Queue) string {
+	a := q.Active()
+	return fmt.Sprintf("%s\n\n%s", yielded(i), nowHasToken(a))
+}
+
+func YieldNoOthers(i queue.Item) string {
+	return fmt.Sprintf("@%s You cannot yield if there is nobody waiting", i.Name)
+}
+
+func YieldNotActive(i queue.Item) string {
+	return fmt.Sprintf("@%s You cannot yield if you do not have the token", i.Name)
 }

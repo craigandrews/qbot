@@ -45,7 +45,7 @@ func Leave(q queue.Queue, name, reason string) (queue.Queue, string) {
 	return q, ""
 }
 
-// Done
+// Done removes the active user from the queue
 func Done(q queue.Queue, name string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
@@ -64,7 +64,22 @@ func Done(q queue.Queue, name string) (queue.Queue, string) {
 	return q, notification.DoneNoOthers(i)
 }
 
-// Yield
+// Yield allows the second place ahead of the active user
+func Yield(q queue.Queue, name string) (queue.Queue, string) {
+	if len(q) == 0 {
+		return q, notification.YieldNotActive(queue.Item{name, ""})
+	}
+	i := q.Active()
+	if i.Name != name {
+		return q, notification.YieldNotActive(queue.Item{name, ""})
+	}
+	if len(q) < 2 {
+		return q, notification.YieldNoOthers(i)
+	}
+	q = q.Yield()
+	return q, notification.Yield(i, q)
+}
+
 // Barge
 // Boot
 // Oust
