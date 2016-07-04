@@ -16,14 +16,14 @@ func New(n notification.Notification) Command {
 	return c
 }
 
-func (c Command) findItem(q queue.Queue, name, reason string) queue.Item {
-	var i queue.Item
+func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item) {
 	for ix := len(q) - 1; ix >= 0; ix-- {
-		if q[ix].Id == name && strings.HasPrefix(q[ix].Reason, reason) {
-			return q[ix]
+		if q[ix].Id == id && strings.HasPrefix(q[ix].Reason, reason) {
+			item = q[ix]
+			break
 		}
 	}
-	return i
+	return
 }
 
 // Join adds an item to the queue
@@ -113,11 +113,12 @@ func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
 }
 
 // Boot kicks someone from the waiting list
-func (c Command) Boot(q queue.Queue, booter, id, reason string) (queue.Queue, string) {
+func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
 	}
 
+	id := c.Notification.GetUserId(name)
 	i := c.findItem(q, id, reason)
 	if i.Id == "" {
 		return q, ""
@@ -135,11 +136,12 @@ func (c Command) Boot(q queue.Queue, booter, id, reason string) (queue.Queue, st
 }
 
 // Oust boots the current token holder and gives it to the next person
-func (c Command) Oust(q queue.Queue, ouster, id, reason string) (queue.Queue, string) {
+func (c Command) Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
 	}
 
+	id := c.Notification.GetUserId(name)
 	i := c.findItem(q, id, reason)
 	if i.Id == "" {
 		return q, ""

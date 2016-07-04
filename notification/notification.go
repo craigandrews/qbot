@@ -21,11 +21,20 @@ func (n Notification) GetUserName(id string) (username string) {
 	return
 }
 
+func (n Notification) GetUserId(name string) (id string) {
+	id = n.UserCache.GetUserId(name)
+	return
+}
+
+func (n Notification) link(i string) string {
+	return fmt.Sprintf("<@%s|%s>", i, n.GetUserName(i))
+}
+
 func (n Notification) item(i queue.Item) string {
 	if i.Reason == "" {
-		return fmt.Sprintf("<@%s>", n.GetUserName(i.Id))
+		return n.link(i.Id)
 	}
-	return fmt.Sprintf("<@%s> (%s)", n.GetUserName(i.Id), i.Reason)
+	return fmt.Sprintf("%s (%s)", n.link(i.Id), i.Reason)
 }
 
 func (n Notification) finishedWithToken(i queue.Item) string {
@@ -45,7 +54,7 @@ func (n Notification) yielded(i queue.Item) string {
 }
 
 func (n Notification) ousted(ouster string, i queue.Item) string {
-	return fmt.Sprintf("@%s ousted %s", ouster, n.item(i))
+	return fmt.Sprintf("%s ousted %s", n.link(ouster), n.item(i))
 }
 
 func (n Notification) Join(i queue.Item) string {
@@ -53,7 +62,7 @@ func (n Notification) Join(i queue.Item) string {
 }
 
 func (n Notification) JoinNoReason(i queue.Item) string {
-	return fmt.Sprintf("@%s You must provide a reason for joining", n.GetUserName(i.Id))
+	return fmt.Sprintf("%s You must provide a reason for joining", n.link(i.Id))
 }
 
 func (n Notification) JoinActive(i queue.Item) string {
@@ -85,7 +94,7 @@ func (n Notification) DoneNoOthers(i queue.Item) string {
 }
 
 func (n Notification) DoneNotActive(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot be done if you don't have the token", n.GetUserName(i.Id))
+	return fmt.Sprintf("%s You cannot be done if you don't have the token", n.link(i.Id))
 }
 
 func (n Notification) Yield(i queue.Item, q queue.Queue) string {
@@ -94,11 +103,11 @@ func (n Notification) Yield(i queue.Item, q queue.Queue) string {
 }
 
 func (n Notification) YieldNoOthers(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot yield if there is nobody waiting", n.GetUserName(i.Id))
+	return fmt.Sprintf("%s You cannot yield if there is nobody waiting", n.link(i.Id))
 }
 
 func (n Notification) YieldNotActive(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot yield if you do not have the token", n.GetUserName(i.Id))
+	return fmt.Sprintf("%s You cannot yield if you do not have the token", n.link(i.Id))
 }
 
 func (n Notification) Barge(i queue.Item) string {
@@ -106,11 +115,11 @@ func (n Notification) Barge(i queue.Item) string {
 }
 
 func (n Notification) Boot(booter string, i queue.Item) string {
-	return fmt.Sprintf("@%s booted %s from the list", n.GetUserName(booter), n.item(i))
+	return fmt.Sprintf("%s booted %s from the list", n.link(booter), n.item(i))
 }
 
 func (n Notification) OustNotBoot(booter string) string {
-	return fmt.Sprintf("@%s You must oust the token holder", n.GetUserName(booter))
+	return fmt.Sprintf("%s You must oust the token holder", n.link(booter))
 }
 
 func (n Notification) Oust(ouster string, i queue.Item, q queue.Queue) string {
@@ -119,7 +128,7 @@ func (n Notification) Oust(ouster string, i queue.Item, q queue.Queue) string {
 }
 
 func (n Notification) OustNotActive(ouster string) string {
-	return fmt.Sprintf("@%s You can only oust the token holder", n.GetUserName(ouster))
+	return fmt.Sprintf("%s You can only oust the token holder", n.link(ouster))
 }
 
 func (n Notification) OustNoOthers(ouster string, i queue.Item) string {
