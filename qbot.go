@@ -7,11 +7,13 @@ import (
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/slack"
+	"encoding/json"
+	"io/ioutil"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "usage: mybot slack-bot-token\n")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: qbot <token> <data file>")
 		os.Exit(1)
 	}
 
@@ -21,9 +23,19 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("mybot ready, ^C exits")
-	q := queue.Queue{}
 
+	dumpfile := os.Args[2]
+	q := queue.Queue{}
+	if _, err := os.Stat(dumpfile); err == nil {
+		dat, err := ioutil.ReadFile(dumpfile)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		json.Unmarshal(dat, &q)
+	}
+
+	fmt.Println("mybot ready, ^C exits")
 	for {
 		// read each incoming message
 		m, err := slackConn.GetMessage()
@@ -72,8 +84,11 @@ func main() {
 				n = command.List(q)
 			}
 			if n != "" {
+				j, err := json.Marshal(q)
+				ioutil.WriteFile(dumpfile, j, 0644)
+				fmt.Println(string(j))
 				fmt.Println(n)
-				err := slackConn.PostMessage(m.Channel, n)
+				err = slackConn.PostMessage(m.Channel, n)
 				if err != nil {
 					fmt.Println("Error when sending: %s", err)
 				}
