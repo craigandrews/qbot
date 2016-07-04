@@ -86,6 +86,8 @@ func main() {
 				}
 			case "list":
 				n = command.List(q)
+			case "help":
+				n = command.Help(name)
 			}
 			if n != "" {
 				if !reflect.DeepEqual(oq, q) {

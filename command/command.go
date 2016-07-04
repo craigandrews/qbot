@@ -103,7 +103,7 @@ func Barge(q queue.Queue, name, reason string) (queue.Queue, string) {
 	return q, notification.Barge(i)
 }
 
-// Boot
+// Boot kicks someone from the waiting list
 func Boot(q queue.Queue, booter, name, reason string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
@@ -125,7 +125,7 @@ func Boot(q queue.Queue, booter, name, reason string) (queue.Queue, string) {
 	return q, ""
 }
 
-// Oust
+// Oust boots the current token holder and gives it to the next person
 func Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
@@ -148,7 +148,7 @@ func Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
 	return q, notification.Oust(ouster, i, q)
 }
 
-// List
+// List shows who has the token and who is waiting
 func List(q queue.Queue) string {
 	if len(q) == 0 {
 		return "Nobody has the token, and nobody is waiting"
@@ -167,4 +167,24 @@ func List(q queue.Queue) string {
 	return s
 }
 
-// Help
+// Help provides much needed assistance
+func Help(name string) string {
+	cmds := [][]string{
+		[]string{"join <reason>", "Join the queue and give a reason why"},
+		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
+		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
+		[]string{"done", "Release the token once you are done with it"},
+		[]string{"yield", "Release the token and swap places with next in line"},
+		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
+		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
+		[]string{"boot <name> <reason>", "Kick somebody out of the waiting list (their most recent entry starting with <reason> is removed"},
+		[]string{"oust", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
+		[]string{"list", "Show who has the token and who is waiting"},
+		[]string{"help", "Show this text"},
+	}
+	s := ""
+	for _, vs := range cmds {
+		s += fmt.Sprintf("`%s: %s` - %s\n", name, vs[0], vs[1])
+	}
+	return s
+}
