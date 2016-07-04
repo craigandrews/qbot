@@ -86,6 +86,14 @@ func splitUser(u string) (username string, reason string) {
 func MessageDispatch(name string, q queue.Queue, userCache *usercache.UserCache,
 	messageChan chan slack.RtmMessage, saveChan chan queue.Queue, notifyChan chan Notification) {
 
+	logNotification := func(n string) {
+		for _, l := range strings.Split(n, "\n") {
+			if l != "" {
+				log.Println(l)
+			}
+		}
+	}
+
 	for m := range messageChan {
 		parts := strings.SplitN(m.Text, " ", 3)
 
@@ -128,11 +136,7 @@ func MessageDispatch(name string, q queue.Queue, userCache *usercache.UserCache,
 
 		if n != "" {
 			if !reflect.DeepEqual(oq, q) {
-				for _, l := range strings.Split(n, "\n") {
-					if l != "" {
-						log.Println(l)
-					}
-				}
+				logNotification(n)
 				saveChan <- q
 			}
 			notifyChan <- Notification{m.Channel, n}
