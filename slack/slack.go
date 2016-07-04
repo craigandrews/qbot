@@ -112,11 +112,6 @@ func (s *Slack) GetMessage() (m RtmMessage, err error) {
 	return
 }
 
-type PostMessageResponse struct {
-	Ok        bool   `json:"ok"`
-	Error     string `json:"error"`
-}
-
 var counter uint64
 
 // PostMessage sends a message to a Slack channel
