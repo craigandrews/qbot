@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"strings"
 	"net/url"
+	"sync/atomic"
 )
 
 type Slack struct {
@@ -40,22 +41,6 @@ func get(url string) (response []byte, err error) {
 	if resp.StatusCode != 200 {
 		err = fmt.Errorf("API GET '%s' failed with code %d", url, resp.StatusCode)
 		return
-	}
-
-	response, err = ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	return
-}
-
-func post(url string, body string) (response []byte, err error) {
-	reader := strings.NewReader(body)
-	resp, err := http.Post(url, "application/x-www-form-urlencoded", reader)
-	if err != nil {
-		return
-	}
-
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("API POST '%s' with '%v' failed with code %d", url, body, resp.StatusCode)
 	}
 
 	response, err = ioutil.ReadAll(resp.Body)
@@ -111,7 +96,7 @@ func New(token string) (slackConn *Slack, err error) {
 	return
 }
 
-type IncomingMessage struct {
+type RtmMessage struct {
 	Id        uint64 `json:"id"`
 	Type      string `json:"type"`
 	Channel   string `json:"channel"`
@@ -119,7 +104,7 @@ type IncomingMessage struct {
 	Text      string `json:"text"`
 }
 
-func (s *Slack) GetMessage() (m IncomingMessage, err error) {
+func (s *Slack) GetMessage() (m RtmMessage, err error) {
 	err = websocket.JSON.Receive(s.WebSocket, &m)
 	return
 }
@@ -129,30 +114,13 @@ type PostMessageResponse struct {
 	Error     string `json:"error"`
 }
 
-func (s *Slack) PostMessage(channel, text string) (err error) {
-	body := encodeFormData(map[string]string{
-		"token": s.Token,
-		"channel": channel,
-		"text": text,
-		"parse": "full",
-		"as_user": "true",
-	})
+var counter uint64
 
-	resp, err := post("https://slack.com/api/chat.postMessage", body)
-	if err != nil {
-		return
-	}
-
-	var response PostMessageResponse
-	err = json.Unmarshal(resp, &response)
-	if err != nil {
-		return
-	}
-
-	if !response.Ok {
-		err = fmt.Errorf("Error posting message: %s", response.Error)
-	}
-	return
+func (s *Slack) PostMessage(channel, text string) error {
+	id := atomic.AddUint64(&counter, 1)
+	m := RtmMessage{id, "message", channel, "", text}
+	m.Id = atomic.AddUint64(&counter, 1)
+	return websocket.JSON.Send(s.WebSocket, m)
 }
 
 type UserInfoResponse struct {

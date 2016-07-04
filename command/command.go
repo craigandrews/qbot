@@ -20,6 +20,11 @@ func findItem(q queue.Queue, name, reason string) queue.Item {
 // Join adds an item to the queue
 func Join(q queue.Queue, name, reason string) (queue.Queue, string) {
 	i := queue.Item{name, reason}
+
+	if i.Reason == "" {
+		return q, notification.JoinNoReason(i)
+	}
+
 	if q.Contains(i) {
 		return q, ""
 	}
@@ -137,7 +142,7 @@ func Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
 
 	q = q.Remove(i)
 
-	if len(q) == 1 {
+	if len(q) == 0 {
 		return q, notification.OustNoOthers(ouster, i)
 	}
 	return q, notification.Oust(ouster, i, q)
@@ -149,13 +154,15 @@ func List(q queue.Queue) string {
 		return "Nobody has the token, and nobody is waiting"
 	}
 
-	s := fmt.Sprintf("%s has the token", q.Active().Name)
+	a := q.Active()
+	s := fmt.Sprintf("%s (%s) has the token", a.Name, a.Reason)
 	if len(q) == 1 {
 		return fmt.Sprintf("%s, and nobody is waiting", s)
 	}
 
-	for _, i := range q.Waiting() {
-		s += fmt.Sprintf("\n* %s (%s)", i.Name, i.Reason)
+	s += ", and waiting their turn are:"
+	for ix, i := range q.Waiting() {
+		s += fmt.Sprintf("\n%d: %s (%s)", ix + 1, i.Name, i.Reason)
 	}
 	return s
 }

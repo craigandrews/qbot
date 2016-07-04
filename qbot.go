@@ -40,13 +40,13 @@ func main() {
 		n := ""
 		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+slackConn.Id+">") {
 			// if so try to parse if
-			parts := strings.SplitN(m.Text, " ", 2)
-			fmt.Println(parts)
+			parts := strings.SplitN(m.Text, " ", 3)
+
 			if len(parts) < 2 {
 				continue
 			}
 			cmd := parts[1]
-			fmt.Println(cmd)
+
 			rest := ""
 			if len(parts) > 2 {
 				rest = parts[2]
@@ -55,6 +55,7 @@ func main() {
 			user := slackConn.GetUsername(m.User)
 			oq := q
 
+			fmt.Printf("User: %s Command: %s Args: %v\n", user, cmd, rest)
 			switch cmd {
 			case "join":
 				q, n = command.Join(q, user, rest)
@@ -67,11 +68,19 @@ func main() {
 			case "barge":
 				q, n = command.Barge(q, user, rest)
 			case "boot":
-				args := strings.SplitN(rest, " ", 0)
-				q, n = command.Boot(q, user, args[0], args[1])
+				args := strings.SplitN(rest, " ", 2)
+				if len(args) == 2 {
+					q, n = command.Boot(q, user, args[0], args[1])
+				} else {
+					q, n = command.Boot(q, user, args[0], "")
+				}
 			case "oust":
-				args := strings.SplitN(rest, " ", 0)
-				q, n = command.Oust(q, user, args[0], args[1])
+				args := strings.SplitN(rest, " ", 2)
+				if len(args) == 2 {
+					q, n = command.Oust(q, user, args[0], args[1])
+				} else {
+					q, n = command.Oust(q, user, args[0], "")
+				}
 			case "list":
 				n = command.List(q)
 			}

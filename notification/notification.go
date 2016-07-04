@@ -7,9 +7,9 @@ import (
 
 func item(i queue.Item) string {
 	if i.Reason == "" {
-		return fmt.Sprintf("@%s", i.Name)
+		return fmt.Sprintf("<@%s>", i.Name)
 	}
-	return fmt.Sprintf("@%s (%s)", i.Name, i.Reason)
+	return fmt.Sprintf("<@%s> (%s)", i.Name, i.Reason)
 }
 
 func finishedWithToken(i queue.Item) string {
@@ -34,6 +34,10 @@ func ousted(ouster string, i queue.Item) string {
 
 func Join(i queue.Item) string {
 	return fmt.Sprintf("%s has joined the queue", item(i))
+}
+
+func JoinNoReason(i queue.Item) string {
+	return fmt.Sprintf("@%s You must provide a reason for joining", i.Name)
 }
 
 func JoinActive(i queue.Item) string {
