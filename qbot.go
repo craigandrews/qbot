@@ -40,7 +40,7 @@ func main() {
 	go Save(dumpfile, saveChan)
 	go Notify(slackConn, notifyChan)
 
-	fmt.Println("mybot ready, ^C exits")
+	fmt.Println("qbot ready, press ctrl-C to quit")
 	for {
 		// read each incoming message
 		m, err := slackConn.GetMessage()
