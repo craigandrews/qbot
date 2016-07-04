@@ -11,12 +11,8 @@ import (
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/slack"
 	"github.com/doozr/qbot/usercache"
+	"github.com/doozr/qbot/dispatch"
 )
-
-type Notification struct {
-	Channel string
-	Message string
-}
 
 func listen(name string, connection *slack.Slack,
 	messageChan chan slack.RtmMessage, userUpdateChan chan slack.UserInfo) {
@@ -67,14 +63,14 @@ func main() {
 	// Create channels
 	messageChan := make(chan slack.RtmMessage, 100)
 	saveChan := make(chan queue.Queue, 5)
-	notifyChan := make(chan Notification, 5)
+	notifyChan := make(chan dispatch.Notification, 5)
 	userUpdateChan := make(chan slack.UserInfo, 5)
 
 	// Start goroutines
-	go MessageDispatch(name, q, commands, messageChan, saveChan, notifyChan)
-	go Save(filename, saveChan)
-	go Notify(connection, notifyChan)
-	go UpdateUser(userCache, userUpdateChan)
+	go dispatch.Message(name, q, commands, messageChan, saveChan, notifyChan)
+	go dispatch.Save(filename, saveChan)
+	go dispatch.Notify(connection, notifyChan)
+	go dispatch.User(userCache, userUpdateChan)
 
 	// Dispatch incoming events
 	log.Println("Ready to receive events")

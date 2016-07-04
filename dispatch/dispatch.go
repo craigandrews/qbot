@@ -1,4 +1,4 @@
-package main
+package dispatch
 
 import (
 	"log"
@@ -11,7 +11,13 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
-func MessageDispatch(name string, q queue.Queue, commands command.Command,
+type Notification struct {
+	Channel string
+	Message string
+}
+
+// Message handles executing user commands and passing on the results
+func Message(name string, q queue.Queue, commands command.Command,
 	messageChan chan slack.RtmMessage, saveChan chan queue.Queue, notifyChan chan Notification) {
 
 	splitUser := func(u string) (username string, reason string) {
@@ -81,6 +87,7 @@ func MessageDispatch(name string, q queue.Queue, commands command.Command,
 	}
 }
 
+// Save handles serialising the queue to disk
 func Save(filename string, saveChan chan queue.Queue) {
 	for q := range saveChan {
 		err := q.Save(filename)
@@ -90,6 +97,7 @@ func Save(filename string, saveChan chan queue.Queue) {
 	}
 }
 
+// Notify handles sending messages to the Slack channel after a command runs
 func Notify(slackConn *slack.Slack, notifyChan chan Notification) {
 	for n := range notifyChan {
 		err := slackConn.PostMessage(n.Channel, n.Message)
@@ -99,7 +107,8 @@ func Notify(slackConn *slack.Slack, notifyChan chan Notification) {
 	}
 }
 
-func UpdateUser(userCache *usercache.UserCache, userUpdateChan chan slack.UserInfo) {
+// User handles user renaming in the user cache
+func User(userCache *usercache.UserCache, userUpdateChan chan slack.UserInfo) {
 	for u := range userUpdateChan {
 		old_name := userCache.GetUserName(u.Id)
 		userCache.UpdateUserName(u)
