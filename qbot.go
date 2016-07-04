@@ -7,8 +7,7 @@ import (
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/slack"
-	"encoding/json"
-	"io/ioutil"
+	"reflect"
 )
 
 func main() {
@@ -25,15 +24,7 @@ func main() {
 	}
 
 	dumpfile := os.Args[2]
-	q := queue.Queue{}
-	if _, err := os.Stat(dumpfile); err == nil {
-		dat, err := ioutil.ReadFile(dumpfile)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		json.Unmarshal(dat, &q)
-	}
+	q, err := queue.Load(dumpfile)
 
 	fmt.Println("mybot ready, ^C exits")
 	for {
@@ -62,6 +53,7 @@ func main() {
 			}
 
 			user := slackConn.GetUsername(m.User)
+			oq := q
 
 			switch cmd {
 			case "join":
@@ -84,10 +76,12 @@ func main() {
 				n = command.List(q)
 			}
 			if n != "" {
-				j, err := json.Marshal(q)
-				ioutil.WriteFile(dumpfile, j, 0644)
-				fmt.Println(string(j))
-				fmt.Println(n)
+				if !reflect.DeepEqual(oq, q) {
+					err = q.Save(dumpfile)
+					if err != nil {
+						fmt.Println("Error saving file to %s: %s", dumpfile, err)
+					}
+				}
 				err = slackConn.PostMessage(m.Channel, n)
 				if err != nil {
 					fmt.Println("Error when sending: %s", err)

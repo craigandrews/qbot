@@ -1,5 +1,11 @@
 package queue
 
+import (
+	"os"
+	"io/ioutil"
+	"encoding/json"
+)
+
 type QueueError struct {
 	msg string
 }
@@ -16,6 +22,17 @@ type Item struct {
 
 // Queue represents a list of waiting items
 type Queue []Item
+
+func Load(filename string) (q Queue, err error) {
+	if _, err = os.Stat(filename); err == nil {
+		dat, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return q, err
+		}
+		json.Unmarshal(dat, &q)
+	}
+	return
+}
 
 // Add appends an item to the queue unless it already exists
 func (q Queue) Add(i Item) Queue {
@@ -83,4 +100,11 @@ func (q Queue) Barge(i Item) Queue {
 		return Queue(append(q, w...))
 	}
 	return q.Add(i)
+}
+
+// Save serialises the queue to disk
+func (q Queue) Save(filename string) (err error) {
+	j, err := json.Marshal(q)
+	err = ioutil.WriteFile(filename, j, 0644)
+	return
 }
