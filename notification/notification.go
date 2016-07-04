@@ -17,7 +17,7 @@ func finishedWithToken(i queue.Item) string {
 }
 
 func nowHasToken(i queue.Item) string {
-	return fmt.Sprintf("%s now has the token", item(i))
+	return fmt.Sprintf("*%s now has the token*", item(i))
 }
 
 func upForGrabs() string {
@@ -50,21 +50,21 @@ func Leave(i queue.Item) string {
 
 func LeaveActive(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n\n%s", Leave(i), nowHasToken(a))
+	return fmt.Sprintf("%s\n%s", Leave(i), nowHasToken(a))
 }
 
 func LeaveNoActive(i queue.Item) string {
-	return fmt.Sprintf("%s\n\n%s", Leave(i), upForGrabs())
+	return fmt.Sprintf("%s\n%s", Leave(i), upForGrabs())
 }
 
 func Done(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n\n%s",
+	return fmt.Sprintf("%s\n%s",
 		finishedWithToken(i), nowHasToken(a))
 }
 
 func DoneNoOthers(i queue.Item) string {
-	return fmt.Sprintf("%s\n\n%s",
+	return fmt.Sprintf("%s\n%s",
 		finishedWithToken(i), upForGrabs())
 }
 
@@ -74,7 +74,7 @@ func DoneNotActive(i queue.Item) string {
 
 func Yield(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n\n%s", yielded(i), nowHasToken(a))
+	return fmt.Sprintf("%s\n%s", yielded(i), nowHasToken(a))
 }
 
 func YieldNoOthers(i queue.Item) string {
@@ -99,7 +99,7 @@ func OustNotBoot(booter string) string {
 
 func Oust(ouster string, i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n\n%s", ousted(ouster, i), nowHasToken(a))
+	return fmt.Sprintf("%s\n%s", ousted(ouster, i), nowHasToken(a))
 }
 
 func OustNotActive(ouster string) string {
