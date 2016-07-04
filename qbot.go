@@ -5,10 +5,10 @@ import (
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/slack"
+	"log"
 	"os"
 	"reflect"
 	"strings"
-	"log"
 )
 
 type Notification struct {
@@ -58,11 +58,19 @@ func main() {
 	}
 }
 
-func MessageDispatch(q queue.Queue,
-	slackConn *slack.Slack,
-	messageChan chan slack.RtmMessage,
-	saveChan chan queue.Queue,
-	notifyChan chan Notification) {
+func splitUser(u string) (username string, reason string) {
+	args := strings.SplitN(u, " ", 2)
+	username = args[0]
+	reason = ""
+	if len(args) > 1 {
+		reason = args[1]
+	}
+	return
+}
+
+func MessageDispatch(q queue.Queue, slackConn *slack.Slack,
+	messageChan chan slack.RtmMessage, saveChan chan queue.Queue, notifyChan chan Notification) {
+
 	for m := range messageChan {
 		parts := strings.SplitN(m.Text, " ", 3)
 
@@ -92,19 +100,11 @@ func MessageDispatch(q queue.Queue,
 		case "barge":
 			q, n = command.Barge(q, user, rest)
 		case "boot":
-			args := strings.SplitN(rest, " ", 2)
-			if len(args) == 2 {
-				q, n = command.Boot(q, user, args[0], args[1])
-			} else {
-				q, n = command.Boot(q, user, args[0], "")
-			}
+			username, reason := splitUser(rest)
+			q, n = command.Boot(q, user, username, reason)
 		case "oust":
-			args := strings.SplitN(rest, " ", 2)
-			if len(args) == 2 {
-				q, n = command.Oust(q, user, args[0], args[1])
-			} else {
-				q, n = command.Oust(q, user, args[0], "")
-			}
+			username, reason := splitUser(rest)
+			q, n = command.Oust(q, user, username, reason)
 		case "list":
 			n = command.List(q)
 		case "help":
@@ -113,7 +113,7 @@ func MessageDispatch(q queue.Queue,
 
 		if n != "" {
 			if !reflect.DeepEqual(oq, q) {
-				for _, l := range(strings.Split(n, "\n")) {
+				for _, l := range strings.Split(n, "\n") {
 					if l != "" {
 						log.Println(l)
 					}
