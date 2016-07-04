@@ -1,8 +1,8 @@
 package queue
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 var John = Item{"john", "done some coding"}

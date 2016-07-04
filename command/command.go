@@ -1,18 +1,28 @@
 package command
 
 import (
-	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/notification"
-	"strings"
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/doozr/qbot/notification"
+	"github.com/doozr/qbot/queue"
+	"github.com/doozr/qbot/usercache"
 )
+
+type PendingOust struct {
+	Item      queue.Item
+	Timestamp time.Time
+}
 
 type Command struct {
 	Notification notification.Notification
+	UserCache    *usercache.UserCache
+	PendingOusts map[string]PendingOust
 }
 
-func New(n notification.Notification) Command {
-	c := Command{n}
+func New(n notification.Notification, uc *usercache.UserCache) Command {
+	c := Command{n, uc, make(map[string]PendingOust)}
 	return c
 }
 
@@ -118,7 +128,7 @@ func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, 
 		return q, ""
 	}
 
-	id := c.Notification.GetUserId(name)
+	id := c.UserCache.GetUserId(name)
 	i := c.findItem(q, id, reason)
 	if i.Id == "" {
 		return q, ""
@@ -141,22 +151,33 @@ func (c Command) Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, 
 		return q, ""
 	}
 
-	id := c.Notification.GetUserId(name)
+	id := c.UserCache.GetUserId(name)
 	i := c.findItem(q, id, reason)
 	if i.Id == "" {
 		return q, ""
+	}
+
+	// If a previous request has been lodged in the last 30 seconds
+	// and all is well then oust the active user
+	pendingOust, ok := c.PendingOusts[ouster]
+	if ok && pendingOust.Item == i {
+		if time.Since(pendingOust.Timestamp).Seconds() < 30 && q.Active() == i {
+			q = q.Remove(i)
+
+			if len(q) == 0 {
+				return q, c.Notification.OustNoOthers(ouster, i)
+			}
+			return q, c.Notification.Oust(ouster, i, q)
+		}
 	}
 
 	if q.Active() != i {
 		return q, c.Notification.OustNotActive(ouster)
 	}
 
-	q = q.Remove(i)
+	c.PendingOusts[ouster] = PendingOust{i, time.Now()}
 
-	if len(q) == 0 {
-		return q, c.Notification.OustNoOthers(ouster, i)
-	}
-	return q, c.Notification.Oust(ouster, i, q)
+	return q, c.Notification.OustConfirm(ouster, i)
 }
 
 // List shows who has the token and who is waiting
@@ -166,9 +187,9 @@ func (c Command) List(q queue.Queue) string {
 	}
 
 	a := q.Active()
-	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.Notification.GetUserName(a.Id), a.Reason)
+	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.UserCache.GetUserName(a.Id), a.Reason)
 	for ix, i := range q.Waiting() {
-		s += fmt.Sprintf("\n%d: %s (%s)", ix + 2, c.Notification.GetUserName(i.Id), i.Reason)
+		s += fmt.Sprintf("\n%d: %s (%s)", ix+2, c.UserCache.GetUserName(i.Id), i.Reason)
 	}
 	return s
 }

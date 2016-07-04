@@ -1,10 +1,11 @@
 package slack
 
 import (
-	"golang.org/x/net/websocket"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"sync/atomic"
+
+	"golang.org/x/net/websocket"
 )
 
 type Slack struct {
@@ -52,7 +53,7 @@ func (s *Slack) PostMessage(channel, text string) error {
 
 // GetUsername retrieves the username of a Slack user from their Slack ID
 func (s *Slack) GetUserList() (users []UserInfo, err error) {
-	body := encodeFormData(map[string]string {
+	body := encodeFormData(map[string]string{
 		"token": s.Token,
 	})
 

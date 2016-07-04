@@ -12,7 +12,7 @@ type Notification struct {
 }
 
 func New(userCache *usercache.UserCache) Notification {
-	n := Notification{ userCache }
+	n := Notification{userCache}
 	return n
 }
 
@@ -133,4 +133,9 @@ func (n Notification) OustNotActive(ouster string) string {
 
 func (n Notification) OustNoOthers(ouster string, i queue.Item) string {
 	return n.ousted(ouster, i)
+}
+
+func (n Notification) OustConfirm(ouster string, i queue.Item) string {
+	return fmt.Sprintf("%s Are you sure you want to oust %s?\n(Repeat this command within 30 seconds to confirm)",
+		n.link(ouster), n.link(i.Id))
 }

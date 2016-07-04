@@ -1,9 +1,9 @@
 package queue
 
 import (
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
+	"os"
 )
 
 type QueueError struct {
@@ -75,7 +75,7 @@ func (q Queue) Remove(i Item) Queue {
 		if q[ix] == i {
 			if ix == 0 {
 				return Queue(q[1:])
-			} else if ix == len(q) - 1 {
+			} else if ix == len(q)-1 {
 				return Queue(q[:ix])
 			}
 			return Queue(append(q[:ix], q[ix+1:]...))

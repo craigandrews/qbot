@@ -6,7 +6,7 @@ import (
 )
 
 type UserCache struct {
-	Mux sync.Mutex
+	Mux       sync.Mutex
 	UserNames map[string]string
 }
 

@@ -17,8 +17,8 @@ type ResponseRtmStart struct {
 }
 
 type ResponseUserList struct {
-	Ok bool            `json:"ok"`
-	Error string       `json:"error"`
+	Ok      bool       `json:"ok"`
+	Error   string     `json:"error"`
 	Members []UserInfo `json:"members"`
 }
 

@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/doozr/qbot/command"
-	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/slack"
 	"log"
 	"os"
 	"reflect"
 	"strings"
-	"github.com/doozr/qbot/usercache"
+
+	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/notification"
+	"github.com/doozr/qbot/queue"
+	"github.com/doozr/qbot/slack"
+	"github.com/doozr/qbot/usercache"
 )
 
 type Notification struct {
@@ -44,7 +45,7 @@ func main() {
 	q, err := queue.Load(dumpfile)
 
 	notifications := notification.New(userCache)
-	commands := command.New(notifications)
+	commands := command.New(notifications, userCache)
 
 	messageChan := make(chan slack.RtmMessage, 100)
 	saveChan := make(chan queue.Queue, 5)

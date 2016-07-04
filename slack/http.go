@@ -1,12 +1,12 @@
 package slack
 
 import (
-	"net/http"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"strings"
-	"encoding/json"
 )
 
 func get(url string) (response []byte, err error) {
@@ -57,4 +57,3 @@ func getWebsocketUrl(token string) (wsurl string, id string, err error) {
 	id = respObj.Self.Id
 	return
 }
-
