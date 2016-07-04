@@ -9,7 +9,6 @@ import (
 )
 
 type Slack struct {
-	Name      string
 	Token     string
 	WebSocket *websocket.Conn
 	Id        string
@@ -20,7 +19,7 @@ type SlackError struct {
 }
 
 // New creates a new Slack instance
-func New(name, token string) (slackConn *Slack, err error) {
+func New(token string) (slackConn *Slack, err error) {
 	wsurl, id, err := getWebsocketUrl(token)
 	if err != nil {
 		return
@@ -31,7 +30,7 @@ func New(name, token string) (slackConn *Slack, err error) {
 		return
 	}
 
-	slackConn = &Slack{name, token, ws, id}
+	slackConn = &Slack{token, ws, id}
 	return
 }
 
@@ -51,7 +50,7 @@ func (s *Slack) PostMessage(channel, text string) error {
 	return websocket.JSON.Send(s.WebSocket, m)
 }
 
-// GetUsername retrieves the username of a Slack user from their Slack ID
+// GetUserList retrieves a list of user IDs mapped to usernames from Slack
 func (s *Slack) GetUserList() (users []UserInfo, err error) {
 	body := encodeFormData(map[string]string{
 		"token": s.Token,

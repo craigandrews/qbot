@@ -1,4 +1,4 @@
-# qbot - manage contented resources amongst humans
+# qbot
 
 Qbot is a slackbot that helps manage a contended resource amongst your team members. This might be a merge token,
 a release dongle or a tea-run doodad. When the token comes free and somebody gets it, the bot mentions the new
@@ -12,11 +12,31 @@ Build the project with Go using `go build`. Once I have some binaries to distrib
 
 Get a bot token from your Slack control panel and run the bot as follows:
 
-    qbot <name> <token> <data file>
+    qbot <token> <data file>
 
-The should match the handle given to the Bot in the Slack configuration, and the token should be the one copied from
-the same. The data file should be a filename in a directory writeable by the bot owner to store serialised versions of
-the list.
+The token should be the one copied from the Slack custom integration page. The data file should be a filename in a
+directory writable by the bot owner to store serialised versions of the queue.
+
+The bot will autodetect its username and respond to messages directed at it, with an @ or without.
+
+## Running multiple bots
+
+Given that the save location and token are run-time variables it is possible to use one copy of the qbot to run
+multiple processes for different Slack channels or teams. Use something like supervisord to start multiple instances
+with different values. For example:
+
+    [program:qbot-merge]
+    command=/path/to/qbot <"merge" integration token> /path/to/qbot/merge.json
+    user=qbotuser
+
+    [program:qbot-release]
+    command=/path/to/qbot <"release" integration token> /path/to/qbot/release.json
+    user qbotuser
+
+This results in two copies of the bot with two usernames, one for each use. Put them in different channels, or in
+the same channel with different names, or whatever suits.
+
+Note that it is not possible to manage multiple queues with a single instance.
 
 ## Commands
 

@@ -20,15 +20,13 @@ type Notification struct {
 }
 
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("Usage: qbot <name> <token> <data file>")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: qbot <token> <data file>")
 		os.Exit(1)
 	}
 
-	name := os.Args[1]
-
-	log.Printf("Connecting to Slack as %s", name)
-	slackConn, err := slack.New(name, os.Args[2])
+	log.Print("Connecting to Slack")
+	slackConn, err := slack.New(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,7 +38,13 @@ func main() {
 	}
 	userCache := usercache.New(users)
 
-	dumpfile := os.Args[3]
+	name := userCache.GetUserName(slackConn.Id)
+	if name == "" {
+		log.Fatal("Could not get username of bot")
+	}
+	log.Printf("Responding to requests directed to @%s", name)
+
+	dumpfile := os.Args[2]
 	log.Printf("Attempting to load queue from %s", dumpfile)
 	q, err := queue.Load(dumpfile)
 
