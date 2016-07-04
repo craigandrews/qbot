@@ -182,9 +182,9 @@ func Help(name string) string {
 		[]string{"list", "Show who has the token and who is waiting"},
 		[]string{"help", "Show this text"},
 	}
-	s := ""
+	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
 	for _, vs := range cmds {
-		s += fmt.Sprintf("`%s: %s` - %s\n", name, vs[0], vs[1])
+		s += fmt.Sprintf("`%s` - %s\n", vs[0], vs[1])
 	}
 	return s
 }
