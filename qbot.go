@@ -53,15 +53,22 @@ func main() {
 	log.Println("Ready to receive messages")
 	for {
 		// read each incoming message
-		m, err := slackConn.GetMessage()
+		m, err := slackConn.GetEvent()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// see if we're mentioned
-		hasPrefix := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+slackConn.Id+">")
-		if m.Type == "message" && hasPrefix {
-			messageChan <- m
+		if m.Type == "message" {
+			msg := slack.ConvertEventToMessage(m)
+			if strings.HasPrefix(msg.Text, name) || strings.HasPrefix(msg.Text, "<@"+slackConn.Id+">") {
+				messageChan <- msg
+			}
+		}
+
+		if m.Type == "user_change" {
+			uc := slack.ConvertEventToUserChange(m)
+			userCache.UpdateUserName(uc.User)
 		}
 	}
 }
