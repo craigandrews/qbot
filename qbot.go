@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"github.com/doozr/qbot/usercache"
 )
 
 type Notification struct {
@@ -30,6 +31,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("Getting user list")
+	users, err := slackConn.GetUserList()
+	if err != nil {
+		log.Fatal(err)
+	}
+	userCache := usercache.New(users)
+
 	dumpfile := os.Args[3]
 	log.Printf("Attempting to load queue from %s", dumpfile)
 	q, err := queue.Load(dumpfile)
@@ -38,7 +46,7 @@ func main() {
 	saveChan := make(chan queue.Queue, 5)
 	notifyChan := make(chan Notification, 5)
 
-	go MessageDispatch(q, slackConn, messageChan, saveChan, notifyChan)
+	go MessageDispatch(name, q, userCache, messageChan, saveChan, notifyChan)
 	go Save(dumpfile, saveChan)
 	go Notify(slackConn, notifyChan)
 
@@ -68,7 +76,7 @@ func splitUser(u string) (username string, reason string) {
 	return
 }
 
-func MessageDispatch(q queue.Queue, slackConn *slack.Slack,
+func MessageDispatch(name string, q queue.Queue, userCache *usercache.UserCache,
 	messageChan chan slack.RtmMessage, saveChan chan queue.Queue, notifyChan chan Notification) {
 
 	for m := range messageChan {
@@ -84,7 +92,7 @@ func MessageDispatch(q queue.Queue, slackConn *slack.Slack,
 			rest = parts[2]
 		}
 
-		user := slackConn.GetUsername(m.User)
+		user := userCache.GetUserName(m.User)
 		oq := q
 		n := ""
 
@@ -108,7 +116,7 @@ func MessageDispatch(q queue.Queue, slackConn *slack.Slack,
 		case "list":
 			n = command.List(q)
 		case "help":
-			n = command.Help(slackConn.Name)
+			n = command.Help(name)
 		}
 
 		if n != "" {

@@ -123,9 +123,9 @@ func (s *Slack) PostMessage(channel, text string) error {
 }
 
 type UserInfoResponse struct {
-	Ok bool `json:"ok"`
-	Error string `json:"error"`
-	User UserInfo `json:"user"`
+	Ok bool            `json:"ok"`
+	Error string       `json:"error"`
+	Members []UserInfo `json:"members"`
 }
 
 type UserInfo struct {
@@ -134,13 +134,12 @@ type UserInfo struct {
 }
 
 // GetUsername retrieves the username of a Slack user from their Slack ID
-func (s *Slack) GetUsername(id string) (username string) {
+func (s *Slack) GetUserList() (users []UserInfo, err error) {
 	body := encodeFormData(map[string]string {
 		"token": s.Token,
-		"user": id,
 	})
 
-	resp, err := get("https://slack.com/api/users.info?" + body)
+	resp, err := get("https://slack.com/api/users.list?" + body)
 	if err != nil {
 		return
 	}
@@ -155,6 +154,6 @@ func (s *Slack) GetUsername(id string) (username string) {
 		err = fmt.Errorf("Error getting user info: %s", response.Error)
 	}
 
-	username = response.User.Name
+	users = response.Members
 	return
 }
