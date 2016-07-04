@@ -40,8 +40,8 @@ func main() {
 
 		// see if we're mentioned
 		n := ""
-		fmt.Println(m.Text)
-		if m.Type == "message" && strings.HasPrefix(m.Text, name) {
+		hasPrefix := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+slackConn.Id+">")
+		if m.Type == "message" && hasPrefix {
 			// if so try to parse if
 			parts := strings.SplitN(m.Text, " ", 3)
 
