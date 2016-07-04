@@ -11,19 +11,21 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: qbot <token> <data file>")
+	if len(os.Args) < 4 {
+		fmt.Println("Usage: qbot <name> <token> <data file>")
 		os.Exit(1)
 	}
 
+	name := os.Args[1]
+
 	// start a websocket-based Real Time API session
-	slackConn, err := slack.New(os.Args[1])
+	slackConn, err := slack.New(os.Args[2])
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	dumpfile := os.Args[2]
+	dumpfile := os.Args[3]
 	q, err := queue.Load(dumpfile)
 
 	fmt.Println("mybot ready, ^C exits")
@@ -38,7 +40,8 @@ func main() {
 
 		// see if we're mentioned
 		n := ""
-		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+slackConn.Id+">") {
+		fmt.Println(m.Text)
+		if m.Type == "message" && strings.HasPrefix(m.Text, name) {
 			// if so try to parse if
 			parts := strings.SplitN(m.Text, " ", 3)
 
