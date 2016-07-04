@@ -48,7 +48,7 @@ func assertNotification(expected, actual string) string {
 
 func TestJoinEmptyQueue(t *testing.T) {
 	q := queue.Queue{}
-	q, m := Join(q, Mick.Name, Mick.Reason)
+	q, m := Join(q, Mick.Id, Mick.Reason)
 	if e := assertQueueLength(q, 1); e != "" {
 		t.Error(e)
 	}
@@ -62,7 +62,7 @@ func TestJoinEmptyQueue(t *testing.T) {
 
 func TestJoin(t *testing.T) {
 	q := queue.Queue{John, Jimmy}
-	q, m := Join(q, Mick.Name, Mick.Reason)
+	q, m := Join(q, Mick.Id, Mick.Reason)
 	if e := assertQueueLength(q, 3); e != "" {
 		t.Error(e)
 	}
@@ -76,7 +76,7 @@ func TestJoin(t *testing.T) {
 
 func TestJoinAlreadyExists(t *testing.T) {
 	q := queue.Queue{John, Jimmy, Mick}
-	q, m := Join(q, Mick.Name, Mick.Reason)
+	q, m := Join(q, Mick.Id, Mick.Reason)
 	if e := assertQueueLength(q, 3); e != "" {
 		t.Error(e)
 	}
@@ -90,7 +90,7 @@ func TestJoinAlreadyExists(t *testing.T) {
 
 func TestLeaveWhenNotPresent(t *testing.T) {
 	q := queue.Queue{John, Jimmy}
-	q, m := Leave(q, Mick.Name, "")
+	q, m := Leave(q, Mick.Id, "")
 	if e := assertQueueLength(q, 2); e != "" {
 		t.Error(e)
 	}
@@ -104,7 +104,7 @@ func TestLeaveWhenNotPresent(t *testing.T) {
 
 func TestLeave(t *testing.T) {
 	q := queue.Queue{John, Mick, Jimmy}
-	q, m := Leave(q, Mick.Name, "")
+	q, m := Leave(q, Mick.Id, "")
 	if e := assertNotContains(q, Mick); e != "" {
 		t.Error(e)
 	}
@@ -116,7 +116,7 @@ func TestLeave(t *testing.T) {
 func TestLeaveWithMulti(t *testing.T) {
 	i := queue.Item{"mick", "potato"}
 	q := queue.Queue{John, Mick, Jimmy, i}
-	q, m := Leave(q, Mick.Name, "")
+	q, m := Leave(q, Mick.Id, "")
 	if e := assertNotContains(q, i); e != "" {
 		t.Error(e)
 	}
@@ -131,7 +131,7 @@ func TestLeaveWithMulti(t *testing.T) {
 func TestLeaveWithPrefix(t *testing.T) {
 	i := queue.Item{"mick", "potato"}
 	q := queue.Queue{John, Mick, Jimmy, i}
-	q, m := Leave(q, Mick.Name, "refac")
+	q, m := Leave(q, Mick.Id, "refac")
 	if e := assertNotContains(q, Mick); e != "" {
 		t.Error(e)
 	}
@@ -145,7 +145,7 @@ func TestLeaveWithPrefix(t *testing.T) {
 
 func TestLeaveWhenActive(t *testing.T) {
 	q := queue.Queue{Mick, John, Jimmy}
-	q, m := Leave(q, Mick.Name, "")
+	q, m := Leave(q, Mick.Id, "")
 	if e := assertQueueLength( q, 2); e != "" {
 		t.Error(e)
 	}
@@ -159,7 +159,7 @@ func TestLeaveWhenActive(t *testing.T) {
 
 func TestLeaveWhenActiveAndAlone(t *testing.T) {
 	q := queue.Queue{Mick}
-	q, m := Leave(q, Mick.Name, "")
+	q, m := Leave(q, Mick.Id, "")
 	if e := assertQueueLength(q, 0); e != "" {
 		t.Error(e)
 	}
@@ -170,7 +170,7 @@ func TestLeaveWhenActiveAndAlone(t *testing.T) {
 
 func TestDone(t *testing.T) {
 	q := queue.Queue{Mick, John}
-	q, m := Done(q, Mick.Name)
+	q, m := Done(q, Mick.Id)
 	if e := assertQueueLength(q, 1); e != "" {
 		t.Error(e)
 	}
@@ -184,7 +184,7 @@ func TestDone(t *testing.T) {
 
 func TestDoneNoOthers(t *testing.T) {
 	q := queue.Queue{Mick}
-	q, m := Done(q, Mick.Name)
+	q, m := Done(q, Mick.Id)
 	if e := assertQueueLength(q, 0); e != "" {
 		t.Error(e)
 	}
@@ -195,7 +195,7 @@ func TestDoneNoOthers(t *testing.T) {
 
 func TestDoneNotActive(t *testing.T) {
 	q := queue.Queue{John, Mick}
-	q, m := Done(q, Mick.Name)
+	q, m := Done(q, Mick.Id)
 	if e := assertQueueLength(q, 2); e != "" {
 		t.Error(e)
 	}
@@ -209,7 +209,7 @@ func TestDoneNotActive(t *testing.T) {
 
 func TestYield(t *testing.T) {
 	q := queue.Queue{Mick, John}
-	q, m := Yield(q, Mick.Name)
+	q, m := Yield(q, Mick.Id)
 	if e := assertQueueLength(q, 2); e != "" {
 		t.Error(e)
 	}
@@ -223,7 +223,7 @@ func TestYield(t *testing.T) {
 
 func TestYieldNoOthers(t *testing.T) {
 	q := queue.Queue{Mick}
-	q, m := Yield(q, Mick.Name)
+	q, m := Yield(q, Mick.Id)
 	if e := assertQueueLength(q, 1); e != "" {
 		t.Error(e)
 	}
@@ -237,7 +237,7 @@ func TestYieldNoOthers(t *testing.T) {
 
 func TestYieldNotActive(t *testing.T) {
 	q := queue.Queue{John, Mick}
-	q, m := Yield(q, Mick.Name)
+	q, m := Yield(q, Mick.Id)
 	if e := assertQueueLength(q, 2); e != "" {
 		t.Error(e)
 	}
@@ -251,7 +251,7 @@ func TestYieldNotActive(t *testing.T) {
 
 func TestYieldEmpty(t *testing.T) {
 	q := queue.Queue{}
-	q, m := Yield(q, Mick.Name)
+	q, m := Yield(q, Mick.Id)
 	if e := assertNotification(notification.YieldNotActive(Mick), m); e != "" {
 		t.Error(e)
 	}

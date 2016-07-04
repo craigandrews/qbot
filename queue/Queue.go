@@ -16,7 +16,7 @@ func (e QueueError) Error() string {
 
 // Item represents a person with a job in the queue
 type Item struct {
-	Name   string
+	Id     string
 	Reason string
 }
 

@@ -1,111 +1,127 @@
 package notification
 
 import (
-	"github.com/doozr/qbot/queue"
 	"fmt"
+
+	"github.com/doozr/qbot/queue"
+	"github.com/doozr/qbot/usercache"
 )
 
-func item(i queue.Item) string {
+type Notification struct {
+	UserCache *usercache.UserCache
+}
+
+func New(userCache *usercache.UserCache) Notification {
+	n := Notification{ userCache }
+	return n
+}
+
+func (n Notification) GetUserName(id string) (username string) {
+	username = n.UserCache.GetUserName(id)
+	return
+}
+
+func (n Notification) item(i queue.Item) string {
 	if i.Reason == "" {
-		return fmt.Sprintf("<@%s>", i.Name)
+		return fmt.Sprintf("<@%s>", n.GetUserName(i.Id))
 	}
-	return fmt.Sprintf("<@%s> (%s)", i.Name, i.Reason)
+	return fmt.Sprintf("<@%s> (%s)", n.GetUserName(i.Id), i.Reason)
 }
 
-func finishedWithToken(i queue.Item) string {
-	return fmt.Sprintf("%s has finished with the token", item(i))
+func (n Notification) finishedWithToken(i queue.Item) string {
+	return fmt.Sprintf("%s has finished with the token", n.item(i))
 }
 
-func nowHasToken(i queue.Item) string {
-	return fmt.Sprintf("*%s now has the token*", item(i))
+func (n Notification) nowHasToken(i queue.Item) string {
+	return fmt.Sprintf("*%s now has the token*", n.item(i))
 }
 
-func upForGrabs() string {
+func (n Notification) upForGrabs() string {
 	return fmt.Sprint("The token is up for grabs")
 }
 
-func yielded(i queue.Item) string {
-	return fmt.Sprintf("%s has yielded the token", item(i))
+func (n Notification) yielded(i queue.Item) string {
+	return fmt.Sprintf("%s has yielded the token", n.item(i))
 }
 
-func ousted(ouster string, i queue.Item) string {
-	return fmt.Sprintf("@%s ousted %s", ouster, item(i))
+func (n Notification) ousted(ouster string, i queue.Item) string {
+	return fmt.Sprintf("@%s ousted %s", ouster, n.item(i))
 }
 
-func Join(i queue.Item) string {
-	return fmt.Sprintf("%s has joined the queue", item(i))
+func (n Notification) Join(i queue.Item) string {
+	return fmt.Sprintf("%s has joined the queue", n.item(i))
 }
 
-func JoinNoReason(i queue.Item) string {
-	return fmt.Sprintf("@%s You must provide a reason for joining", i.Name)
+func (n Notification) JoinNoReason(i queue.Item) string {
+	return fmt.Sprintf("@%s You must provide a reason for joining", n.GetUserName(i.Id))
 }
 
-func JoinActive(i queue.Item) string {
-	return fmt.Sprintf("%s", nowHasToken(i))
+func (n Notification) JoinActive(i queue.Item) string {
+	return fmt.Sprintf("%s", n.nowHasToken(i))
 }
 
-func Leave(i queue.Item) string {
-	return fmt.Sprintf("%s has left the queue", item(i))
+func (n Notification) Leave(i queue.Item) string {
+	return fmt.Sprintf("%s has left the queue", n.item(i))
 }
 
-func LeaveActive(i queue.Item, q queue.Queue) string {
+func (n Notification) LeaveActive(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n%s", Leave(i), nowHasToken(a))
+	return fmt.Sprintf("%s\n%s", n.Leave(i), n.nowHasToken(a))
 }
 
-func LeaveNoActive(i queue.Item) string {
-	return fmt.Sprintf("%s\n%s", Leave(i), upForGrabs())
+func (n Notification) LeaveNoActive(i queue.Item) string {
+	return fmt.Sprintf("%s\n%s", n.Leave(i), n.upForGrabs())
 }
 
-func Done(i queue.Item, q queue.Queue) string {
+func (n Notification) Done(i queue.Item, q queue.Queue) string {
 	a := q.Active()
 	return fmt.Sprintf("%s\n%s",
-		finishedWithToken(i), nowHasToken(a))
+		n.finishedWithToken(i), n.nowHasToken(a))
 }
 
-func DoneNoOthers(i queue.Item) string {
+func (n Notification) DoneNoOthers(i queue.Item) string {
 	return fmt.Sprintf("%s\n%s",
-		finishedWithToken(i), upForGrabs())
+		n.finishedWithToken(i), n.upForGrabs())
 }
 
-func DoneNotActive(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot be done if you don't have the token", i.Name)
+func (n Notification) DoneNotActive(i queue.Item) string {
+	return fmt.Sprintf("@%s You cannot be done if you don't have the token", n.GetUserName(i.Id))
 }
 
-func Yield(i queue.Item, q queue.Queue) string {
+func (n Notification) Yield(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n%s", yielded(i), nowHasToken(a))
+	return fmt.Sprintf("%s\n%s", n.yielded(i), n.nowHasToken(a))
 }
 
-func YieldNoOthers(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot yield if there is nobody waiting", i.Name)
+func (n Notification) YieldNoOthers(i queue.Item) string {
+	return fmt.Sprintf("@%s You cannot yield if there is nobody waiting", n.GetUserName(i.Id))
 }
 
-func YieldNotActive(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot yield if you do not have the token", i.Name)
+func (n Notification) YieldNotActive(i queue.Item) string {
+	return fmt.Sprintf("@%s You cannot yield if you do not have the token", n.GetUserName(i.Id))
 }
 
-func Barge(i queue.Item) string {
-	return fmt.Sprintf("%s barged to the front", item(i))
+func (n Notification) Barge(i queue.Item) string {
+	return fmt.Sprintf("%s barged to the front", n.item(i))
 }
 
-func Boot(booter string, i queue.Item) string {
-	return fmt.Sprintf("@%s booted %s from the list", booter, item(i))
+func (n Notification) Boot(booter string, i queue.Item) string {
+	return fmt.Sprintf("@%s booted %s from the list", n.GetUserName(booter), n.item(i))
 }
 
-func OustNotBoot(booter string) string {
-	return fmt.Sprintf("@%s You must oust the token holder", booter)
+func (n Notification) OustNotBoot(booter string) string {
+	return fmt.Sprintf("@%s You must oust the token holder", n.GetUserName(booter))
 }
 
-func Oust(ouster string, i queue.Item, q queue.Queue) string {
+func (n Notification) Oust(ouster string, i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("%s\n%s", ousted(ouster, i), nowHasToken(a))
+	return fmt.Sprintf("%s\n%s", n.ousted(ouster, i), n.nowHasToken(a))
 }
 
-func OustNotActive(ouster string) string {
-	return fmt.Sprintf("@%s You can only oust the token holder", ouster)
+func (n Notification) OustNotActive(ouster string) string {
+	return fmt.Sprintf("@%s You can only oust the token holder", n.GetUserName(ouster))
 }
 
-func OustNoOthers(ouster string, i queue.Item) string {
-	return ousted(ouster, i)
+func (n Notification) OustNoOthers(ouster string, i queue.Item) string {
+	return n.ousted(ouster, i)
 }

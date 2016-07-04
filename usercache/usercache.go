@@ -33,3 +33,15 @@ func (u *UserCache) UpdateUserName(user slack.UserInfo) {
 	u.UserNames[user.Id] = user.Name
 	u.Mux.Unlock()
 }
+
+func (u *UserCache) GetUserId(name string) (id string) {
+	u.Mux.Lock()
+	for k, v := range u.UserNames {
+		if v == name {
+			id = k
+			break
+		}
+	}
+	u.Mux.Unlock()
+	return
+}

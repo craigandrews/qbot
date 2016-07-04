@@ -7,10 +7,19 @@ import (
 	"fmt"
 )
 
-func findItem(q queue.Queue, name, reason string) queue.Item {
+type Command struct {
+	Notification notification.Notification
+}
+
+func New(n notification.Notification) Command {
+	c := Command{n}
+	return c
+}
+
+func (c Command) findItem(q queue.Queue, name, reason string) queue.Item {
 	var i queue.Item
 	for ix := len(q) - 1; ix >= 0; ix-- {
-		if q[ix].Name == name && strings.HasPrefix(q[ix].Reason, reason) {
+		if q[ix].Id == name && strings.HasPrefix(q[ix].Reason, reason) {
 			return q[ix]
 		}
 	}
@@ -18,11 +27,11 @@ func findItem(q queue.Queue, name, reason string) queue.Item {
 }
 
 // Join adds an item to the queue
-func Join(q queue.Queue, name, reason string) (queue.Queue, string) {
-	i := queue.Item{name, reason}
+func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
+	i := queue.Item{id, reason}
 
 	if i.Reason == "" {
-		return q, notification.JoinNoReason(i)
+		return q, c.Notification.JoinNoReason(i)
 	}
 
 	if q.Contains(i) {
@@ -31,16 +40,16 @@ func Join(q queue.Queue, name, reason string) (queue.Queue, string) {
 
 	q = q.Add(i)
 	if q.Active() == i {
-		return q, notification.JoinActive(i)
+		return q, c.Notification.JoinActive(i)
 	}
 
-	return q, notification.Join(i)
+	return q, c.Notification.Join(i)
 }
 
 // Leave removes an item from the queue
-func Leave(q queue.Queue, name, reason string) (queue.Queue, string) {
-	i := findItem(q, name, reason)
-	if i.Name == "" {
+func (c Command) Leave(q queue.Queue, id, reason string) (queue.Queue, string) {
+	i := c.findItem(q, id, reason)
+	if i.Id == "" {
 		return q, ""
 	}
 
@@ -49,121 +58,121 @@ func Leave(q queue.Queue, name, reason string) (queue.Queue, string) {
 		q = q.Remove(i)
 		if active {
 			if len(q) == 0 {
-				return q, notification.LeaveNoActive(i)
+				return q, c.Notification.LeaveNoActive(i)
 			}
-			return q, notification.LeaveActive(i, q)
+			return q, c.Notification.LeaveActive(i, q)
 		}
-		return q, notification.Leave(i)
+		return q, c.Notification.Leave(i)
 	}
 	return q, ""
 }
 
 // Done removes the active user from the queue
-func Done(q queue.Queue, name string) (queue.Queue, string) {
+func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
 	}
 
 	i := q.Active()
 
-	if i.Name != name {
-		return q, notification.DoneNotActive(i)
+	if i.Id != id {
+		return q, c.Notification.DoneNotActive(i)
 	}
 
 	q = q.Remove(i)
 	if len(q) > 0 {
-		return q, notification.Done(i, q)
+		return q, c.Notification.Done(i, q)
 	}
-	return q, notification.DoneNoOthers(i)
+	return q, c.Notification.DoneNoOthers(i)
 }
 
 // Yield allows the second place ahead of the active user
-func Yield(q queue.Queue, name string) (queue.Queue, string) {
+func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 	if len(q) == 0 {
-		return q, notification.YieldNotActive(queue.Item{name, ""})
+		return q, c.Notification.YieldNotActive(queue.Item{id, ""})
 	}
 	i := q.Active()
-	if i.Name != name {
-		return q, notification.YieldNotActive(queue.Item{name, ""})
+	if i.Id != id {
+		return q, c.Notification.YieldNotActive(queue.Item{id, ""})
 	}
 	if len(q) < 2 {
-		return q, notification.YieldNoOthers(i)
+		return q, c.Notification.YieldNoOthers(i)
 	}
 	q = q.Yield()
-	return q, notification.Yield(i, q)
+	return q, c.Notification.Yield(i, q)
 }
 
 // Barge adds a user to the front of the queue
-func Barge(q queue.Queue, name, reason string) (queue.Queue, string) {
-	i := queue.Item{name, reason}
+func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
+	i := queue.Item{id, reason}
 	q = q.Barge(i)
 	if q.Active() == i {
-		return q, notification.JoinActive(i)
+		return q, c.Notification.JoinActive(i)
 	}
-	return q, notification.Barge(i)
+	return q, c.Notification.Barge(i)
 }
 
 // Boot kicks someone from the waiting list
-func Boot(q queue.Queue, booter, name, reason string) (queue.Queue, string) {
+func (c Command) Boot(q queue.Queue, booter, id, reason string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
 	}
 
-	i := findItem(q, name, reason)
-	if i.Name == "" {
+	i := c.findItem(q, id, reason)
+	if i.Id == "" {
 		return q, ""
 	}
 
 	if q.Active() == i {
-		return q, notification.OustNotBoot(booter)
+		return q, c.Notification.OustNotBoot(booter)
 	}
 
 	if q.Contains(i) {
 		q = q.Remove(i)
-		return q, notification.Boot(booter, i)
+		return q, c.Notification.Boot(booter, i)
 	}
 	return q, ""
 }
 
 // Oust boots the current token holder and gives it to the next person
-func Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
+func (c Command) Oust(q queue.Queue, ouster, id, reason string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
 	}
 
-	i := findItem(q, name, reason)
-	if i.Name == "" {
+	i := c.findItem(q, id, reason)
+	if i.Id == "" {
 		return q, ""
 	}
 
 	if q.Active() != i {
-		return q, notification.OustNotActive(ouster)
+		return q, c.Notification.OustNotActive(ouster)
 	}
 
 	q = q.Remove(i)
 
 	if len(q) == 0 {
-		return q, notification.OustNoOthers(ouster, i)
+		return q, c.Notification.OustNoOthers(ouster, i)
 	}
-	return q, notification.Oust(ouster, i, q)
+	return q, c.Notification.Oust(ouster, i, q)
 }
 
 // List shows who has the token and who is waiting
-func List(q queue.Queue) string {
+func (c Command) List(q queue.Queue) string {
 	if len(q) == 0 {
 		return "Nobody has the token, and nobody is waiting"
 	}
 
 	a := q.Active()
-	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, a.Name, a.Reason)
+	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.Notification.GetUserName(a.Id), a.Reason)
 	for ix, i := range q.Waiting() {
-		s += fmt.Sprintf("\n%d: %s (%s)", ix + 2, i.Name, i.Reason)
+		s += fmt.Sprintf("\n%d: %s (%s)", ix + 2, c.Notification.GetUserName(i.Id), i.Reason)
 	}
 	return s
 }
 
 // Help provides much needed assistance
-func Help(name string) string {
+func (c Command) Help(name string) string {
 	cmds := [][]string{
 		[]string{"join <reason>", "Join the queue and give a reason why"},
 		[]string{"leave", "Leave the queue (your most recent entry is removed)"},

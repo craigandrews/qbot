@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"github.com/doozr/qbot/usercache"
+	"github.com/doozr/qbot/notification"
 )
 
 type Notification struct {
@@ -42,11 +43,14 @@ func main() {
 	log.Printf("Attempting to load queue from %s", dumpfile)
 	q, err := queue.Load(dumpfile)
 
+	notifications := notification.New(userCache)
+	commands := command.New(notifications)
+
 	messageChan := make(chan slack.RtmMessage, 100)
 	saveChan := make(chan queue.Queue, 5)
 	notifyChan := make(chan Notification, 5)
 
-	go MessageDispatch(name, q, userCache, messageChan, saveChan, notifyChan)
+	go MessageDispatch(name, q, commands, messageChan, saveChan, notifyChan)
 	go Save(dumpfile, saveChan)
 	go Notify(slackConn, notifyChan)
 
@@ -83,7 +87,7 @@ func splitUser(u string) (username string, reason string) {
 	return
 }
 
-func MessageDispatch(name string, q queue.Queue, userCache *usercache.UserCache,
+func MessageDispatch(name string, q queue.Queue, commands command.Command,
 	messageChan chan slack.RtmMessage, saveChan chan queue.Queue, notifyChan chan Notification) {
 
 	logNotification := func(n string) {
@@ -107,31 +111,30 @@ func MessageDispatch(name string, q queue.Queue, userCache *usercache.UserCache,
 			rest = parts[2]
 		}
 
-		user := userCache.GetUserName(m.User)
 		oq := q
 		n := ""
 
 		switch cmd {
 		case "join":
-			q, n = command.Join(q, user, rest)
+			q, n = commands.Join(q, m.User, rest)
 		case "leave":
-			q, n = command.Leave(q, user, rest)
+			q, n = commands.Leave(q, m.User, rest)
 		case "done":
-			q, n = command.Done(q, user)
+			q, n = commands.Done(q, m.User)
 		case "yield":
-			q, n = command.Yield(q, user)
+			q, n = commands.Yield(q, m.User)
 		case "barge":
-			q, n = command.Barge(q, user, rest)
+			q, n = commands.Barge(q, m.User, rest)
 		case "boot":
-			username, reason := splitUser(rest)
-			q, n = command.Boot(q, user, username, reason)
+			id, reason := splitUser(rest)
+			q, n = commands.Boot(q, m.User, id, reason)
 		case "oust":
-			username, reason := splitUser(rest)
-			q, n = command.Oust(q, user, username, reason)
+			id, reason := splitUser(rest)
+			q, n = commands.Oust(q, m.User, id, reason)
 		case "list":
-			n = command.List(q)
+			n = commands.List(q)
 		case "help":
-			n = command.Help(name)
+			n = commands.Help(name)
 		}
 
 		if n != "" {
