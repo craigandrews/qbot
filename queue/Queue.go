@@ -87,7 +87,11 @@ func (q Queue) Remove(i Item) Queue {
 // Yield swaps the Active item with the first Waiting item
 func (q Queue) Yield() Queue {
 	if len(q) > 1 {
-		q[0], q[1] = q[1], q[0]
+		oq := q
+		q = Queue{q[1], q[0]}
+		if len(oq) > 2 {
+			q = append(q, oq[2:]...)
+		}
 	}
 	return q
 }

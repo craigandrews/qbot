@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"log"
 )
 
 type Notification struct {
@@ -23,13 +24,14 @@ func main() {
 
 	name := os.Args[1]
 
+	log.Printf("Connecting to Slack as %s", name)
 	slackConn, err := slack.New(name, os.Args[2])
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	dumpfile := os.Args[3]
+	log.Printf("Attempting to load queue from %s", dumpfile)
 	q, err := queue.Load(dumpfile)
 
 	messageChan := make(chan slack.RtmMessage, 100)
@@ -40,13 +42,12 @@ func main() {
 	go Save(dumpfile, saveChan)
 	go Notify(slackConn, notifyChan)
 
-	fmt.Println("qbot ready, press ctrl-C to quit")
+	log.Println("Ready to receive messages")
 	for {
 		// read each incoming message
 		m, err := slackConn.GetMessage()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			log.Fatal(err)
 		}
 
 		// see if we're mentioned
@@ -62,7 +63,6 @@ func MessageDispatch(q queue.Queue,
 	messageChan chan slack.RtmMessage,
 	saveChan chan queue.Queue,
 	notifyChan chan Notification) {
-	n := ""
 	for m := range messageChan {
 		parts := strings.SplitN(m.Text, " ", 3)
 
@@ -78,8 +78,8 @@ func MessageDispatch(q queue.Queue,
 
 		user := slackConn.GetUsername(m.User)
 		oq := q
+		n := ""
 
-		fmt.Printf("User: %s Command: %s Args: %v\n", user, cmd, rest)
 		switch cmd {
 		case "join":
 			q, n = command.Join(q, user, rest)
@@ -110,9 +110,14 @@ func MessageDispatch(q queue.Queue,
 		case "help":
 			n = command.Help(slackConn.Name)
 		}
+
 		if n != "" {
 			if !reflect.DeepEqual(oq, q) {
-				fmt.Println(n)
+				for _, l := range(strings.Split(n, "\n")) {
+					if l != "" {
+						log.Println(l)
+					}
+				}
 				saveChan <- q
 			}
 			notifyChan <- Notification{m.Channel, n}
@@ -124,7 +129,7 @@ func Save(filename string, saveChan chan queue.Queue) {
 	for q := range saveChan {
 		err := q.Save(filename)
 		if err != nil {
-			fmt.Println("Error saving file to %s: %s", filename, err)
+			log.Printf("Error saving file to %s: %s", filename, err)
 		}
 	}
 }
@@ -133,7 +138,7 @@ func Notify(slackConn *slack.Slack, notifyChan chan Notification) {
 	for n := range notifyChan {
 		err := slackConn.PostMessage(n.Channel, n.Message)
 		if err != nil {
-			fmt.Println("Error when sending: %s", err)
+			log.Printf("Error when sending: %s", err)
 		}
 	}
 }
