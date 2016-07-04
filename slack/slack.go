@@ -12,6 +12,7 @@ import (
 )
 
 type Slack struct {
+	Name string
 	Token string
 	WebSocket *websocket.Conn
 	Id string
@@ -82,7 +83,7 @@ func getWebsocketUrl(token string) (wsurl string, id string, err error) {
 }
 
 // New creates a new Slack instance
-func New(token string) (slackConn *Slack, err error) {
+func New(name, token string) (slackConn *Slack, err error) {
 	wsurl, id, err := getWebsocketUrl(token)
 	if err != nil {
 		return
@@ -93,7 +94,7 @@ func New(token string) (slackConn *Slack, err error) {
 		return
 	}
 
-	slackConn = &Slack{token, ws, id}
+	slackConn = &Slack{name, token, ws, id}
 	return
 }
 
