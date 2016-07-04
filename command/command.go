@@ -155,14 +155,9 @@ func List(q queue.Queue) string {
 	}
 
 	a := q.Active()
-	s := fmt.Sprintf("%s (%s) has the token", a.Name, a.Reason)
-	if len(q) == 1 {
-		return fmt.Sprintf("%s, and nobody is waiting", s)
-	}
-
-	s += ", and waiting their turn are:"
+	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, a.Name, a.Reason)
 	for ix, i := range q.Waiting() {
-		s += fmt.Sprintf("\n%d: %s (%s)", ix + 1, i.Name, i.Reason)
+		s += fmt.Sprintf("\n%d: %s (%s)", ix + 2, i.Name, i.Reason)
 	}
 	return s
 }
