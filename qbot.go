@@ -6,6 +6,7 @@ import (
 	"strings"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/command"
+	"github.com/doozr/qbot/slack"
 )
 
 func main() {
@@ -15,13 +16,17 @@ func main() {
 	}
 
 	// start a websocket-based Real Time API session
-	ws, id := slackConnect(os.Args[1])
+	slackConn, err := slack.New(os.Args[1])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	fmt.Println("mybot ready, ^C exits")
 	q := queue.Queue{}
 
 	for {
 		// read each incoming message
-		m, err := getMessage(ws)
+		m, err := slackConn.GetMessage()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -30,7 +35,7 @@ func main() {
 
 		// see if we're mentioned
 		n := ""
-		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+id+">") {
+		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+slackConn.Id+">") {
 			// if so try to parse if
 			parts := strings.SplitN(m.Text, " ", 2)
 			fmt.Println(parts)
@@ -43,32 +48,35 @@ func main() {
 			if len(parts) > 2 {
 				rest = parts[2]
 			}
+
+			user := slackConn.GetUsername(m.User)
+
 			switch cmd {
 			case "join":
-				q, n = command.Join(q, m.User, rest)
+				q, n = command.Join(q, user, rest)
 			case "leave":
-				q, n = command.Leave(q, m.User, rest)
+				q, n = command.Leave(q, user, rest)
 			case "done":
-				q, n = command.Done(q, m.User)
+				q, n = command.Done(q, user)
 			case "yield":
-				q, n = command.Yield(q, m.User)
+				q, n = command.Yield(q, user)
 			case "barge":
-				q, n = command.Barge(q, m.User, rest)
+				q, n = command.Barge(q, user, rest)
 			case "boot":
 				args := strings.SplitN(rest, " ", 0)
-				q, n = command.Boot(q, m.User, args[0], args[1])
+				q, n = command.Boot(q, user, args[0], args[1])
 			case "oust":
 				args := strings.SplitN(rest, " ", 0)
-				q, n = command.Oust(q, m.User, args[0], args[1])
+				q, n = command.Oust(q, user, args[0], args[1])
 			case "list":
 				n = command.List(q)
 			}
 			if n != "" {
 				fmt.Println(n)
-				go func(m Message) {
-					m.Text = n
-					postMessage(ws, m)
-				}(m)
+				err := slackConn.PostMessage(m.Channel, n)
+				if err != nil {
+					fmt.Println("Error when sending: %s", err)
+				}
 			}
 		}
 	}

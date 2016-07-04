@@ -5,12 +5,19 @@ import (
 	"fmt"
 )
 
+func item(i queue.Item) string {
+	if i.Reason == "" {
+		return fmt.Sprintf("@%s", i.Name)
+	}
+	return fmt.Sprintf("@%s (%s)", i.Name, i.Reason)
+}
+
 func finishedWithToken(i queue.Item) string {
-	return fmt.Sprintf("@%s (%s) has finished with the token", i.Name, i.Reason)
+	return fmt.Sprintf("%s has finished with the token", item(i))
 }
 
 func nowHasToken(i queue.Item) string {
-	return fmt.Sprintf("@%s (%s) now has the token", i.Name, i.Reason)
+	return fmt.Sprintf("%s now has the token", item(i))
 }
 
 func upForGrabs() string {
@@ -18,52 +25,52 @@ func upForGrabs() string {
 }
 
 func yielded(i queue.Item) string {
-	return fmt.Sprintf("@%s (%s) has yielded the token", i.Name, i.Reason)
+	return fmt.Sprintf("%s has yielded the token", item(i))
 }
 
 func ousted(ouster string, i queue.Item) string {
-	return fmt.Sprintf("@%s ousted @%s (%s)", ouster, i.Name, i.Reason)
+	return fmt.Sprintf("@%s ousted %s", ouster, item(i))
 }
 
 func Join(i queue.Item) string {
-	return fmt.Sprintf("@here @%s (%s) has joined the queue", i.Name, i.Reason)
+	return fmt.Sprintf("%s has joined the queue", item(i))
 }
 
 func JoinActive(i queue.Item) string {
-	return fmt.Sprintf("@here %s", nowHasToken(i))
+	return fmt.Sprintf("%s", nowHasToken(i))
 }
 
 func Leave(i queue.Item) string {
-	return fmt.Sprintf("@here @%s (%s) has left the queue", i.Name, i.Reason)
+	return fmt.Sprintf("%s has left the queue", item(i))
 }
 
 func LeaveActive(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("@here %s\n\n%s", Leave(i), nowHasToken(a))
+	return fmt.Sprintf("%s\n\n%s", Leave(i), nowHasToken(a))
 }
 
 func LeaveNoActive(i queue.Item) string {
-	return fmt.Sprintf("@here %s\n\n%s", Leave(i), upForGrabs())
+	return fmt.Sprintf("%s\n\n%s", Leave(i), upForGrabs())
 }
 
 func Done(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("@here %s\n\n%s",
+	return fmt.Sprintf("%s\n\n%s",
 		finishedWithToken(i), nowHasToken(a))
 }
 
 func DoneNoOthers(i queue.Item) string {
-	return fmt.Sprintf("@here %s\n\nThe token is up for grabs%s",
+	return fmt.Sprintf("%s\n\n%s",
 		finishedWithToken(i), upForGrabs())
 }
 
 func DoneNotActive(i queue.Item) string {
-	return fmt.Sprintf("@%s You cannot be done if you don't have the token")
+	return fmt.Sprintf("@%s You cannot be done if you don't have the token", i.Name)
 }
 
 func Yield(i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("@here %s\n\n%s", yielded(i), nowHasToken(a))
+	return fmt.Sprintf("%s\n\n%s", yielded(i), nowHasToken(a))
 }
 
 func YieldNoOthers(i queue.Item) string {
@@ -75,11 +82,11 @@ func YieldNotActive(i queue.Item) string {
 }
 
 func Barge(i queue.Item) string {
-	return fmt.Sprintf("@here @%s (%s) barged to the front", i.Name, i.Reason)
+	return fmt.Sprintf("%s barged to the front", item(i))
 }
 
 func Boot(booter string, i queue.Item) string {
-	return fmt.Sprintf("@here @%s booted %s (%s) from the list", booter, i.Name, i.Reason)
+	return fmt.Sprintf("@%s booted %s from the list", booter, item(i))
 }
 
 func OustNotBoot(booter string) string {
@@ -88,7 +95,7 @@ func OustNotBoot(booter string) string {
 
 func Oust(ouster string, i queue.Item, q queue.Queue) string {
 	a := q.Active()
-	return fmt.Sprintf("@here %s\n\n%s", ousted(ouster, i), nowHasToken(a))
+	return fmt.Sprintf("%s\n\n%s", ousted(ouster, i), nowHasToken(a))
 }
 
 func OustNotActive(ouster string) string {
@@ -96,5 +103,5 @@ func OustNotActive(ouster string) string {
 }
 
 func OustNoOthers(ouster string, i queue.Item) string {
-	return fmt.Sprintf("@here %s", ousted(ouster, i))
+	return ousted(ouster, i)
 }
