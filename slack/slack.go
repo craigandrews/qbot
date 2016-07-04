@@ -81,6 +81,7 @@ func getWebsocketUrl(token string) (wsurl string, id string, err error) {
 	return
 }
 
+// New creates a new Slack instance
 func New(token string) (slackConn *Slack, err error) {
 	wsurl, id, err := getWebsocketUrl(token)
 	if err != nil {
@@ -104,6 +105,7 @@ type RtmMessage struct {
 	Text      string `json:"text"`
 }
 
+// GetMessage blocks until a message arrives from Slack
 func (s *Slack) GetMessage() (m RtmMessage, err error) {
 	err = websocket.JSON.Receive(s.WebSocket, &m)
 	return
@@ -116,6 +118,7 @@ type PostMessageResponse struct {
 
 var counter uint64
 
+// PostMessage sends a message to a Slack channel
 func (s *Slack) PostMessage(channel, text string) error {
 	id := atomic.AddUint64(&counter, 1)
 	m := RtmMessage{id, "message", channel, "", text}
@@ -134,6 +137,7 @@ type UserInfo struct {
 	Name string `json:"name"`
 }
 
+// GetUsername retrieves the username of a Slack user from their Slack ID
 func (s *Slack) GetUsername(id string) (username string) {
 	body := encodeFormData(map[string]string {
 		"token": s.Token,
