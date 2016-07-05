@@ -45,13 +45,21 @@ type RtmUserChange struct {
 
 // ConvertEventToMessage casts an RtmEvent to an RtmMessage
 func ConvertEventToMessage(e RtmEvent) (msg RtmMessage) {
-	msg = RtmMessage{e.Id, e.Type, e.Channel, e.User.(string), e.Text}
+	user := ""
+	if e.User != nil {
+		user = e.User.(string)
+	}
+	msg = RtmMessage{e.Id, e.Type, e.Channel, user, e.Text}
 	return
 }
 
 // ConvertEventToUserChange casts an RtmEvent to an RtmUserChange
 func ConvertEventToUserChange(e RtmEvent) (uc RtmUserChange) {
-	ui := e.User.(map[string]interface{})
-	uc = RtmUserChange{e.Type, UserInfo{ui["id"].(string), ui["name"].(string)}}
+	user := UserInfo{}
+	if e.User != nil {
+		ui := e.User.(map[string]interface{})
+		user = UserInfo{ui["id"].(string), ui["name"].(string)}
+	}
+	uc = RtmUserChange{e.Type, user}
 	return
 }
