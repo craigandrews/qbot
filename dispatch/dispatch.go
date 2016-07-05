@@ -69,8 +69,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 			id, reason := splitUser(rest)
 			q, n = commands.Boot(q, m.User, id, reason)
 		case "oust":
-			id, reason := splitUser(rest)
-			q, n = commands.Oust(q, m.User, id, reason)
+			q, n = commands.Oust(q, m.User, rest)
 		case "list":
 			n = commands.List(q)
 		case "help":

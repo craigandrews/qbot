@@ -146,15 +146,19 @@ func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, 
 }
 
 // Oust boots the current token holder and gives it to the next person
-func (c Command) Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, string) {
+func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) {
 	if len(q) == 0 {
 		return q, ""
 	}
 
 	id := c.UserCache.GetUserId(name)
-	i := c.findItem(q, id, reason)
-	if i.Id == "" {
-		return q, ""
+	if id == "" {
+		return q, c.Notification.OustNotActive(ouster)
+	}
+
+	i := q.Active()
+	if i.Id != id {
+		return q, c.Notification.OustNotActive(ouster)
 	}
 
 	// If a previous request has been lodged in the last 30 seconds
@@ -169,10 +173,6 @@ func (c Command) Oust(q queue.Queue, ouster, name, reason string) (queue.Queue, 
 			}
 			return q, c.Notification.Oust(ouster, i, q)
 		}
-	}
-
-	if q.Active() != i {
-		return q, c.Notification.OustNotActive(ouster)
 	}
 
 	c.PendingOusts[ouster] = PendingOust{i, time.Now()}
@@ -205,7 +205,7 @@ func (c Command) Help(name string) string {
 		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
 		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
 		[]string{"boot <name> <reason>", "Kick somebody out of the waiting list (their most recent entry starting with <reason> is removed"},
-		[]string{"oust", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
+		[]string{"oust <name>", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
 		[]string{"list", "Show who has the token and who is waiting"},
 		[]string{"help", "Show this text"},
 	}
