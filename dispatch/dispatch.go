@@ -16,9 +16,14 @@ type Notification struct {
 	Message string
 }
 
+type MessageChan chan slack.RtmMessage
+type SaveChan chan queue.Queue
+type NotifyChan chan Notification
+type UserChan chan slack.UserInfo
+
 // Message handles executing user commands and passing on the results
 func Message(name string, q queue.Queue, commands command.Command,
-	messageChan chan slack.RtmMessage, saveChan chan queue.Queue, notifyChan chan Notification) {
+	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan) {
 
 	splitUser := func(u string) (username string, reason string) {
 		args := strings.SplitN(u, " ", 2)
@@ -87,7 +92,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 }
 
 // Save handles serialising the queue to disk
-func Save(filename string, saveChan chan queue.Queue) {
+func Save(filename string, saveChan SaveChan) {
 	for q := range saveChan {
 		err := q.Save(filename)
 		if err != nil {
@@ -97,7 +102,7 @@ func Save(filename string, saveChan chan queue.Queue) {
 }
 
 // Notify handles sending messages to the Slack channel after a command runs
-func Notify(slackConn *slack.Slack, notifyChan chan Notification) {
+func Notify(slackConn *slack.Slack, notifyChan NotifyChan) {
 	for n := range notifyChan {
 		err := slackConn.PostMessage(n.Channel, n.Message)
 		if err != nil {
@@ -107,7 +112,7 @@ func Notify(slackConn *slack.Slack, notifyChan chan Notification) {
 }
 
 // User handles user renaming in the user cache
-func User(userCache *usercache.UserCache, userUpdateChan chan slack.UserInfo) {
+func User(userCache *usercache.UserCache, userUpdateChan UserChan) {
 	for u := range userUpdateChan {
 		old_name := userCache.GetUserName(u.Id)
 		userCache.UpdateUserName(u)

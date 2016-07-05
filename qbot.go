@@ -14,8 +14,7 @@ import (
 	"github.com/doozr/qbot/dispatch"
 )
 
-func listen(name string, connection *slack.Slack,
-	messageChan chan slack.RtmMessage, userUpdateChan chan slack.UserInfo) {
+func listen(name string, connection *slack.Slack, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
 	for {
 		// read each incoming message
@@ -35,7 +34,7 @@ func listen(name string, connection *slack.Slack,
 		// see if it's a user update
 		if m.Type == "user_change" {
 			uc := slack.ConvertEventToUserChange(m)
-			userUpdateChan <- uc.User
+			userChan <- uc.User
 		}
 	}
 }
@@ -61,20 +60,20 @@ func main() {
 	commands := command.New(notifications, userCache)
 
 	// Create channels
-	messageChan := make(chan slack.RtmMessage, 100)
-	saveChan := make(chan queue.Queue, 5)
-	notifyChan := make(chan dispatch.Notification, 5)
-	userUpdateChan := make(chan slack.UserInfo, 5)
+	messageChan := make(dispatch.MessageChan, 100)
+	saveChan := make(dispatch.SaveChan, 5)
+	notifyChan := make(dispatch.NotifyChan, 5)
+	userChan := make(dispatch.UserChan, 5)
 
 	// Start goroutines
 	go dispatch.Message(name, q, commands, messageChan, saveChan, notifyChan)
 	go dispatch.Save(filename, saveChan)
 	go dispatch.Notify(connection, notifyChan)
-	go dispatch.User(userCache, userUpdateChan)
+	go dispatch.User(userCache, userChan)
 
 	// Dispatch incoming events
 	log.Println("Ready to receive events")
-	listen(name, connection, messageChan, userUpdateChan)
+	listen(name, connection, messageChan, userChan)
 }
 
 func connectToSlack(token string) (connection *slack.Slack) {
