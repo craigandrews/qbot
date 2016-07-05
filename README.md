@@ -6,7 +6,13 @@ recipient so they know immediately that it's their turn to merge, release, make 
 
 ## Installation
 
-Build the project with Go using `go build`. Once I have some binaries to distribute I will update these instructions.
+Grab it with `go get`:
+
+    go get github.com/doozr/qbot
+
+Or clone the project and build it with `go build`.
+
+Once I have some binaries to distribute I will update these instructions.
 
 ## Run the bot
 
