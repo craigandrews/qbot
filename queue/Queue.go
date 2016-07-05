@@ -24,6 +24,7 @@ type Item struct {
 type Queue []Item
 
 func Load(filename string) (q Queue, err error) {
+	q = Queue{}
 	if _, err = os.Stat(filename); err == nil {
 		dat, err := ioutil.ReadFile(filename)
 		if err != nil {
@@ -31,6 +32,7 @@ func Load(filename string) (q Queue, err error) {
 		}
 		json.Unmarshal(dat, &q)
 	}
+	err = nil
 	return
 }
 
