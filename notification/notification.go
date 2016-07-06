@@ -73,13 +73,8 @@ func (n Notification) Leave(i queue.Item) string {
 	return fmt.Sprintf("%s has left the queue", n.item(i))
 }
 
-func (n Notification) LeaveActive(i queue.Item, q queue.Queue) string {
-	a := q.Active()
-	return fmt.Sprintf("%s\n%s", n.Leave(i), n.nowHasToken(a))
-}
-
-func (n Notification) LeaveNoActive(i queue.Item) string {
-	return fmt.Sprintf("%s\n%s", n.Leave(i), n.upForGrabs())
+func (n Notification) LeaveActive(i queue.Item) string {
+	return fmt.Sprintf("%s You have the token, did you mean 'done'?", n.link(i.Id))
 }
 
 func (n Notification) Done(i queue.Item, q queue.Queue) string {

@@ -63,15 +63,12 @@ func (c Command) Leave(q queue.Queue, id, reason string) (queue.Queue, string) {
 		return q, ""
 	}
 
-	active := q.Active() == i
+	if q.Active() == i {
+		return q, c.notification.LeaveActive(i)
+	}
+
 	if q.Contains(i) {
 		q = q.Remove(i)
-		if active {
-			if len(q) == 0 {
-				return q, c.notification.LeaveNoActive(i)
-			}
-			return q, c.notification.LeaveActive(i, q)
-		}
 		return q, c.notification.Leave(i)
 	}
 	return q, ""
@@ -198,11 +195,11 @@ func (c Command) List(q queue.Queue) string {
 func (c Command) Help(name string) string {
 	cmds := [][]string{
 		[]string{"join <reason>", "Join the queue and give a reason why"},
-		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
-		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
 		[]string{"done", "Release the token once you are done with it"},
 		[]string{"yield", "Release the token and swap places with next in line"},
 		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
+		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
+		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
 		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
 		[]string{"boot <name> <reason>", "Kick somebody out of the waiting list (their most recent entry starting with <reason> is removed"},
 		[]string{"oust <name>", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
