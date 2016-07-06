@@ -16,9 +16,9 @@ type PendingOust struct {
 }
 
 type Command struct {
-	Notification notification.Notification
-	UserCache    *usercache.UserCache
-	PendingOusts map[string]PendingOust
+	notification notification.Notification
+	userCache    *usercache.UserCache
+	pendingOusts map[string]PendingOust
 }
 
 func New(n notification.Notification, uc *usercache.UserCache) Command {
@@ -41,7 +41,7 @@ func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
 	i := queue.Item{id, reason}
 
 	if i.Reason == "" {
-		return q, c.Notification.JoinNoReason(i)
+		return q, c.notification.JoinNoReason(i)
 	}
 
 	if q.Contains(i) {
@@ -50,10 +50,10 @@ func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
 
 	q = q.Add(i)
 	if q.Active() == i {
-		return q, c.Notification.JoinActive(i)
+		return q, c.notification.JoinActive(i)
 	}
 
-	return q, c.Notification.Join(i)
+	return q, c.notification.Join(i)
 }
 
 // Leave removes an item from the queue
@@ -68,11 +68,11 @@ func (c Command) Leave(q queue.Queue, id, reason string) (queue.Queue, string) {
 		q = q.Remove(i)
 		if active {
 			if len(q) == 0 {
-				return q, c.Notification.LeaveNoActive(i)
+				return q, c.notification.LeaveNoActive(i)
 			}
-			return q, c.Notification.LeaveActive(i, q)
+			return q, c.notification.LeaveActive(i, q)
 		}
-		return q, c.Notification.Leave(i)
+		return q, c.notification.Leave(i)
 	}
 	return q, ""
 }
@@ -86,30 +86,30 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 	i := q.Active()
 
 	if i.Id != id {
-		return q, c.Notification.DoneNotActive(i)
+		return q, c.notification.DoneNotActive(i)
 	}
 
 	q = q.Remove(i)
 	if len(q) > 0 {
-		return q, c.Notification.Done(i, q)
+		return q, c.notification.Done(i, q)
 	}
-	return q, c.Notification.DoneNoOthers(i)
+	return q, c.notification.DoneNoOthers(i)
 }
 
 // Yield allows the second place ahead of the active user
 func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 	if len(q) == 0 {
-		return q, c.Notification.YieldNotActive(queue.Item{id, ""})
+		return q, c.notification.YieldNotActive(queue.Item{id, ""})
 	}
 	i := q.Active()
 	if i.Id != id {
-		return q, c.Notification.YieldNotActive(queue.Item{id, ""})
+		return q, c.notification.YieldNotActive(queue.Item{id, ""})
 	}
 	if len(q) < 2 {
-		return q, c.Notification.YieldNoOthers(i)
+		return q, c.notification.YieldNoOthers(i)
 	}
 	q = q.Yield()
-	return q, c.Notification.Yield(i, q)
+	return q, c.notification.Yield(i, q)
 }
 
 // Barge adds a user to the front of the queue
@@ -117,9 +117,9 @@ func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
 	i := queue.Item{id, reason}
 	q = q.Barge(i)
 	if q.Active() == i {
-		return q, c.Notification.JoinActive(i)
+		return q, c.notification.JoinActive(i)
 	}
-	return q, c.Notification.Barge(i)
+	return q, c.notification.Barge(i)
 }
 
 // Boot kicks someone from the waiting list
@@ -128,19 +128,19 @@ func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, 
 		return q, ""
 	}
 
-	id := c.UserCache.GetUserId(name)
+	id := c.userCache.GetUserId(name)
 	i := c.findItem(q, id, reason)
 	if i.Id == "" {
 		return q, ""
 	}
 
 	if q.Active() == i {
-		return q, c.Notification.OustNotBoot(booter)
+		return q, c.notification.OustNotBoot(booter)
 	}
 
 	if q.Contains(i) {
 		q = q.Remove(i)
-		return q, c.Notification.Boot(booter, i)
+		return q, c.notification.Boot(booter, i)
 	}
 	return q, ""
 }
@@ -151,33 +151,33 @@ func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) 
 		return q, ""
 	}
 
-	id := c.UserCache.GetUserId(name)
+	id := c.userCache.GetUserId(name)
 	if id == "" {
-		return q, c.Notification.OustNotActive(ouster)
+		return q, c.notification.OustNotActive(ouster)
 	}
 
 	i := q.Active()
 	if i.Id != id {
-		return q, c.Notification.OustNotActive(ouster)
+		return q, c.notification.OustNotActive(ouster)
 	}
 
 	// If a previous request has been lodged in the last 30 seconds
 	// and all is well then oust the active user
-	pendingOust, ok := c.PendingOusts[ouster]
+	pendingOust, ok := c.pendingOusts[ouster]
 	if ok && pendingOust.Item == i {
 		if time.Since(pendingOust.Timestamp).Seconds() < 30 && q.Active() == i {
 			q = q.Remove(i)
 
 			if len(q) == 0 {
-				return q, c.Notification.OustNoOthers(ouster, i)
+				return q, c.notification.OustNoOthers(ouster, i)
 			}
-			return q, c.Notification.Oust(ouster, i, q)
+			return q, c.notification.Oust(ouster, i, q)
 		}
 	}
 
-	c.PendingOusts[ouster] = PendingOust{i, time.Now()}
+	c.pendingOusts[ouster] = PendingOust{i, time.Now()}
 
-	return q, c.Notification.OustConfirm(ouster, i)
+	return q, c.notification.OustConfirm(ouster, i)
 }
 
 // List shows who has the token and who is waiting
@@ -187,9 +187,9 @@ func (c Command) List(q queue.Queue) string {
 	}
 
 	a := q.Active()
-	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.UserCache.GetUserName(a.Id), a.Reason)
+	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.userCache.GetUserName(a.Id), a.Reason)
 	for ix, i := range q.Waiting() {
-		s += fmt.Sprintf("\n%d: %s (%s)", ix+2, c.UserCache.GetUserName(i.Id), i.Reason)
+		s += fmt.Sprintf("\n%d: %s (%s)", ix+2, c.userCache.GetUserName(i.Id), i.Reason)
 	}
 	return s
 }
