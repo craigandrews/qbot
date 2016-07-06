@@ -193,22 +193,45 @@ func (c Command) List(q queue.Queue) string {
 
 // Help provides much needed assistance
 func (c Command) Help(name string) string {
-	cmds := [][]string{
+	cmdList := func(cmds [][]string) string {
+		c := ""
+		for _, vs := range cmds {
+			c += fmt.Sprintf("`%s` - %s\n", vs[0], vs[1])
+		}
+		return c
+	}
+
+	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
+
+	s += "*If you don't have the token and need it:*\n"
+	s += cmdList([][]string{
 		[]string{"join <reason>", "Join the queue and give a reason why"},
+		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
+	})
+
+	s += "\n*If you have the token and have done with it:*\n"
+	s += cmdList([][]string{
 		[]string{"done", "Release the token once you are done with it"},
 		[]string{"yield", "Release the token and swap places with next in line"},
-		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
+	})
+
+	s += "\n*If you are in the queue and need to leave:*\n"
+	s += cmdList([][]string{
 		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
 		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
+	})
+
+	s += "\n*If you need to get rid of somebody who is in the way:*\n"
+	s += cmdList([][]string{
+		[]string{"oust <name>", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
 		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
 		[]string{"boot <name> <reason>", "Kick somebody out of the waiting list (their most recent entry starting with <reason> is removed"},
-		[]string{"oust <name>", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
+	})
+
+	s += "\n*Other useful things to know:*\n"
+	s += cmdList([][]string{
 		[]string{"list", "Show who has the token and who is waiting"},
 		[]string{"help", "Show this text"},
-	}
-	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
-	for _, vs := range cmds {
-		s += fmt.Sprintf("`%s` - %s\n", vs[0], vs[1])
-	}
+	})
 	return s
 }
