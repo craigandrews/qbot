@@ -2,8 +2,6 @@ package dispatch
 
 import (
 	"log"
-	"reflect"
-	"strings"
 
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
@@ -25,68 +23,40 @@ type UserChan chan slack.UserInfo
 func Message(name string, q queue.Queue, commands command.Command,
 	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan) {
 
-	splitUser := func(u string) (username string, reason string) {
-		args := strings.SplitN(u, " ", 2)
-		username = args[0]
-		reason = ""
-		if len(args) > 1 {
-			reason = args[1]
-		}
-		return
-	}
-
-	logNotification := func(n string) {
-		for _, l := range strings.Split(n, "\n") {
-			if l != "" {
-				log.Println(l)
-			}
-		}
-	}
-
 	for m := range messageChan {
-		parts := strings.SplitN(m.Text, " ", 3)
+		cmd, args := splitCommand(m.Text)
 
-		if len(parts) < 2 {
-			continue
-		}
-		cmd := parts[1]
-
-		rest := ""
-		if len(parts) > 2 {
-			rest = parts[2]
-		}
-
-		oq := q
-		n := ""
+		old_q := q
+		response := ""
 
 		switch cmd {
 		case "join":
-			q, n = commands.Join(q, m.User, rest)
+			q, response = commands.Join(q, m.User, args)
 		case "leave":
-			q, n = commands.Leave(q, m.User, rest)
+			q, response = commands.Leave(q, m.User, args)
 		case "done":
-			q, n = commands.Done(q, m.User)
+			q, response = commands.Done(q, m.User)
 		case "yield":
-			q, n = commands.Yield(q, m.User)
+			q, response = commands.Yield(q, m.User)
 		case "barge":
-			q, n = commands.Barge(q, m.User, rest)
+			q, response = commands.Barge(q, m.User, args)
 		case "boot":
-			id, reason := splitUser(rest)
-			q, n = commands.Boot(q, m.User, id, reason)
+			id, reason := splitUser(args)
+			q, response = commands.Boot(q, m.User, id, reason)
 		case "oust":
-			q, n = commands.Oust(q, m.User, rest)
+			q, response = commands.Oust(q, m.User, args)
 		case "list":
-			n = commands.List(q)
+			response = commands.List(q)
 		case "help":
-			n = commands.Help(name)
+			response = commands.Help(name)
 		}
 
-		if n != "" {
-			if !reflect.DeepEqual(oq, q) {
-				logNotification(n)
+		if response != "" {
+			if !q.Equal(old_q) {
+				logResponse(response)
 				saveChan <- q
 			}
-			notifyChan <- Notification{m.Channel, n}
+			notifyChan <- Notification{m.Channel, response}
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"reflect"
 )
 
 type QueueError struct {
@@ -34,6 +35,11 @@ func Load(filename string) (q Queue, err error) {
 	}
 	err = nil
 	return
+}
+
+// Equal checks if the queue is the same as another queue
+func (q Queue) Equal(other Queue) bool {
+	return reflect.DeepEqual(q, other)
 }
 
 // Add appends an item to the queue unless it already exists
