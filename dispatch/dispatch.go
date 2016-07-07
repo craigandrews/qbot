@@ -49,6 +49,8 @@ func Message(name string, q queue.Queue, commands command.Command,
 			response = commands.List(q)
 		case "help":
 			response = commands.Help(name)
+		case "morehelp":
+			response = commands.MoreHelp(name)
 		}
 
 		if response != "" {

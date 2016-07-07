@@ -191,16 +191,32 @@ func (c Command) List(q queue.Queue) string {
 	return s
 }
 
-// Help provides much needed assistance
-func (c Command) Help(name string) string {
-	cmdList := func(cmds [][]string) string {
-		c := ""
-		for _, vs := range cmds {
-			c += fmt.Sprintf("`%s` - %s\n", vs[0], vs[1])
-		}
-		return c
+func cmdList(cmds [][]string) string {
+	c := ""
+	for _, vs := range cmds {
+		c += fmt.Sprintf("`%s` - %s\n", vs[0], vs[1])
 	}
+	return c
+}
 
+// Help provides brief assistance
+func (c Command) Help(name string) string {
+	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
+
+	s += cmdList([][]string{
+		[]string{"list", "Show who has the token and who is waiting"},
+		[]string{"join <reason>", "Join the queue and give a reason why"},
+		[]string{"done", "Release the token once you are done with it"},
+		[]string{"yield", "Relinquish the token and swap places with the next in line"},
+		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
+		[]string{"help", "Show this text"},
+		[]string{"morehelp", "Show more detailed help and extra actions"},
+	})
+	return s
+}
+
+// MoreHelp provides much needed assistance
+func (c Command) MoreHelp(name string) string {
 	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
 
 	s += "*If you don't have the token and need it:*\n"
