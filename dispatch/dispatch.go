@@ -3,10 +3,13 @@ package dispatch
 import (
 	"log"
 
+	"strings"
+
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/slack"
 	"github.com/doozr/qbot/usercache"
+	"github.com/doozr/qbot/util"
 )
 
 type Notification struct {
@@ -24,7 +27,8 @@ func Message(name string, q queue.Queue, commands command.Command,
 	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan) {
 
 	for m := range messageChan {
-		cmd, args := splitCommand(m.Text)
+		text := strings.Trim(m.Text, " \t\r\n")
+		cmd, args := util.StringPop(text)
 
 		old_q := q
 		response := ""
@@ -41,7 +45,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		case "barge":
 			q, response = commands.Barge(q, m.User, args)
 		case "boot":
-			id, reason := splitUser(args)
+			id, reason := util.StringPop(args)
 			q, response = commands.Boot(q, m.User, id, reason)
 		case "oust":
 			q, response = commands.Oust(q, m.User, args)
@@ -55,7 +59,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 
 		if response != "" {
 			if !q.Equal(old_q) {
-				logResponse(response)
+				util.LogMultiLine(response)
 				saveChan <- q
 			}
 			notifyChan <- Notification{m.Channel, response}

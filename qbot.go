@@ -7,33 +7,35 @@ import (
 	"strings"
 
 	"github.com/doozr/qbot/command"
+	"github.com/doozr/qbot/dispatch"
 	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/slack"
 	"github.com/doozr/qbot/usercache"
-	"github.com/doozr/qbot/dispatch"
+	"github.com/doozr/qbot/util"
 )
 
 func listen(name string, connection *slack.Slack, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
 	for {
 		// read each incoming message
-		m, err := connection.GetEvent()
+		e, err := connection.GetEvent()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// see if we're mentioned
-		if m.Type == "message" {
-			msg := slack.ConvertEventToMessage(m)
-			if strings.HasPrefix(msg.Text, name) || strings.HasPrefix(msg.Text, "<@"+ connection.Id+">") {
-				messageChan <- msg
+		if e.Type == "message" {
+			m := slack.ConvertEventToMessage(e)
+			if strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.Id+">") {
+				_, m.Text = util.StringPop(m.Text)
+				messageChan <- m
 			}
 		}
 
 		// see if it's a user update
-		if m.Type == "user_change" {
-			uc := slack.ConvertEventToUserChange(m)
+		if e.Type == "user_change" {
+			uc := slack.ConvertEventToUserChange(e)
 			userChan <- uc.User
 		}
 	}
@@ -112,4 +114,3 @@ func loadQueue(filename string) (q queue.Queue) {
 	}
 	return
 }
-
