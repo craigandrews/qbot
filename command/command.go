@@ -26,9 +26,10 @@ func New(n notification.Notification, uc *usercache.UserCache) Command {
 	return c
 }
 
-func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item) {
+func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
 	for ix := len(q) - 1; ix >= 0; ix-- {
 		if q[ix].Id == id && strings.HasPrefix(q[ix].Reason, reason) {
+			ok = true
 			item = q[ix]
 			break
 		}
@@ -36,9 +37,19 @@ func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item) {
 	return
 }
 
+func (c Command) getIdFromName(name string) (id string) {
+	id = ""
+	if strings.HasPrefix(name, "<@") {
+		id = strings.Trim(name, "<@>")
+	} else {
+		id = c.userCache.GetUserId(name)
+	}
+	return
+}
+
 // Join adds an item to the queue
 func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := queue.Item{id, reason}
+	i := queue.Item{Id: id, Reason: reason}
 
 	if i.Reason == "" {
 		return q, c.notification.JoinNoReason(i)
@@ -58,8 +69,8 @@ func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
 
 // Leave removes an item from the queue
 func (c Command) Leave(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := c.findItem(q, id, reason)
-	if i.Id == "" {
+	i, ok := c.findItem(q, id, reason)
+	if !ok {
 		return q, ""
 	}
 
@@ -96,11 +107,11 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 // Yield allows the second place ahead of the active user
 func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 	if len(q) == 0 {
-		return q, c.notification.YieldNotActive(queue.Item{id, ""})
+		return q, c.notification.YieldNotActive(queue.Item{Id: id, Reason: ""})
 	}
 	i := q.Active()
 	if i.Id != id {
-		return q, c.notification.YieldNotActive(queue.Item{id, ""})
+		return q, c.notification.YieldNotActive(queue.Item{Id: id, Reason: ""})
 	}
 	if len(q) < 2 {
 		return q, c.notification.YieldNoOthers(i)
@@ -111,7 +122,7 @@ func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 
 // Barge adds a user to the front of the queue
 func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := queue.Item{id, reason}
+	i := queue.Item{Id: id, Reason: reason}
 	q = q.Barge(i)
 	if q.Active() == i {
 		return q, c.notification.JoinActive(i)
@@ -125,9 +136,9 @@ func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, 
 		return q, ""
 	}
 
-	id := c.userCache.GetUserId(name)
-	i := c.findItem(q, id, reason)
-	if i.Id == "" {
+	id := c.getIdFromName(name)
+	i, ok := c.findItem(q, id, reason)
+	if !ok {
 		return q, ""
 	}
 
@@ -148,7 +159,7 @@ func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) 
 		return q, ""
 	}
 
-	id := c.userCache.GetUserId(name)
+	id := c.getIdFromName(name)
 	if id == "" {
 		return q, c.notification.OustNotActive(ouster)
 	}
