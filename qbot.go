@@ -6,28 +6,29 @@ import (
 	"os"
 	"strings"
 
+	"github.com/doozr/goslack"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/dispatch"
 	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/slack"
 	"github.com/doozr/qbot/usercache"
 	"github.com/doozr/qbot/util"
 )
 
-func listen(name string, connection *slack.Slack, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
+func listen(name string, connection *goslack.Slack, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
 	for {
 		// read each incoming message
-		e, err := connection.GetEvent()
-		if err != nil {
-			log.Fatal(err)
-		}
+		e := <-connection.RealTime
 
 		// see if we're mentioned
 		if e.Type == "message" {
-			m := slack.ConvertEventToMessage(e)
-			if strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.Id+">") {
+			m, err := e.RtmMessage()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			if strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.ID+">") {
 				_, m.Text = util.StringPop(m.Text)
 				messageChan <- m
 			}
@@ -35,7 +36,11 @@ func listen(name string, connection *slack.Slack, messageChan dispatch.MessageCh
 
 		// see if it's a user update
 		if e.Type == "user_change" {
-			uc := slack.ConvertEventToUserChange(e)
+			uc, err := e.RtmUserChange()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 			userChan <- uc.User
 		}
 	}
@@ -54,7 +59,7 @@ func main() {
 	// Instantiate state
 	connection := connectToSlack(token)
 	userCache := getUserList(connection)
-	name := getBotName(userCache, connection.Id)
+	name := getBotName(userCache, connection.ID)
 	q := loadQueue(filename)
 
 	// Set up command and response processors
@@ -78,16 +83,16 @@ func main() {
 	listen(name, connection, messageChan, userChan)
 }
 
-func connectToSlack(token string) (connection *slack.Slack) {
+func connectToSlack(token string) (connection *goslack.Slack) {
 	log.Print("Connecting to Slack")
-	connection, err := slack.New(token)
+	connection, err := goslack.New(token)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return
 }
 
-func getUserList(connection *slack.Slack) (userCache *usercache.UserCache) {
+func getUserList(connection *goslack.Slack) (userCache *usercache.UserCache) {
 	log.Println("Getting user list")
 	users, err := connection.GetUserList()
 	if err != nil {
@@ -110,7 +115,7 @@ func loadQueue(filename string) (q queue.Queue) {
 	log.Printf("Attempting to load queue from %s", filename)
 	q, err := queue.Load(filename)
 	if err != nil {
-		log.Fatal("Error loading queue: %s", err)
+		log.Fatalf("Error loading queue: %s", err)
 	}
 	return
 }

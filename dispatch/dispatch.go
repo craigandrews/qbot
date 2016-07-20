@@ -5,22 +5,32 @@ import (
 
 	"strings"
 
+	"github.com/doozr/goslack"
+	"github.com/doozr/goslack/apitypes"
+	"github.com/doozr/goslack/rtmtypes"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/slack"
 	"github.com/doozr/qbot/usercache"
 	"github.com/doozr/qbot/util"
 )
 
+// Notification represents a message to a channel
 type Notification struct {
 	Channel string
 	Message string
 }
 
-type MessageChan chan slack.RtmMessage
+// MessageChan is a stream of Slack real-time messages
+type MessageChan chan rtmtypes.RtmMessage
+
+// SaveChan is a stream of queue instances to persist
 type SaveChan chan queue.Queue
+
+// NotifyChan is a stream of notifications
 type NotifyChan chan Notification
-type UserChan chan slack.UserInfo
+
+// UserChan is a stream of user info updates
+type UserChan chan apitypes.UserInfo
 
 // Message handles executing user commands and passing on the results
 func Message(name string, q queue.Queue, commands command.Command,
@@ -30,7 +40,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		text := strings.Trim(m.Text, " \t\r\n")
 		cmd, args := util.StringPop(text)
 
-		old_q := q
+		oldQ := q
 		response := ""
 
 		switch cmd {
@@ -58,7 +68,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		}
 
 		if response != "" {
-			if !q.Equal(old_q) {
+			if !q.Equal(oldQ) {
 				util.LogMultiLine(response)
 				saveChan <- q
 			}
@@ -78,9 +88,9 @@ func Save(filename string, saveChan SaveChan) {
 }
 
 // Notify handles sending messages to the Slack channel after a command runs
-func Notify(slackConn *slack.Slack, notifyChan NotifyChan) {
+func Notify(slackConn *goslack.Slack, notifyChan NotifyChan) {
 	for n := range notifyChan {
-		err := slackConn.PostMessage(n.Channel, n.Message)
+		err := slackConn.PostRealTimeMessage(n.Channel, n.Message)
 		if err != nil {
 			log.Printf("Error when sending: %s", err)
 		}
@@ -90,12 +100,12 @@ func Notify(slackConn *slack.Slack, notifyChan NotifyChan) {
 // User handles user renaming in the user cache
 func User(userCache *usercache.UserCache, userUpdateChan UserChan) {
 	for u := range userUpdateChan {
-		old_name := userCache.GetUserName(u.Id)
+		oldName := userCache.GetUserName(u.ID)
 		userCache.UpdateUserName(u)
-		if old_name == "" {
+		if oldName == "" {
 			log.Printf("New user %s cached", u.Name)
 		} else {
-			log.Printf("User %s renamed to %s", old_name, u.Name)
+			log.Printf("User %s renamed to %s", oldName, u.Name)
 		}
 	}
 }
