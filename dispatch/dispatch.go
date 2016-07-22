@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/doozr/goslack"
-	"github.com/doozr/goslack/apitypes"
-	"github.com/doozr/goslack/rtmtypes"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
@@ -21,7 +19,7 @@ type Notification struct {
 }
 
 // MessageChan is a stream of Slack real-time messages
-type MessageChan chan rtmtypes.RtmMessage
+type MessageChan chan goslack.RtmMessage
 
 // SaveChan is a stream of queue instances to persist
 type SaveChan chan queue.Queue
@@ -30,7 +28,7 @@ type SaveChan chan queue.Queue
 type NotifyChan chan Notification
 
 // UserChan is a stream of user info updates
-type UserChan chan apitypes.UserInfo
+type UserChan chan goslack.UserInfo
 
 // Message handles executing user commands and passing on the results
 func Message(name string, q queue.Queue, commands command.Command,
@@ -88,7 +86,7 @@ func Save(filename string, saveChan SaveChan) {
 }
 
 // Notify handles sending messages to the Slack channel after a command runs
-func Notify(slackConn *goslack.Slack, notifyChan NotifyChan) {
+func Notify(slackConn *goslack.Connection, notifyChan NotifyChan) {
 	for n := range notifyChan {
 		err := slackConn.PostRealTimeMessage(n.Channel, n.Message)
 		if err != nil {

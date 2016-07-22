@@ -15,7 +15,7 @@ import (
 	"github.com/doozr/qbot/util"
 )
 
-func listen(name string, connection *goslack.Slack, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
+func listen(name string, connection *goslack.Connection, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
 	for {
 		// read each incoming message
@@ -83,7 +83,7 @@ func main() {
 	listen(name, connection, messageChan, userChan)
 }
 
-func connectToSlack(token string) (connection *goslack.Slack) {
+func connectToSlack(token string) (connection *goslack.Connection) {
 	log.Print("Connecting to Slack")
 	connection, err := goslack.New(token)
 	if err != nil {
@@ -92,7 +92,7 @@ func connectToSlack(token string) (connection *goslack.Slack) {
 	return
 }
 
-func getUserList(connection *goslack.Slack) (userCache *usercache.UserCache) {
+func getUserList(connection *goslack.Connection) (userCache *usercache.UserCache) {
 	log.Println("Getting user list")
 	users, err := connection.GetUserList()
 	if err != nil {

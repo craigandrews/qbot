@@ -10,17 +10,20 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
+// PendingOust contains an oust request that must be fulfilled
 type PendingOust struct {
 	Item      queue.Item
 	Timestamp time.Time
 }
 
+// Command provides the API to the various commands supported by the bot
 type Command struct {
 	notification notification.Notification
 	userCache    *usercache.UserCache
 	pendingOusts map[string]PendingOust
 }
 
+// New returns a new Command instance
 func New(n notification.Notification, uc *usercache.UserCache) Command {
 	c := Command{n, uc, make(map[string]PendingOust)}
 	return c
@@ -28,7 +31,7 @@ func New(n notification.Notification, uc *usercache.UserCache) Command {
 
 func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
 	for ix := len(q) - 1; ix >= 0; ix-- {
-		if q[ix].Id == id && strings.HasPrefix(q[ix].Reason, reason) {
+		if q[ix].ID == id && strings.HasPrefix(q[ix].Reason, reason) {
 			ok = true
 			item = q[ix]
 			break
@@ -37,19 +40,19 @@ func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item, ok
 	return
 }
 
-func (c Command) getIdFromName(name string) (id string) {
+func (c Command) getIDFromName(name string) (id string) {
 	id = ""
 	if strings.HasPrefix(name, "<@") {
 		id = strings.Trim(name, "<@>")
 	} else {
-		id = c.userCache.GetUserId(name)
+		id = c.userCache.GetUserID(name)
 	}
 	return
 }
 
 // Join adds an item to the queue
 func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := queue.Item{Id: id, Reason: reason}
+	i := queue.Item{ID: id, Reason: reason}
 
 	if i.Reason == "" {
 		return q, c.notification.JoinNoReason(i)
@@ -93,7 +96,7 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 
 	i := q.Active()
 
-	if i.Id != id {
+	if i.ID != id {
 		return q, c.notification.DoneNotActive(i)
 	}
 
@@ -107,11 +110,11 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 // Yield allows the second place ahead of the active user
 func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 	if len(q) == 0 {
-		return q, c.notification.YieldNotActive(queue.Item{Id: id, Reason: ""})
+		return q, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})
 	}
 	i := q.Active()
-	if i.Id != id {
-		return q, c.notification.YieldNotActive(queue.Item{Id: id, Reason: ""})
+	if i.ID != id {
+		return q, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})
 	}
 	if len(q) < 2 {
 		return q, c.notification.YieldNoOthers(i)
@@ -122,7 +125,7 @@ func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 
 // Barge adds a user to the front of the queue
 func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := queue.Item{Id: id, Reason: reason}
+	i := queue.Item{ID: id, Reason: reason}
 	q = q.Barge(i)
 	if q.Active() == i {
 		return q, c.notification.JoinActive(i)
@@ -136,7 +139,7 @@ func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, 
 		return q, ""
 	}
 
-	id := c.getIdFromName(name)
+	id := c.getIDFromName(name)
 	i, ok := c.findItem(q, id, reason)
 	if !ok {
 		return q, ""
@@ -159,13 +162,13 @@ func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) 
 		return q, ""
 	}
 
-	id := c.getIdFromName(name)
+	id := c.getIDFromName(name)
 	if id == "" {
 		return q, c.notification.OustNotActive(ouster)
 	}
 
 	i := q.Active()
-	if i.Id != id {
+	if i.ID != id {
 		return q, c.notification.OustNotActive(ouster)
 	}
 
@@ -195,9 +198,9 @@ func (c Command) List(q queue.Queue) string {
 	}
 
 	a := q.Active()
-	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.userCache.GetUserName(a.Id), a.Reason)
+	s := fmt.Sprintf("*%d: %s (%s) has the token*", 1, c.userCache.GetUserName(a.ID), a.Reason)
 	for ix, i := range q.Waiting() {
-		s += fmt.Sprintf("\n%d: %s (%s)", ix+2, c.userCache.GetUserName(i.Id), i.Reason)
+		s += fmt.Sprintf("\n%d: %s (%s)", ix+2, c.userCache.GetUserName(i.ID), i.Reason)
 	}
 	return s
 }

@@ -3,16 +3,17 @@ package usercache
 import (
 	"sync"
 
-	"github.com/doozr/goslack/apitypes"
+	"github.com/doozr/goslack"
 )
 
+// UserCache contains a mutex control list of user info objects keyed on ID
 type UserCache struct {
 	Mux       sync.Mutex
 	UserNames map[string]string
 }
 
 // New creates an instance of UserCache
-func New(users []apitypes.UserInfo) *UserCache {
+func New(users []goslack.UserInfo) *UserCache {
 	uc := UserCache{}
 	uc.UserNames = make(map[string]string)
 	for _, user := range users {
@@ -32,14 +33,14 @@ func (u *UserCache) GetUserName(id string) (username string) {
 }
 
 // UpdateUserName updates the username associated with an ID
-func (u *UserCache) UpdateUserName(user apitypes.UserInfo) {
+func (u *UserCache) UpdateUserName(user goslack.UserInfo) {
 	u.Mux.Lock()
 	u.UserNames[user.ID] = user.Name
 	u.Mux.Unlock()
 }
 
-// GetUserId gets the ID associated with a username
-func (u *UserCache) GetUserId(name string) (id string) {
+// GetUserID gets the ID associated with a username
+func (u *UserCache) GetUserID(name string) (id string) {
 	u.Mux.Lock()
 	for k, v := range u.UserNames {
 		if v == name {

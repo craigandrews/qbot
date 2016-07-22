@@ -7,34 +7,36 @@ import (
 	"reflect"
 )
 
-type QueueError struct {
+// Error is an error thrown when manipulating the queue
+type Error struct {
 	msg string
 }
 
-func (e QueueError) Error() string {
+// Error returns the error message
+func (e Error) Error() string {
 	return e.msg
 }
 
 // Item represents a person with a job in the queue
 type Item struct {
-	Id     string
+	ID     string
 	Reason string
 }
 
 // Queue represents a list of waiting items
 type Queue []Item
 
-func Load(filename string) (q Queue, err error) {
-	q = Queue{}
-	if _, err = os.Stat(filename); err == nil {
+// Load populates a new queue from a JSON file
+func Load(filename string) (Queue, error) {
+	q := Queue{}
+	if _, err := os.Stat(filename); err == nil {
 		dat, err := ioutil.ReadFile(filename)
 		if err != nil {
 			return q, err
 		}
 		json.Unmarshal(dat, &q)
 	}
-	err = nil
-	return
+	return q, nil
 }
 
 // Equal checks if the queue is the same as another queue
@@ -66,7 +68,7 @@ func (q Queue) Active() Item {
 	if len(q) > 0 {
 		return q[0]
 	}
-	panic(QueueError{"Queue is empty"})
+	panic(Error{"Queue is empty"})
 }
 
 // Waiting returns all items in the queue in order except the Active item
