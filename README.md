@@ -12,7 +12,7 @@ Grab it with `go get`:
 
 Or clone the project and build it with `go build`.
 
-Once I have some binaries to distribute I will update these instructions.
+Alternatively grab a binary from the releases page, unzip it and you're good to go.
 
 ## Run the bot
 
