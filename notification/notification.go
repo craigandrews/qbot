@@ -84,6 +84,11 @@ func (n Notification) LeaveActive(i queue.Item) string {
 	return fmt.Sprintf("%s You have the token, did you mean 'done'?", n.link(i.ID))
 }
 
+// LeaveNoEntry tells the user that an entry with the requested reason does not exist
+func (n Notification) LeaveNoEntry(id, reason string) string {
+	return fmt.Sprintf("%s No entry with a reason that starts with '%s' was found", n.link(id), reason)
+}
+
 // Done is a successful drop of the token
 func (n Notification) Done(i queue.Item, q queue.Queue) string {
 	a := q.Active()
@@ -126,6 +131,11 @@ func (n Notification) Barge(i queue.Item) string {
 // Boot is a successful force remove from the queue
 func (n Notification) Boot(booter string, i queue.Item) string {
 	return fmt.Sprintf("%s booted %s from the list", n.link(booter), n.item(i))
+}
+
+// BootNoEntry tells the user that an entry with the requested user and reason does not exist
+func (n Notification) BootNoEntry(id, name, reason string) string {
+	return fmt.Sprintf("%s No entry with for %s with a reason that starts with '%s' was found", n.link(id), name, reason)
 }
 
 // OustNotBoot tells the user that they can't boot the token holder

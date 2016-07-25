@@ -28,8 +28,12 @@ func listen(name string, connection *goslack.Connection, messageChan dispatch.Me
 				log.Println(err)
 				continue
 			}
-			if strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.ID+">") {
+
+			directedAtUs := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.ID+">")
+			if directedAtUs {
 				_, m.Text = util.StringPop(m.Text)
+				messageChan <- m
+			} else if util.IsPrivateChannel(m.Channel) {
 				messageChan <- m
 			}
 		}

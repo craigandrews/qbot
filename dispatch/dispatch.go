@@ -12,6 +12,8 @@ import (
 	"github.com/doozr/qbot/util"
 )
 
+const privateOnly = "Please send this request in private"
+
 // Notification represents a message to a channel
 type Notification struct {
 	Channel string
@@ -38,6 +40,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		text := strings.Trim(m.Text, " \t\r\n")
 		cmd, args := util.StringPop(text)
 
+		channel := m.Channel
 		oldQ := q
 		response := ""
 
@@ -60,9 +63,13 @@ func Message(name string, q queue.Queue, commands command.Command,
 		case "list":
 			response = commands.List(q)
 		case "help":
-			response = commands.Help(name)
+			if util.IsPrivateChannel(m.Channel) {
+				response = commands.Help(name)
+			}
 		case "morehelp":
-			response = commands.MoreHelp(name)
+			if util.IsPrivateChannel(m.Channel) {
+				response = commands.MoreHelp(name)
+			}
 		}
 
 		if response != "" {
@@ -70,7 +77,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 				util.LogMultiLine(response)
 				saveChan <- q
 			}
-			notifyChan <- Notification{m.Channel, response}
+			notifyChan <- Notification{channel, response}
 		}
 	}
 }
