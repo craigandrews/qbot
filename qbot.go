@@ -15,6 +15,9 @@ import (
 	"github.com/doozr/qbot/util"
 )
 
+// Version is the current release version
+const Version = "1.1"
+
 func listen(name string, connection *goslack.Connection, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
 	for {
@@ -55,6 +58,8 @@ func main() {
 		fmt.Println("Usage: qbot <token> <data file>")
 		os.Exit(1)
 	}
+
+	log.Printf("Qbot version %s", Version)
 
 	// Get command line parameters
 	token := os.Args[1]
