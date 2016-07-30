@@ -63,13 +63,11 @@ func Message(name string, q queue.Queue, commands command.Command,
 		case "list":
 			response = commands.List(q)
 		case "help":
-			if util.IsPrivateChannel(m.Channel) {
-				response = commands.Help(name)
-			}
+			response = commands.Help(name)
+			channel = m.User
 		case "morehelp":
-			if util.IsPrivateChannel(m.Channel) {
-				response = commands.MoreHelp(name)
-			}
+			response = commands.MoreHelp(name)
+			channel = m.User
 		}
 
 		if response != "" {
@@ -93,9 +91,18 @@ func Save(filename string, saveChan SaveChan) {
 }
 
 // Notify handles sending messages to the Slack channel after a command runs
-func Notify(slackConn *goslack.Connection, notifyChan NotifyChan) {
+func Notify(connection *goslack.Connection, notifyChan NotifyChan) {
 	for n := range notifyChan {
-		err := slackConn.PostRealTimeMessage(n.Channel, n.Message)
+		if util.IsUser(n.Channel) {
+			channel, err := connection.PostIMOpen(n.Channel)
+			if err != nil {
+				log.Printf("Could not get IM channel for user %s: %s", n.Channel, err)
+			} else {
+				n.Channel = channel
+			}
+		}
+
+		err := connection.PostRealTimeMessage(n.Channel, n.Message)
 		if err != nil {
 			log.Printf("Error when sending: %s", err)
 		}
