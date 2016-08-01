@@ -44,30 +44,42 @@ func Message(name string, q queue.Queue, commands command.Command,
 		oldQ := q
 		response := ""
 
-		switch cmd {
-		case "join":
-			q, response = commands.Join(q, m.User, args)
-		case "leave":
-			q, response = commands.Leave(q, m.User, args)
-		case "done":
-			q, response = commands.Done(q, m.User)
-		case "yield":
-			q, response = commands.Yield(q, m.User)
-		case "barge":
-			q, response = commands.Barge(q, m.User, args)
-		case "boot":
-			id, reason := util.StringPop(args)
-			q, response = commands.Boot(q, m.User, id, reason)
-		case "oust":
-			q, response = commands.Oust(q, m.User, args)
-		case "list":
-			response = commands.List(q)
-		case "help":
-			response = commands.Help(name)
-			channel = m.User
-		case "morehelp":
-			response = commands.MoreHelp(name)
-			channel = m.User
+		if util.IsPrivateChannel(channel) {
+			switch cmd {
+			case "list":
+				response = commands.List(q)
+			case "help":
+				response = commands.Help(name)
+			case "morehelp":
+				response = commands.MoreHelp(name)
+			}
+
+		} else {
+			switch cmd {
+			case "join":
+				q, response = commands.Join(q, m.User, args)
+			case "leave":
+				q, response = commands.Leave(q, m.User, args)
+			case "done":
+				q, response = commands.Done(q, m.User)
+			case "yield":
+				q, response = commands.Yield(q, m.User)
+			case "barge":
+				q, response = commands.Barge(q, m.User, args)
+			case "boot":
+				id, reason := util.StringPop(args)
+				q, response = commands.Boot(q, m.User, id, reason)
+			case "oust":
+				q, response = commands.Oust(q, m.User, args)
+			case "list":
+				response = commands.List(q)
+			case "help":
+				response = commands.Help(name)
+				channel = m.User
+			case "morehelp":
+				response = commands.MoreHelp(name)
+				channel = m.User
+			}
 		}
 
 		if response != "" {
