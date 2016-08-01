@@ -16,7 +16,7 @@ import (
 )
 
 // Version is the current release version
-const Version = "1.2"
+const Version = "1.3"
 
 func listen(name string, connection *goslack.Connection, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
