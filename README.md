@@ -52,6 +52,7 @@ Address each command to the bot (`<bot name>: <command>`)
 * `leave` - Leave the queue (your most recent entry is removed)
 * `leave <reason>` - Leave the queue (your most recent entry starting with <reason> is removed)
 * `done` - Release the token once you are done with it
+* `drop` - Drop the token and leave the queue (note: actually just an alias of `done`)
 * `yield` - Release the token and swap places with next in line
 * `barge <reason>` - Barge to the front of the queue so you get the token next (only with good reason!)
 * `boot <name>` - Kick somebody out of the waiting list (their most recent entry is removed)

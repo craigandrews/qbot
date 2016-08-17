@@ -223,6 +223,7 @@ func (c Command) Help(name string) string {
 		[]string{"list", "Show who has the token and who is waiting"},
 		[]string{"join <reason>", "Join the queue and give a reason why"},
 		[]string{"done", "Release the token once you are done with it"},
+		[]string{"drop", "Drop the token and leave the queue (note: actually just an alias of `done`)"},
 		[]string{"yield", "Relinquish the token and swap places with the next in line"},
 		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
 		[]string{"help", "Show this text"},
@@ -244,6 +245,7 @@ func (c Command) MoreHelp(name string) string {
 	s += "\n*If you have the token and have done with it:*\n"
 	s += cmdList([][]string{
 		[]string{"done", "Release the token once you are done with it"},
+		[]string{"drop", "Drop the token and leave the queue (note: actually just an alias of `done`)"},
 		[]string{"yield", "Release the token and swap places with next in line"},
 	})
 

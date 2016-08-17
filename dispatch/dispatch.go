@@ -62,6 +62,8 @@ func Message(name string, q queue.Queue, commands command.Command,
 				q, response = commands.Leave(q, m.User, args)
 			case "done":
 				q, response = commands.Done(q, m.User)
+			case "drop":
+				q, response = commands.Done(q, m.User)
 			case "yield":
 				q, response = commands.Yield(q, m.User)
 			case "barge":
