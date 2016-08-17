@@ -103,8 +103,8 @@ func (n Notification) DoneNoOthers(i queue.Item) string {
 }
 
 // DoneNotActive tells the user that they must have the token to use done
-func (n Notification) DoneNotActive(i queue.Item) string {
-	return fmt.Sprintf("%s You cannot be done if you don't have the token", n.link(i.ID))
+func (n Notification) DoneNotActive(user string) string {
+	return fmt.Sprintf("%s You cannot be done if you don't have the token", n.link(user))
 }
 
 // Yield is a successful passing of the token to next in line

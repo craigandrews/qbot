@@ -98,7 +98,7 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 	i := q.Active()
 
 	if i.ID != id {
-		return q, c.notification.DoneNotActive(i)
+		return q, c.notification.DoneNotActive(id)
 	}
 
 	q = q.Remove(i)
