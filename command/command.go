@@ -131,7 +131,7 @@ func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
 	if q.Active() == i {
 		return q, c.notification.JoinActive(i)
 	}
-	return q, c.notification.Barge(i)
+	return q, c.notification.Barge(i, q.Active())
 }
 
 // Boot kicks someone from the waiting list

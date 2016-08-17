@@ -124,8 +124,8 @@ func (n Notification) YieldNotActive(i queue.Item) string {
 }
 
 // Barge is a successful barge to the front of the queue
-func (n Notification) Barge(i queue.Item) string {
-	return fmt.Sprintf("%s barged to the front", n.item(i))
+func (n Notification) Barge(i queue.Item, a queue.Item) string {
+	return fmt.Sprintf("%s barged to the front\n%s still has the token", n.item(i), n.item(a))
 }
 
 // Boot is a successful force remove from the queue
