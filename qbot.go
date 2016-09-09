@@ -16,7 +16,7 @@ import (
 )
 
 // Version is the current release version
-const Version = "1.3"
+var Version string
 
 func listen(name string, connection *goslack.Connection, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
 
@@ -59,7 +59,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("Qbot version %s", Version)
+	if Version != "" {
+		log.Printf("Qbot version %s", Version)
+	} else {
+		log.Printf("Qbot <unversioned build>")
+	}
 
 	// Get command line parameters
 	token := os.Args[1]
