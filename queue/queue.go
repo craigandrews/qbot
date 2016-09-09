@@ -2,6 +2,7 @@ package queue
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -117,8 +118,10 @@ func (q Queue) Barge(i Item) Queue {
 }
 
 // Save serialises the queue to disk
-func (q Queue) Save(filename string) (err error) {
+func (q Queue) Save(w io.Writer) (err error) {
 	j, err := json.Marshal(q)
-	err = ioutil.WriteFile(filename, j, 0644)
+	if err != nil {
+		_, err = w.Write(j)
+	}
 	return
 }

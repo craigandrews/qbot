@@ -1,7 +1,9 @@
 package dispatch
 
 import (
+	"bufio"
 	"log"
+	"os"
 
 	"strings"
 
@@ -97,7 +99,15 @@ func Message(name string, q queue.Queue, commands command.Command,
 // Save handles serialising the queue to disk
 func Save(filename string, saveChan SaveChan) {
 	for q := range saveChan {
-		err := q.Save(filename)
+		f, err := os.Create(filename)
+		defer f.Close()
+
+		if err == nil {
+			w := bufio.NewWriter(f)
+			err = q.Save(w)
+			w.Flush()
+		}
+
 		if err != nil {
 			log.Printf("Error saving file to %s: %s", filename, err)
 		}
@@ -130,7 +140,7 @@ func User(userCache *usercache.UserCache, userUpdateChan UserChan) {
 		userCache.UpdateUserName(u)
 		if oldName == "" {
 			log.Printf("New user %s cached", u.Name)
-		} else {
+		} else if oldName != u.Name {
 			log.Printf("User %s renamed to %s", oldName, u.Name)
 		}
 	}
