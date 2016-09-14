@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/doozr/guac"
+	"github.com/doozr/jot"
 	"github.com/doozr/qbot/dispatch"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
@@ -34,6 +35,7 @@ func run(world World) {
 	for {
 		select {
 		case <-world.Done:
+			jot.Print("WaitGroup.Done: run")
 			world.WaitGroup.Done()
 			return
 		default:
@@ -56,6 +58,10 @@ func main() {
 		log.Printf("Qbot version %s", Version)
 	} else {
 		log.Printf("Qbot <unversioned build>")
+	}
+
+	if os.Getenv("JOTTER_ENABLE") == "true" {
+		jot.Enable()
 	}
 
 	// Get command line parameters

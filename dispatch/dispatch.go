@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/doozr/guac"
+	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
@@ -38,11 +39,11 @@ func Message(name string, q queue.Queue, commands command.Command,
 	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan,
 	wg *sync.WaitGroup) {
 
-	log.Print("Starting message dispatch")
+	jot.Print("Starting message dispatch")
 	for {
 		m, ok := <-messageChan
 		if !ok {
-			log.Print("Terminating message dispatch")
+			jot.Print("WaitGroup.Done: message dispatch")
 			wg.Done()
 			return
 		}
@@ -50,12 +51,14 @@ func Message(name string, q queue.Queue, commands command.Command,
 		text := strings.Trim(m.Text, " \t\r\n")
 		cmd, args := util.StringPop(text)
 		cmd = strings.ToLower(cmd)
+		jot.Printf("Parsed message text into command pair '%s' '%s'", cmd, args)
 
 		channel := m.Channel
 		oldQ := q
 		response := ""
 
 		if util.IsPrivateChannel(channel) {
+			jot.Print("Handling as private", m)
 			switch cmd {
 			case "list":
 				response = commands.List(q)
@@ -66,6 +69,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 			}
 
 		} else {
+			jot.Print("Handling as public", m)
 			switch cmd {
 			case "join":
 				q, response = commands.Join(q, m.User, args)
@@ -98,6 +102,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		if response != "" {
 			if !q.Equal(oldQ) {
 				util.LogMultiLine(response)
+				jot.Print("Queue updated, sending save")
 				saveChan <- q
 			}
 			notifyChan <- Notification{channel, response}
@@ -107,11 +112,11 @@ func Message(name string, q queue.Queue, commands command.Command,
 
 // Save handles serialising the queue to disk
 func Save(filename string, saveChan SaveChan, wg *sync.WaitGroup) {
-	log.Print("Starting save dispatch")
+	jot.Print("Starting save dispatch")
 	for {
 		q, ok := <-saveChan
 		if !ok {
-			log.Print("Terminating save dispatch")
+			jot.Print("WaitGroup.Done: save dispatch")
 			wg.Done()
 			return
 		}
@@ -120,16 +125,17 @@ func Save(filename string, saveChan SaveChan, wg *sync.WaitGroup) {
 		if err != nil {
 			log.Printf("Error saving file to %s: %s", filename, err)
 		}
+		jot.Print("Saved queue to ", filename)
 	}
 }
 
 // Notify handles sending messages to the Slack channel after a command runs
 func Notify(client guac.RealTimeClient, notifyChan NotifyChan, wg *sync.WaitGroup) {
-	log.Print("Starting notify dispatch")
+	jot.Print("Starting notify dispatch")
 	for {
 		n, ok := <-notifyChan
 		if !ok {
-			log.Println("Terminating notify dispatch")
+			jot.Print("WaitGroup.Done: notify dispatch")
 			wg.Done()
 			return
 		}
@@ -152,11 +158,11 @@ func Notify(client guac.RealTimeClient, notifyChan NotifyChan, wg *sync.WaitGrou
 
 // User handles user renaming in the user cache
 func User(userCache *usercache.UserCache, userUpdateChan UserChan, wg *sync.WaitGroup) {
-	log.Print("Starting user dispatch")
+	jot.Print("Starting user dispatch")
 	for {
 		u, ok := <-userUpdateChan
 		if !ok {
-			log.Print("Terminating user dispatch")
+			jot.Print("WaitGroup.Done: user dispatch")
 			wg.Done()
 			return
 		}

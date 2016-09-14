@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/doozr/guac"
+	"github.com/doozr/jot"
 )
 
 func receive(r guac.RealTimeClient, done chan struct{}) (events chan interface{}) {
@@ -18,7 +19,8 @@ func receive(r guac.RealTimeClient, done chan struct{}) (events chan interface{}
 			default:
 				event, err := r.Receive()
 				if err != nil {
-					log.Print("Error while receiving events: ", err)
+					log.Print("Connection terminated")
+					jot.Print("Error while receiving events: ", err)
 					close(events)
 					return
 				}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/doozr/guac"
+	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/dispatch"
 	"github.com/doozr/qbot/notification"
@@ -48,7 +49,7 @@ func listen(r guac.RealTimeClient, world World) {
 	for {
 		select {
 		case <-world.Done:
-			log.Println("Closing connection")
+			jot.Print("Closing connection")
 			r.Close()
 			return
 
@@ -61,6 +62,7 @@ func listen(r guac.RealTimeClient, world World) {
 			case guac.MessageEvent:
 				isForUs := messageIsForUs(r, event)
 				isDM := util.IsPrivateChannel(event.Channel)
+				jot.Print("Message ", event.Text, " is for us? ", isForUs, " is DM?", isDM)
 
 				if isForUs {
 					_, event.Text = util.StringPop(event.Text)
