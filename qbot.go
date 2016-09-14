@@ -65,11 +65,25 @@ func main() {
 	client := guac.New(token)
 	var wg sync.WaitGroup
 
+	// Load user list
+	userCache, err := getUserList(client)
+	if err != nil {
+		log.Print("Error loading user list", err)
+		os.Exit(1)
+	}
+
+	// Load queue
+	queue, err := loadQueue(filename)
+	if err != nil {
+		log.Print("Error loading queue", err)
+		os.Exit(1)
+	}
+
 	// Instantiate state
 	world := World{
 		Client:    client,
-		Q:         loadQueue(filename),
-		UserCache: getUserList(client),
+		Q:         queue,
+		UserCache: userCache,
 		SaveChan:  make(dispatch.SaveChan, 5),
 		UserChan:  make(dispatch.UserChan, 5),
 		Done:      make(chan struct{}),
@@ -105,21 +119,17 @@ func main() {
 	log.Println("Shutdown complete")
 }
 
-func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
+func getUserList(client guac.WebClient) (userCache *usercache.UserCache, err error) {
 	log.Println("Getting user list")
 	users, err := client.UsersList()
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	userCache = usercache.New(users)
 	return
 }
 
-func loadQueue(filename string) (q queue.Queue) {
+func loadQueue(filename string) (q queue.Queue, err error) {
 	log.Printf("Attempting to load queue from %s", filename)
-	q, err := queue.Load(filename)
-	if err != nil {
-		log.Fatalf("Error loading queue: %s", err)
-	}
-	return
+	return queue.Load(filename)
 }

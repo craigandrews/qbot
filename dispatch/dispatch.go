@@ -98,7 +98,6 @@ func Message(name string, q queue.Queue, commands command.Command,
 		if response != "" {
 			if !q.Equal(oldQ) {
 				util.LogMultiLine(response)
-				log.Print("Saving q")
 				saveChan <- q
 			}
 			notifyChan <- Notification{channel, response}
@@ -120,8 +119,6 @@ func Save(filename string, saveChan SaveChan, wg *sync.WaitGroup) {
 		err := q.Save(filename)
 		if err != nil {
 			log.Printf("Error saving file to %s: %s", filename, err)
-		} else {
-			log.Printf("Saved to %s", filename)
 		}
 	}
 }
