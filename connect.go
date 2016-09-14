@@ -8,8 +8,15 @@ import (
 )
 
 func mustConnect(w guac.WebClient, done chan struct{}) (r guac.RealTimeClient, ok bool) {
-	backoff := 1 * time.Second
-	maxBackoff := 64 * time.Second
+	backoffTimes := []time.Duration{
+		1 * time.Second,
+		2 * time.Second,
+		5 * time.Second,
+		10 * time.Second,
+		30 * time.Second,
+		60 * time.Second,
+	}
+	var backoff time.Duration
 
 	log.Print("Connecting to Slack")
 	var err error
@@ -26,11 +33,14 @@ func mustConnect(w guac.WebClient, done chan struct{}) (r guac.RealTimeClient, o
 			log.Println("Cancelling reconnection")
 			return
 		default:
+			// If we can increase backoff time, do so, otherwise stick with
+			// whatever value we have (last value of backoffTimes)
+			if len(backoffTimes) > 0 {
+				backoff, backoffTimes = backoffTimes[0], backoffTimes[1:]
+			}
+
 			log.Printf("Error while connecting; retrying in %s: %v", backoff, err)
 			time.Sleep(backoff)
-			if backoff <= maxBackoff {
-				backoff *= 2
-			}
 		}
 	}
 }

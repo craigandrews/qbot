@@ -91,16 +91,16 @@ func main() {
 	signal.Notify(sig, syscall.SIGTERM)
 	signal.Notify(sig, syscall.SIGKILL)
 
-	// Run forever or until the done channel is closed
-	select {
-	case s := <-sig:
-		log.Printf("Received %s signal - shutting down", s)
-		close(world.Done)
-		close(world.SaveChan)
-		close(world.UserChan)
-	}
+	// Wait for a signal
+	s := <-sig
+	log.Printf("Received %s signal - shutting down", s)
 
-	// Wait for everything to shut down
+	// Shut down all the qeueus
+	close(world.Done)
+	close(world.SaveChan)
+	close(world.UserChan)
+
+	// Wait for all the goroutines to stop
 	wg.Wait()
 	log.Println("Shutdown complete")
 }
