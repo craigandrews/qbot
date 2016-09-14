@@ -3,7 +3,7 @@ package usercache
 import (
 	"sync"
 
-	"github.com/doozr/goslack"
+	"github.com/doozr/guac"
 )
 
 // UserCache contains a mutex control list of user info objects keyed on ID
@@ -13,7 +13,7 @@ type UserCache struct {
 }
 
 // New creates an instance of UserCache
-func New(users []goslack.UserInfo) *UserCache {
+func New(users []guac.UserInfo) *UserCache {
 	uc := UserCache{}
 	uc.UserNames = make(map[string]string)
 	for _, user := range users {
@@ -33,7 +33,7 @@ func (u *UserCache) GetUserName(id string) (username string) {
 }
 
 // UpdateUserName updates the username associated with an ID
-func (u *UserCache) UpdateUserName(user goslack.UserInfo) {
+func (u *UserCache) UpdateUserName(user guac.UserChangeEvent) {
 	u.Mux.Lock()
 	u.UserNames[user.ID] = user.Name
 	u.Mux.Unlock()

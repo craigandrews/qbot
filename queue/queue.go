@@ -2,7 +2,6 @@ package queue
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -26,19 +25,6 @@ type Item struct {
 
 // Queue represents a list of waiting items
 type Queue []Item
-
-// Load populates a new queue from a JSON file
-func Load(filename string) (Queue, error) {
-	q := Queue{}
-	if _, err := os.Stat(filename); err == nil {
-		dat, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return q, err
-		}
-		json.Unmarshal(dat, &q)
-	}
-	return q, nil
-}
 
 // Equal checks if the queue is the same as another queue
 func (q Queue) Equal(other Queue) bool {
@@ -117,11 +103,22 @@ func (q Queue) Barge(i Item) Queue {
 	return q.Add(i)
 }
 
-// Save serialises the queue to disk
-func (q Queue) Save(w io.Writer) (err error) {
-	j, err := json.Marshal(q)
-	if err != nil {
-		_, err = w.Write(j)
+// Load populates a new queue from a JSON file
+func Load(filename string) (Queue, error) {
+	q := Queue{}
+	if _, err := os.Stat(filename); err == nil {
+		dat, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return q, err
+		}
+		json.Unmarshal(dat, &q)
 	}
+	return q, nil
+}
+
+// Save serialises the queue to disk
+func (q Queue) Save(filename string) (err error) {
+	j, err := json.Marshal(q)
+	err = ioutil.WriteFile(filename, j, 0644)
 	return
 }

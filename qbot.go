@@ -4,51 +4,44 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"os/signal"
+	"sync"
+	"syscall"
 
-	"github.com/doozr/goslack"
-	"github.com/doozr/qbot/command"
+	"github.com/doozr/guac"
 	"github.com/doozr/qbot/dispatch"
-	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
-	"github.com/doozr/qbot/util"
 )
 
 // Version is the current release version
 var Version string
 
-func listen(name string, connection *goslack.Connection, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
+// World is all the state that could be global, but isn't
+//
+// Useful for making sure we can tear down and rebuild on connection failure
+type World struct {
+	Client    guac.WebClient
+	Q         queue.Queue
+	UserCache *usercache.UserCache
+	SaveChan  dispatch.SaveChan
+	UserChan  dispatch.UserChan
+	Done      chan struct{}
+	WaitGroup *sync.WaitGroup
+}
 
+func run(world World) {
 	for {
-		// read each incoming message
-		e := <-connection.RealTime
-
-		// see if we're mentioned
-		if e.Type == "message" {
-			m, err := e.RtmMessage()
-			if err != nil {
-				log.Println(err)
-				continue
+		select {
+		case <-world.Done:
+			world.WaitGroup.Done()
+			return
+		default:
+			r, ok := mustConnect(world.Client, world.Done)
+			if ok {
+				log.Printf("Responding as %s", r.Name())
+				listen(r, world)
 			}
-
-			directedAtUs := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.ID+">")
-			if directedAtUs {
-				_, m.Text = util.StringPop(m.Text)
-				messageChan <- m
-			} else if util.IsPrivateChannel(m.Channel) {
-				messageChan <- m
-			}
-		}
-
-		// see if it's a user update
-		if e.Type == "user_change" {
-			uc, err := e.RtmUserChange()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			userChan <- uc.User
 		}
 	}
 }
@@ -69,58 +62,56 @@ func main() {
 	token := os.Args[1]
 	filename := os.Args[2]
 
+	client := guac.New(token)
+	var wg sync.WaitGroup
+
 	// Instantiate state
-	connection := connectToSlack(token)
-	userCache := getUserList(connection)
-	name := getBotName(userCache, connection.ID)
-	q := loadQueue(filename)
-
-	// Set up command and response processors
-	notifications := notification.New(userCache)
-	commands := command.New(notifications, userCache)
-
-	// Create channels
-	messageChan := make(dispatch.MessageChan, 100)
-	saveChan := make(dispatch.SaveChan, 5)
-	notifyChan := make(dispatch.NotifyChan, 5)
-	userChan := make(dispatch.UserChan, 5)
-
-	// Start goroutines
-	go dispatch.Message(name, q, commands, messageChan, saveChan, notifyChan)
-	go dispatch.Save(filename, saveChan)
-	go dispatch.Notify(connection, notifyChan)
-	go dispatch.User(userCache, userChan)
-
-	// Dispatch incoming events
-	log.Println("Ready to receive events")
-	listen(name, connection, messageChan, userChan)
-}
-
-func connectToSlack(token string) (connection *goslack.Connection) {
-	log.Print("Connecting to Slack")
-	connection, err := goslack.New(token)
-	if err != nil {
-		log.Fatal(err)
+	world := World{
+		Client:    client,
+		Q:         loadQueue(filename),
+		UserCache: getUserList(client),
+		SaveChan:  make(dispatch.SaveChan, 5),
+		UserChan:  make(dispatch.UserChan, 5),
+		Done:      make(chan struct{}),
+		WaitGroup: &wg,
 	}
-	return
+
+	// Listen for notifications to save and update global state
+	wg.Add(2)
+	go dispatch.Save(filename, world.SaveChan, &wg)
+	go dispatch.User(world.UserCache, world.UserChan, &wg)
+
+	// Run the receiver
+	wg.Add(1)
+	go run(world)
+
+	// Wait for signals to stop
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGKILL)
+
+	// Run forever or until the done channel is closed
+	select {
+	case s := <-sig:
+		log.Printf("Received %s signal - shutting down", s)
+		close(world.Done)
+		close(world.SaveChan)
+		close(world.UserChan)
+	}
+
+	// Wait for everything to shut down
+	wg.Wait()
+	log.Println("Shutdown complete")
 }
 
-func getUserList(connection *goslack.Connection) (userCache *usercache.UserCache) {
+func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
 	log.Println("Getting user list")
-	users, err := connection.GetUserList()
+	users, err := client.UsersList()
 	if err != nil {
 		log.Fatal(err)
 	}
 	userCache = usercache.New(users)
-	return
-}
-
-func getBotName(userCache *usercache.UserCache, id string) (name string) {
-	name = userCache.GetUserName(id)
-	if name == "" {
-		log.Fatal("Could not get username of bot")
-	}
-	log.Printf("Responding to requests directed to @%s", name)
 	return
 }
 
