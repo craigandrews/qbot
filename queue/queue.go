@@ -2,10 +2,11 @@ package queue
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
+
+	"github.com/doozr/jot"
 )
 
 // Error is an error thrown when manipulating the queue
@@ -118,10 +119,11 @@ func (q Queue) Barge(i Item) Queue {
 }
 
 // Save serialises the queue to disk
-func (q Queue) Save(w io.Writer) (err error) {
+func (q Queue) Save(filename string) (err error) {
 	j, err := json.Marshal(q)
-	if err != nil {
-		_, err = w.Write(j)
+	if err == nil {
+		jot.Print("Writing queue JSON: ", string(j))
+		err = ioutil.WriteFile(filename, j, 0644)
 	}
 	return
 }

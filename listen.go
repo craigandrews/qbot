@@ -1,0 +1,46 @@
+package main
+
+import (
+	"strings"
+	"sync"
+
+	"github.com/doozr/guac"
+	"github.com/doozr/jot"
+	"github.com/doozr/qbot/dispatch"
+	"github.com/doozr/qbot/util"
+)
+
+func listen(name string, client guac.RealTimeClient,
+	messageChan dispatch.MessageChan, userChan dispatch.UserChan,
+	done chan struct{}, waitGroup *sync.WaitGroup) {
+
+	jot.Print("listen started")
+	defer func() {
+		jot.Print("listen done")
+		waitGroup.Done()
+	}()
+
+	events := receive(client, done, waitGroup)
+	for {
+		// read each incoming message
+		select {
+		case <-done:
+			return
+
+		case event := <-events:
+			switch m := event.(type) {
+			case guac.MessageEvent:
+				directedAtUs := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+client.ID()+">")
+				if directedAtUs {
+					_, m.Text = util.StringPop(m.Text)
+					messageChan <- m
+				} else if util.IsPrivateChannel(m.Channel) {
+					messageChan <- m
+				}
+
+			case guac.UserChangeEvent:
+				userChan <- m.UserInfo
+			}
+		}
+	}
+}

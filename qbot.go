@@ -4,54 +4,21 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"os/signal"
+	"sync"
+	"syscall"
 
-	"github.com/doozr/goslack"
+	"github.com/doozr/guac"
+	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/dispatch"
 	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
-	"github.com/doozr/qbot/util"
 )
 
 // Version is the current release version
 var Version string
-
-func listen(name string, connection *goslack.Connection, messageChan dispatch.MessageChan, userChan dispatch.UserChan) {
-
-	for {
-		// read each incoming message
-		e := <-connection.RealTime
-
-		// see if we're mentioned
-		if e.Type == "message" {
-			m, err := e.RtmMessage()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-
-			directedAtUs := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+connection.ID+">")
-			if directedAtUs {
-				_, m.Text = util.StringPop(m.Text)
-				messageChan <- m
-			} else if util.IsPrivateChannel(m.Channel) {
-				messageChan <- m
-			}
-		}
-
-		// see if it's a user update
-		if e.Type == "user_change" {
-			uc, err := e.RtmUserChange()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			userChan <- uc.User
-		}
-	}
-}
 
 func main() {
 	if len(os.Args) < 3 {
@@ -69,10 +36,33 @@ func main() {
 	token := os.Args[1]
 	filename := os.Args[2]
 
+	// Turn on jot if required
+	if os.Getenv("QBOT_DEBUG") == "true" {
+		jot.Enable()
+	}
+
+	// Synchronisation primitives
+	waitGroup := sync.WaitGroup{}
+	done := make(chan struct{})
+	defer func() {
+		jot.Print("Closing done channel")
+		close(done)
+
+		jot.Print("Awaiting all goroutines")
+		waitGroup.Wait()
+
+		jot.Print("Shutdown complete")
+	}()
+
+	// Connect to Slack
+	client, err := guac.New(token).PersistentRealTime()
+	if err != nil {
+		log.Fatal("Error connecting to Slack ", err)
+	}
+
 	// Instantiate state
-	connection := connectToSlack(token)
-	userCache := getUserList(connection)
-	name := getBotName(userCache, connection.ID)
+	userCache := getUserList(client.WebClient)
+	name := client.Name()
 	q := loadQueue(filename)
 
 	// Set up command and response processors
@@ -84,30 +74,41 @@ func main() {
 	saveChan := make(dispatch.SaveChan, 5)
 	notifyChan := make(dispatch.NotifyChan, 5)
 	userChan := make(dispatch.UserChan, 5)
+	defer func() {
+		jot.Println("Closing channels")
+		close(messageChan)
+		close(saveChan)
+		close(notifyChan)
+		close(userChan)
+	}()
 
 	// Start goroutines
-	go dispatch.Message(name, q, commands, messageChan, saveChan, notifyChan)
-	go dispatch.Save(filename, saveChan)
-	go dispatch.Notify(connection, notifyChan)
-	go dispatch.User(userCache, userChan)
+	waitGroup.Add(4)
+	go dispatch.Message(name, q, commands, messageChan, saveChan, notifyChan, &waitGroup)
+	go dispatch.Save(filename, saveChan, &waitGroup)
+	go dispatch.Notify(client, notifyChan, &waitGroup)
+	go dispatch.User(userCache, userChan, &waitGroup)
 
 	// Dispatch incoming events
-	log.Println("Ready to receive events")
-	listen(name, connection, messageChan, userChan)
+	jot.Println("Ready to receive events")
+	waitGroup.Add(1)
+	go listen(name, client, messageChan, userChan, done, &waitGroup)
+
+	// Wait for signals to stop
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGKILL)
+
+	// Wait for a signal
+	s := <-sig
+	log.Printf("Received %s signal - shutting down", s)
+	client.Close()
 }
 
-func connectToSlack(token string) (connection *goslack.Connection) {
-	log.Print("Connecting to Slack")
-	connection, err := goslack.New(token)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return
-}
-
-func getUserList(connection *goslack.Connection) (userCache *usercache.UserCache) {
+func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
 	log.Println("Getting user list")
-	users, err := connection.GetUserList()
+	users, err := client.UsersList()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,20 +116,11 @@ func getUserList(connection *goslack.Connection) (userCache *usercache.UserCache
 	return
 }
 
-func getBotName(userCache *usercache.UserCache, id string) (name string) {
-	name = userCache.GetUserName(id)
-	if name == "" {
-		log.Fatal("Could not get username of bot")
-	}
-	log.Printf("Responding to requests directed to @%s", name)
-	return
-}
-
 func loadQueue(filename string) (q queue.Queue) {
-	log.Printf("Attempting to load queue from %s", filename)
 	q, err := queue.Load(filename)
 	if err != nil {
 		log.Fatalf("Error loading queue: %s", err)
 	}
+	log.Printf("Loaded queue from %s", filename)
 	return
 }

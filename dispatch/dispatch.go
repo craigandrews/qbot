@@ -1,13 +1,13 @@
 package dispatch
 
 import (
-	"bufio"
 	"log"
-	"os"
+	"sync"
 
 	"strings"
 
-	"github.com/doozr/goslack"
+	"github.com/doozr/guac"
+	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
@@ -23,7 +23,7 @@ type Notification struct {
 }
 
 // MessageChan is a stream of Slack real-time messages
-type MessageChan chan goslack.RtmMessage
+type MessageChan chan guac.MessageEvent
 
 // SaveChan is a stream of queue instances to persist
 type SaveChan chan queue.Queue
@@ -32,13 +32,25 @@ type SaveChan chan queue.Queue
 type NotifyChan chan Notification
 
 // UserChan is a stream of user info updates
-type UserChan chan goslack.UserInfo
+type UserChan chan guac.UserInfo
 
 // Message handles executing user commands and passing on the results
 func Message(name string, q queue.Queue, commands command.Command,
-	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan) {
+	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan,
+	waitGroup *sync.WaitGroup) {
 
-	for m := range messageChan {
+	jot.Print("message dispatch started")
+	defer func() {
+		waitGroup.Done()
+		jot.Print("message dispatch done")
+	}()
+
+	for {
+		m, ok := <-messageChan
+		if !ok {
+			return
+		}
+
 		text := strings.Trim(m.Text, " \t\r\n")
 		cmd, args := util.StringPop(text)
 
@@ -97,28 +109,47 @@ func Message(name string, q queue.Queue, commands command.Command,
 }
 
 // Save handles serialising the queue to disk
-func Save(filename string, saveChan SaveChan) {
-	for q := range saveChan {
-		f, err := os.Create(filename)
-		defer f.Close()
+func Save(filename string, saveChan SaveChan, waitGroup *sync.WaitGroup) {
 
-		if err == nil {
-			w := bufio.NewWriter(f)
-			err = q.Save(w)
-			w.Flush()
+	jot.Print("save dispatch started")
+	defer func() {
+		waitGroup.Done()
+		jot.Print("save dispatch done")
+	}()
+
+	for {
+		q, ok := <-saveChan
+		if !ok {
+			return
 		}
 
+		jot.Print("Received queue to save ", q)
+		err := q.Save(filename)
 		if err != nil {
 			log.Printf("Error saving file to %s: %s", filename, err)
+		} else {
+			jot.Print("Saved queue to ", filename)
 		}
 	}
 }
 
 // Notify handles sending messages to the Slack channel after a command runs
-func Notify(connection *goslack.Connection, notifyChan NotifyChan) {
-	for n := range notifyChan {
+func Notify(client guac.RealTimeClient, notifyChan NotifyChan, waitGroup *sync.WaitGroup) {
+
+	jot.Print("notify dispatch started")
+	defer func() {
+		waitGroup.Done()
+		jot.Print("notify dispatch done")
+	}()
+
+	for {
+		n, ok := <-notifyChan
+		if !ok {
+			return
+		}
+
 		if util.IsUser(n.Channel) {
-			channel, err := connection.PostIMOpen(n.Channel)
+			channel, err := client.IMOpen(n.Channel)
 			if err != nil {
 				log.Printf("Could not get IM channel for user %s: %s", n.Channel, err)
 			} else {
@@ -126,7 +157,7 @@ func Notify(connection *goslack.Connection, notifyChan NotifyChan) {
 			}
 		}
 
-		err := connection.PostRealTimeMessage(n.Channel, n.Message)
+		err := client.PostMessage(n.Channel, n.Message)
 		if err != nil {
 			log.Printf("Error when sending: %s", err)
 		}
@@ -134,10 +165,22 @@ func Notify(connection *goslack.Connection, notifyChan NotifyChan) {
 }
 
 // User handles user renaming in the user cache
-func User(userCache *usercache.UserCache, userUpdateChan UserChan) {
-	for u := range userUpdateChan {
+func User(userCache *usercache.UserCache, userUpdateChan UserChan, waitGroup *sync.WaitGroup) {
+
+	jot.Print("user dispatch started")
+	defer func() {
+		waitGroup.Done()
+		jot.Print("user dispatch done")
+	}()
+
+	for {
+		u, ok := <-userUpdateChan
+		if !ok {
+			return
+		}
+
 		oldName := userCache.GetUserName(u.ID)
-		userCache.UpdateUserName(u)
+		userCache.UpdateUserName(u.ID, u.Name)
 		if oldName == "" {
 			log.Printf("New user %s cached", u.Name)
 		} else if oldName != u.Name {
