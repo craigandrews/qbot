@@ -44,15 +44,6 @@ func main() {
 	// Synchronisation primitives
 	waitGroup := sync.WaitGroup{}
 	done := make(chan struct{})
-	defer func() {
-		jot.Print("qbot: closing done channel")
-		close(done)
-
-		jot.Print("qbot: waiting for dispatch to terminate")
-		waitGroup.Wait()
-
-		jot.Print("qbot: shutdown complete")
-	}()
 
 	// Connect to Slack
 	client, err := guac.New(token).PersistentRealTime()
@@ -74,13 +65,6 @@ func main() {
 	saveChan := make(dispatch.SaveChan, 5)
 	notifyChan := make(dispatch.NotifyChan, 5)
 	userChan := make(dispatch.UserChan, 5)
-	defer func() {
-		jot.Println("qbot: closing channels")
-		close(messageChan)
-		close(saveChan)
-		close(notifyChan)
-		close(userChan)
-	}()
 
 	// Start goroutines
 	waitGroup.Add(4)
@@ -103,7 +87,23 @@ func main() {
 	// Wait for a signal
 	s := <-sig
 	log.Printf("Received %s signal - shutting down", s)
+
+	jot.Print("qbot: closing done channel")
+	close(done)
+
+	jot.Print("qbot: closing connection")
 	client.Close()
+
+	jot.Println("qbot: closing dispatch channels")
+	close(messageChan)
+	close(saveChan)
+	close(notifyChan)
+	close(userChan)
+
+	jot.Print("qbot: waiting for dispatch to terminate")
+	waitGroup.Wait()
+
+	jot.Print("qbot: shutdown complete")
 }
 
 func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
