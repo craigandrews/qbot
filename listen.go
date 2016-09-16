@@ -14,9 +14,9 @@ func listen(name string, client guac.RealTimeClient,
 	messageChan dispatch.MessageChan, userChan dispatch.UserChan,
 	done chan struct{}, waitGroup *sync.WaitGroup) {
 
-	jot.Print("listen started")
+	jot.Print("qbot.listen started")
 	defer func() {
-		jot.Print("listen done")
+		jot.Print("qbot.listen done")
 		waitGroup.Done()
 	}()
 

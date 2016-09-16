@@ -37,6 +37,7 @@ func Load(filename string) (Queue, error) {
 			return q, err
 		}
 		json.Unmarshal(dat, &q)
+		jot.Printf("queue: read queue from %s: %v", filename, q)
 	}
 	return q, nil
 }
@@ -122,7 +123,7 @@ func (q Queue) Barge(i Item) Queue {
 func (q Queue) Save(filename string) (err error) {
 	j, err := json.Marshal(q)
 	if err == nil {
-		jot.Print("Writing queue JSON: ", string(j))
+		jot.Print("queue: writing queue JSON: ", string(j))
 		err = ioutil.WriteFile(filename, j, 0644)
 	}
 	return

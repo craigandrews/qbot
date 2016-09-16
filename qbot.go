@@ -45,13 +45,13 @@ func main() {
 	waitGroup := sync.WaitGroup{}
 	done := make(chan struct{})
 	defer func() {
-		jot.Print("Closing done channel")
+		jot.Print("qbot: closing done channel")
 		close(done)
 
-		jot.Print("Awaiting all goroutines")
+		jot.Print("qbot: waiting for dispatch to terminate")
 		waitGroup.Wait()
 
-		jot.Print("Shutdown complete")
+		jot.Print("qbot: shutdown complete")
 	}()
 
 	// Connect to Slack
@@ -75,7 +75,7 @@ func main() {
 	notifyChan := make(dispatch.NotifyChan, 5)
 	userChan := make(dispatch.UserChan, 5)
 	defer func() {
-		jot.Println("Closing channels")
+		jot.Println("qbot: closing channels")
 		close(messageChan)
 		close(saveChan)
 		close(notifyChan)
@@ -90,7 +90,7 @@ func main() {
 	go dispatch.User(userCache, userChan, &waitGroup)
 
 	// Dispatch incoming events
-	jot.Println("Ready to receive events")
+	jot.Println("qbot: ready to receive events")
 	waitGroup.Add(1)
 	go listen(name, client, messageChan, userChan, done, &waitGroup)
 

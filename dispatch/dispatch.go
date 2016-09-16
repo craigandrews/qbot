@@ -45,12 +45,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		jot.Print("message dispatch done")
 	}()
 
-	for {
-		m, ok := <-messageChan
-		if !ok {
-			return
-		}
-
+	for m := range messageChan {
 		text := strings.Trim(m.Text, " \t\r\n")
 		cmd, args := util.StringPop(text)
 
@@ -59,6 +54,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		response := ""
 
 		if util.IsPrivateChannel(channel) {
+			jot.Print("message dispatch: private message ", m)
 			switch cmd {
 			case "list":
 				response = commands.List(q)
@@ -69,6 +65,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 			}
 
 		} else {
+			jot.Print("message dispatch: public message ", m)
 			switch cmd {
 			case "join":
 				q, response = commands.Join(q, m.User, args)
@@ -117,18 +114,13 @@ func Save(filename string, saveChan SaveChan, waitGroup *sync.WaitGroup) {
 		jot.Print("save dispatch done")
 	}()
 
-	for {
-		q, ok := <-saveChan
-		if !ok {
-			return
-		}
-
-		jot.Print("Received queue to save ", q)
+	for q := range saveChan {
+		jot.Print("save dispath: queue to save ", q)
 		err := q.Save(filename)
 		if err != nil {
 			log.Printf("Error saving file to %s: %s", filename, err)
 		} else {
-			jot.Print("Saved queue to ", filename)
+			jot.Print("save dispatch: saved to ", filename)
 		}
 	}
 }
@@ -142,12 +134,7 @@ func Notify(client guac.RealTimeClient, notifyChan NotifyChan, waitGroup *sync.W
 		jot.Print("notify dispatch done")
 	}()
 
-	for {
-		n, ok := <-notifyChan
-		if !ok {
-			return
-		}
-
+	for n := range notifyChan {
 		if util.IsUser(n.Channel) {
 			channel, err := client.IMOpen(n.Channel)
 			if err != nil {
@@ -173,12 +160,7 @@ func User(userCache *usercache.UserCache, userUpdateChan UserChan, waitGroup *sy
 		jot.Print("user dispatch done")
 	}()
 
-	for {
-		u, ok := <-userUpdateChan
-		if !ok {
-			return
-		}
-
+	for u := range userUpdateChan {
 		oldName := userCache.GetUserName(u.ID)
 		userCache.UpdateUserName(u.ID, u.Name)
 		if oldName == "" {

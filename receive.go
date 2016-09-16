@@ -8,7 +8,7 @@ import (
 )
 
 func receive(r guac.RealTimeClient, done chan struct{}, waitGroup *sync.WaitGroup) (events chan interface{}) {
-	jot.Print("receive started")
+	jot.Print("qbot.receive started")
 	events = make(chan interface{})
 	waitGroup.Add(1)
 
@@ -16,21 +16,21 @@ func receive(r guac.RealTimeClient, done chan struct{}, waitGroup *sync.WaitGrou
 		defer func() {
 			close(events)
 			waitGroup.Done()
-			jot.Print("receive done")
+			jot.Print("qbot.receive done")
 		}()
 
 		for {
 			select {
 			case <-done:
-				jot.Println("Terminating listener")
+				jot.Println("qbot.receive: terminating listener")
 				return
 			default:
 				event, err := r.Receive()
 				if err != nil {
-					jot.Print("Error while receiving events: ", err)
+					jot.Print("qbot.receive: error while receiving events: ", err)
 					return
 				}
-				jot.Print("Received event: ", event)
+				jot.Print("qbot.receive: event: ", event)
 				events <- event
 			}
 		}
