@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
@@ -46,7 +47,7 @@ func main() {
 	done := make(chan struct{})
 
 	// Connect to Slack
-	client, err := guac.New(token).PersistentRealTime()
+	client, err := guac.New(token).PersistentRealTime(5 * time.Minute)
 	if err != nil {
 		log.Fatal("Error connecting to Slack ", err)
 	}

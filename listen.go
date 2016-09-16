@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
@@ -40,7 +41,14 @@ func listen(name string, client guac.RealTimeClient,
 
 			case guac.UserChangeEvent:
 				userChan <- m.UserInfo
+
+			case guac.PingPongEvent:
+				jot.Print("qbot.listen: pong")
 			}
+
+		case <-time.After(30 * time.Second):
+			jot.Print("qbot.listen: ping")
+			client.Ping()
 		}
 	}
 }
