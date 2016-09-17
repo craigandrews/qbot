@@ -21,14 +21,13 @@ func listen(name string, client guac.RealTimeClient,
 		waitGroup.Done()
 	}()
 
-	events := receive(client, done, waitGroup)
 	for {
 		// read each incoming message
 		select {
 		case <-done:
 			return
 
-		case event := <-events:
+		case event := <-client.Receive():
 			switch m := event.(type) {
 			case guac.MessageEvent:
 				directedAtUs := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+client.ID()+">")
