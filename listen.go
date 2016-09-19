@@ -22,7 +22,7 @@ func listen(name string, client guac.RealTimeClient,
 	}()
 
 	for {
-		// read each incoming message
+		jot.Print("qbot.listen awaiting event")
 		select {
 		case <-done:
 			return
