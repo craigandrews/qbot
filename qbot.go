@@ -48,6 +48,7 @@ func main() {
 
 	// Connect to Slack
 	client, err := guac.New(token).PersistentRealTime(5 * time.Minute)
+	log.Print("Connected to slack as ", client.Name())
 	if err != nil {
 		log.Fatal("Error connecting to Slack ", err)
 	}
@@ -55,6 +56,7 @@ func main() {
 	// Instantiate state
 	userCache := getUserList(client.WebClient)
 	name := client.Name()
+	jot.Print("qbot: name is ", name)
 	q := loadQueue(filename)
 
 	// Set up command and response processors

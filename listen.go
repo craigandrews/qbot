@@ -30,11 +30,15 @@ func listen(name string, client guac.RealTimeClient,
 		case event := <-client.Receive():
 			switch m := event.(type) {
 			case guac.MessageEvent:
+				jot.Print("qbot.listen received message: ", m)
 				directedAtUs := strings.HasPrefix(m.Text, name) || strings.HasPrefix(m.Text, "<@"+client.ID()+">")
+				jot.Print("qbot.listen message directed at us? ", name)
 				if directedAtUs {
+					jot.Printf("qbot.listen received public message from %s in channel %s: %v", m.User, m.Channel, m.Text)
 					_, m.Text = util.StringPop(m.Text)
 					messageChan <- m
 				} else if util.IsPrivateChannel(m.Channel) {
+					jot.Printf("qbot.listen received private message from %s in channel %s: %v", m.User, m.Channel, m.Text)
 					messageChan <- m
 				}
 

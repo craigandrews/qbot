@@ -54,7 +54,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 		response := ""
 
 		if util.IsPrivateChannel(channel) {
-			jot.Print("message dispatch: private message ", m)
+			jot.Printf("message dispatch: private message %s with cmd %s and args %v", m.Text, cmd, args)
 			switch cmd {
 			case "list":
 				response = commands.List(q)
@@ -65,7 +65,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 			}
 
 		} else {
-			jot.Print("message dispatch: public message ", m)
+			jot.Printf("message dispatch: public message %s with cmd %s and args %v", m.Text, cmd, args)
 			switch cmd {
 			case "join":
 				q, response = commands.Join(q, m.User, args)
