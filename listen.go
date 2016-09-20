@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -21,13 +22,20 @@ func listen(name string, client guac.RealTimeClient,
 		waitGroup.Done()
 	}()
 
+	events := receive(client, done, waitGroup)
 	for {
 		jot.Print("qbot.listen awaiting event")
 		select {
 		case <-done:
 			return
 
-		case event := <-client.Receive():
+		case event, ok := <-events:
+			if !ok {
+				log.Print("Incoming event stream closed")
+				jot.Print("qbot.listen: closing done channel")
+				close(done)
+				return
+			}
 			switch m := event.(type) {
 			case guac.MessageEvent:
 				jot.Print("qbot.listen received message: ", m)
@@ -54,4 +62,42 @@ func listen(name string, client guac.RealTimeClient,
 			client.Ping()
 		}
 	}
+}
+
+func receive(client guac.RealTimeClient, done chan struct{}, waitGroup *sync.WaitGroup) (events chan interface{}) {
+	events = make(chan interface{})
+	jot.Print("qbot.receive started")
+
+	waitGroup.Add(1)
+	go func() {
+		defer func() {
+			close(events)
+			waitGroup.Done()
+			jot.Print("qbot.receive done")
+		}()
+
+		for {
+			select {
+			case <-done:
+				return
+
+			default:
+				event, err := client.Receive()
+				if err != nil {
+					log.Print("Error receiving event: ", err)
+					return
+				}
+
+				if event == nil {
+					log.Print("Nil event received")
+					return
+				}
+
+				jot.Print("qbot.receive: received ", event)
+				events <- event
+			}
+		}
+	}()
+
+	return
 }

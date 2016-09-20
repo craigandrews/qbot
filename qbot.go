@@ -88,11 +88,13 @@ func main() {
 	signal.Notify(sig, syscall.SIGKILL)
 
 	// Wait for a signal
-	s := <-sig
-	log.Printf("Received %s signal - shutting down", s)
-
-	jot.Print("qbot: closing done channel")
-	close(done)
+	select {
+	case <-done:
+	case s := <-sig:
+		log.Printf("Received %s signal - shutting down", s)
+		jot.Print("qbot: closing done channel")
+		close(done)
+	}
 
 	jot.Print("qbot: closing connection")
 	client.Close()
