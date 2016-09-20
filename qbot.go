@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
@@ -47,7 +46,7 @@ func main() {
 	done := make(chan struct{})
 
 	// Connect to Slack
-	client, err := guac.New(token).PersistentRealTime(5 * time.Minute)
+	client, err := guac.New(token).RealTime()
 	log.Print("Connected to slack as ", client.Name())
 	if err != nil {
 		log.Fatal("Error connecting to Slack ", err)
@@ -78,8 +77,7 @@ func main() {
 
 	// Dispatch incoming events
 	jot.Println("qbot: ready to receive events")
-	waitGroup.Add(1)
-	go listen(name, client, messageChan, userChan, done, &waitGroup)
+	abort := listen(name, client, messageChan, userChan, done, &waitGroup)
 
 	// Wait for signals to stop
 	sig := make(chan os.Signal, 1)
@@ -89,12 +87,14 @@ func main() {
 
 	// Wait for a signal
 	select {
-	case <-done:
+	case <-abort:
+		log.Print("Execution aborted - shutting down")
 	case s := <-sig:
 		log.Printf("Received %s signal - shutting down", s)
-		jot.Print("qbot: closing done channel")
-		close(done)
 	}
+
+	jot.Print("qbot: closing done channel")
+	close(done)
 
 	jot.Print("qbot: closing connection")
 	client.Close()
