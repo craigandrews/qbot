@@ -12,18 +12,21 @@ import (
 	"github.com/doozr/qbot/util"
 )
 
-func listen(name string, client guac.RealTimeClient,
+func listen(name string, client guac.RealTimeClient, timeout time.Duration,
 	messageChan dispatch.MessageChan, userChan dispatch.UserChan,
 	done chan struct{}, waitGroup *sync.WaitGroup) (abort chan struct{}) {
 
 	abort = make(chan struct{})
+	lastEvent := time.Now()
 
 	jot.Print("qbot.listen started")
 	waitGroup.Add(1)
 	go func() {
 		defer func() {
-			jot.Print("qbot.listen done")
+			jot.Print("qbot.listen shutting down")
+			close(abort)
 			waitGroup.Done()
+			jot.Print("qbot.listen done")
 		}()
 
 		events := receive(client, done, waitGroup)
@@ -37,9 +40,10 @@ func listen(name string, client guac.RealTimeClient,
 				if !ok {
 					log.Print("Incoming event stream closed")
 					jot.Print("qbot.listen: closing abort channel")
-					close(abort)
 					return
 				}
+				lastEvent = time.Now()
+
 				switch m := event.(type) {
 				case guac.MessageEvent:
 					jot.Print("qbot.listen received message: ", m)
@@ -62,6 +66,10 @@ func listen(name string, client guac.RealTimeClient,
 				}
 
 			case <-time.After(30 * time.Second):
+				if time.Since(lastEvent) > timeout {
+					log.Printf("No activity for %s - shutting down", timeout)
+					return
+				}
 				jot.Print("qbot.listen: ping")
 				client.Ping()
 			}

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
@@ -47,10 +48,10 @@ func main() {
 
 	// Connect to Slack
 	client, err := guac.New(token).RealTime()
-	log.Print("Connected to slack as ", client.Name())
 	if err != nil {
 		log.Fatal("Error connecting to Slack ", err)
 	}
+	log.Print("Connected to slack as ", client.Name())
 
 	// Instantiate state
 	userCache := getUserList(client.WebClient)
@@ -77,7 +78,7 @@ func main() {
 
 	// Dispatch incoming events
 	jot.Println("qbot: ready to receive events")
-	abort := listen(name, client, messageChan, userChan, done, &waitGroup)
+	abort := listen(name, client, 60*time.Second, messageChan, userChan, done, &waitGroup)
 
 	// Wait for signals to stop
 	sig := make(chan os.Signal, 1)
