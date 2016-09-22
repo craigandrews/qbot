@@ -24,6 +24,7 @@ func Message(name string, q queue.Queue, commands command.Command,
 	for m := range messageChan {
 		text := strings.Trim(m.Text, " \t\r\n")
 		cmd, args := util.StringPop(text)
+		cmd = strings.ToLower(cmd)
 
 		channel := m.Channel
 		oldQ := q
