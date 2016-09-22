@@ -54,7 +54,7 @@ func main() {
 	log.Print("Connected to slack as ", client.Name())
 
 	// Instantiate state
-	userCache := getUserList(client.WebClient)
+	userCache := getUserList(client)
 	name := client.Name()
 	jot.Print("qbot: name is ", name)
 	q := loadQueue(filename)
