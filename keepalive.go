@@ -8,8 +8,8 @@ import (
 	"github.com/doozr/jot"
 )
 
-// keepalive sends a ping request every 30 seconds
-func keepalive(client guac.RealTimeClient, done DoneChan, waitGroup *sync.WaitGroup) {
+// startKeepAlive sends a ping request every 30 seconds
+func startKeepAlive(client guac.RealTimeClient, done DoneChan, waitGroup *sync.WaitGroup) {
 	jot.Print("qbot.keepalive starting up")
 	waitGroup.Add(1)
 	go func() {

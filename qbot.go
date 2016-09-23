@@ -71,7 +71,7 @@ func main() {
 	userChangeHandler := createUserChangeHandler(userCache)
 
 	// start keepalive
-	keepalive(client, done, &waitGroup)
+	startKeepAlive(client, done, &waitGroup)
 
 	// Receive incoming events
 	receiver := createReceiver(client)
