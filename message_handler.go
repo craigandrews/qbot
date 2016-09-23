@@ -1,4 +1,4 @@
-package dispatch
+package main
 
 import (
 	"strings"
@@ -7,14 +7,28 @@ import (
 	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/util"
 )
 
-// MessageHandler handles an incoming message event
-type MessageHandler func(guac.MessageEvent) error
+func stringPop(m string) (first string, rest string) {
+	parts := strings.SplitN(m, " ", 2)
+
+	if len(parts) < 1 {
+		return
+	}
+	first = parts[0]
+
+	rest = ""
+	if len(parts) > 1 {
+		rest = strings.Trim(parts[1], " \t\r\n")
+	}
+
+	return
+}
 
 // NewMessageHandler creates a new MessageHandler
-func NewMessageHandler(id string, name string, q queue.Queue, commands command.Command, notify Notifier, persist Persister) MessageHandler {
+func createMessageHandler(id string, name string, q queue.Queue, commands command.Command,
+	notify Notifier, persist Persister) MessageHandler {
+
 	isDirectedAtUs := func(id string, name string, message guac.MessageEvent) bool {
 		return strings.HasPrefix(message.Text, name) || strings.HasPrefix(message.Text, "<@"+id+">")
 	}
@@ -30,7 +44,7 @@ func NewMessageHandler(id string, name string, q queue.Queue, commands command.C
 		response := ""
 
 		if isPrivateChannel(channel) {
-			cmd, args := util.StringPop(text)
+			cmd, args := stringPop(text)
 			cmd = strings.ToLower(cmd)
 
 			jot.Printf("message dispatch: private message %s with cmd %s and args %v", m.Text, cmd, args)
@@ -44,8 +58,8 @@ func NewMessageHandler(id string, name string, q queue.Queue, commands command.C
 			}
 
 		} else if isDirectedAtUs(id, name, m) {
-			_, text = util.StringPop(text)
-			cmd, args := util.StringPop(text)
+			_, text = stringPop(text)
+			cmd, args := stringPop(text)
 			cmd = strings.ToLower(cmd)
 
 			jot.Printf("message dispatch: public message %s with cmd %s and args %v", m.Text, cmd, args)
@@ -63,7 +77,7 @@ func NewMessageHandler(id string, name string, q queue.Queue, commands command.C
 			case "barge":
 				q, response = commands.Barge(q, m.User, args)
 			case "boot":
-				id, reason := util.StringPop(args)
+				id, reason := stringPop(args)
 				q, response = commands.Boot(q, m.User, id, reason)
 			case "oust":
 				q, response = commands.Oust(q, m.User, args)
@@ -79,7 +93,10 @@ func NewMessageHandler(id string, name string, q queue.Queue, commands command.C
 		}
 
 		if response != "" {
-			err = notify(Notification{channel, response})
+			err = notify(Notification{
+				Channel: channel,
+				Message: response,
+			})
 			if err != nil {
 				return
 			}

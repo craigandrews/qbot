@@ -1,4 +1,4 @@
-package dispatch
+package main
 
 import (
 	"log"
@@ -7,11 +7,8 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
-// UserChangeHandler handles incoming user change events
-type UserChangeHandler func(guac.UserChangeEvent) error
-
 // NewUserChangeHandler creates a new user change handler
-func NewUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
+func createUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
 	return func(userChange guac.UserChangeEvent) error {
 		oldName := userCache.GetUserName(userChange.ID)
 		userCache.UpdateUserName(userChange.ID, userChange.Name)

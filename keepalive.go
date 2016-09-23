@@ -8,7 +8,7 @@ import (
 	"github.com/doozr/jot"
 )
 
-func keepalive(client guac.RealTimeClient, done chan struct{}, waitGroup *sync.WaitGroup) {
+func keepalive(client guac.RealTimeClient, done DoneChan, waitGroup *sync.WaitGroup) {
 	jot.Print("qbot.keepalive starting up")
 	defer func() {
 		waitGroup.Done()

@@ -1,4 +1,4 @@
-package dispatch
+package main
 
 import (
 	"log"
@@ -7,11 +7,8 @@ import (
 	"github.com/doozr/qbot/queue"
 )
 
-// Persister handles exporting the queue to persistent media
-type Persister func(queue.Queue) error
-
 // NewPersister creates a new Persister
-func NewPersister(filename string) Persister {
+func createPersister(filename string) Persister {
 	var oldQ queue.Queue
 	return func(q queue.Queue) (err error) {
 		jot.Print("persist: queue to save ", q)

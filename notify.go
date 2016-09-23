@@ -1,19 +1,20 @@
-package dispatch
+package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/doozr/guac"
-	"github.com/doozr/qbot/util"
 )
 
-// Notifier sends notifications to channels or users
-type Notifier func(Notification) error
+func isUser(channel string) bool {
+	return strings.HasPrefix(channel, "U")
+}
 
 // NewNotifier creates a new Notifier
-func NewNotifier(client guac.RealTimeClient) Notifier {
+func createNotifier(client guac.RealTimeClient) Notifier {
 	return func(notification Notification) error {
-		if util.IsUser(notification.Channel) {
+		if isUser(notification.Channel) {
 			channel, err := client.IMOpen(notification.Channel)
 			if err != nil {
 				return fmt.Errorf("Could not get IM channel for user %s: %s", notification.Channel, err)

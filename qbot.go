@@ -12,7 +12,6 @@ import (
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
-	"github.com/doozr/qbot/dispatch"
 	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
@@ -20,6 +19,9 @@ import (
 
 // Version is the current release version
 var Version string
+
+// DoneChan is a channel used for informing go routines to shut down
+type DoneChan chan struct{}
 
 func main() {
 	if len(os.Args) < 3 {
@@ -44,7 +46,7 @@ func main() {
 
 	// Synchronisation primitives
 	waitGroup := sync.WaitGroup{}
-	done := make(chan struct{})
+	done := make(DoneChan)
 
 	// Connect to Slack
 	client, err := guac.New(token).RealTime()
@@ -64,26 +66,30 @@ func main() {
 	commands := command.New(notifications, userCache)
 
 	// Create dispatchers
-	notify := dispatch.NewNotifier(client)
-	persist := dispatch.NewPersister(filename)
-	messageHandler := dispatch.NewMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
-	userChangeHandler := dispatch.NewUserChangeHandler(userCache)
+	notify := createNotifier(client)
+	persist := createPersister(filename)
+	messageHandler := createMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
+	userChangeHandler := createUserChangeHandler(userCache)
 
 	// keepalive
 	waitGroup.Add(1)
 	go keepalive(client, done, &waitGroup)
 
+	// Receive incoming events
+	receiver := createReceiver(client)
+	events := receive(receiver, done, &waitGroup)
+
 	// Dispatch incoming events
 	jot.Println("qbot: ready to receive events")
-	dispatcher := dispatch.New(messageHandler, userChangeHandler)
-	abort := dispatcher.Listen(client, 1*time.Minute, done, &waitGroup)
+	dispatcher := createDispatcher(client, 1*time.Minute, messageHandler, userChangeHandler)
+	abort := dispatch(dispatcher, events, done, &waitGroup)
 
 	// Wait for signals to stop
 	sig := addSignalHandler()
 
 	// Wait for a signal
 	select {
-	case err = <-abort:
+	case err := <-abort:
 		if err != nil {
 			log.Print("Error: ", err)
 		}
@@ -92,16 +98,52 @@ func main() {
 		log.Printf("Received %s signal - shutting down", s)
 	}
 
-	jot.Print("qbot: closing done channel")
 	close(done)
-
-	jot.Print("qbot: closing connection")
 	client.Close()
-
-	jot.Print("qbot: waiting for dispatch to terminate")
 	waitGroup.Wait()
 
 	jot.Print("qbot: shutdown complete")
+}
+
+func receive(receiver Receiver, done DoneChan, waitGroup *sync.WaitGroup) (events guac.EventChan) {
+	events = make(guac.EventChan)
+
+	waitGroup.Add(1)
+	jot.Print("receive starting up")
+	go func() {
+		defer func() {
+			waitGroup.Done()
+			close(events)
+			jot.Print("receive done")
+		}()
+
+		err := receiver(events, done)
+		if err != nil {
+			return
+		}
+	}()
+	return
+}
+
+func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitGroup *sync.WaitGroup) (abort chan error) {
+	abort = make(chan error)
+
+	waitGroup.Add(1)
+	jot.Print("dispatch starting up")
+	go func() {
+		defer func() {
+			waitGroup.Done()
+			close(abort)
+			jot.Print("dispatch done")
+		}()
+
+		err := dispatcher(events, done)
+		if err != nil {
+			abort <- err
+			return
+		}
+	}()
+	return
 }
 
 func addSignalHandler() chan os.Signal {
