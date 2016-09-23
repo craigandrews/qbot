@@ -52,13 +52,13 @@ func main() {
 	messageHandler := createMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
 	userChangeHandler := createUserChangeHandler(userCache)
 
-	receiver := createReceiver(client)
+	receiver := createEventReceiver(client)
 	events := receive(receiver, done, &waitGroup)
 
 	startKeepAlive(client, done, &waitGroup)
 
 	log.Print("Ready")
-	dispatcher := createDispatcher(client, 1*time.Minute, messageHandler, userChangeHandler)
+	dispatcher := createDispatcher(1*time.Minute, messageHandler, userChangeHandler)
 	abort := dispatch(dispatcher, events, done, &waitGroup)
 	sig := addSignalHandler()
 	wait(sig, abort)

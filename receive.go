@@ -10,7 +10,7 @@ import (
 )
 
 // receive runs a Receiver instance in a goroutine and handles synchronisation
-func receive(receiver Receiver, done DoneChan, waitGroup *sync.WaitGroup) (events guac.EventChan) {
+func receive(receiver EventReceiver, done DoneChan, waitGroup *sync.WaitGroup) (events guac.EventChan) {
 	events = make(guac.EventChan)
 
 	waitGroup.Add(1)
@@ -28,11 +28,16 @@ func receive(receiver Receiver, done DoneChan, waitGroup *sync.WaitGroup) (event
 	return
 }
 
-// Receiver of events from Slack
-type Receiver func(guac.EventChan, DoneChan) error
+// EventReceiver receives events from Slack and pushes them to a channel
+type EventReceiver func(guac.EventChan, DoneChan) error
 
-// New receiver instance.
-func createReceiver(client guac.RealTimeClient) Receiver {
+// Receiver is anything with a Receive method for interface{}
+type Receiver interface {
+	Receive() (interface{}, error)
+}
+
+// createEventReceiver creates a default EventReceiver.
+func createEventReceiver(client Receiver) EventReceiver {
 	isDone := func(done DoneChan) bool {
 		select {
 		case <-done:

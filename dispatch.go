@@ -32,8 +32,7 @@ func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitG
 type Dispatcher func(guac.EventChan, DoneChan) error
 
 // createDispatcher creates a new Dispatcher instance
-func createDispatcher(client guac.RealTimeClient, timeout time.Duration,
-	handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
+func createDispatcher(timeout time.Duration, handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
 
 	return func(events guac.EventChan, done DoneChan) (err error) {
 		for {
