@@ -55,13 +55,12 @@ func main() {
 	receiver := createReceiver(client)
 	events := receive(receiver, done, &waitGroup)
 
-	dispatcher := createDispatcher(client, 1*time.Minute, messageHandler, userChangeHandler)
-	abort := dispatch(dispatcher, events, done, &waitGroup)
-
-	sig := addSignalHandler()
-
 	startKeepAlive(client, done, &waitGroup)
 
+	log.Print("Ready")
+	dispatcher := createDispatcher(client, 1*time.Minute, messageHandler, userChangeHandler)
+	abort := dispatch(dispatcher, events, done, &waitGroup)
+	sig := addSignalHandler()
 	wait(sig, abort)
 
 	close(done)

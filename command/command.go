@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -50,6 +51,15 @@ func (c Command) getIDFromName(name string) (id string) {
 	return
 }
 
+func (c Command) getNameIDPair(id string) (pair string) {
+	name := c.userCache.GetUserName(id)
+	return fmt.Sprintf("<%s|%s>", id, name)
+}
+
+func (c Command) logActivity(id, reason, text string) {
+	log.Printf("%s (%s) %s", c.getNameIDPair(id), reason, text)
+}
+
 // Join adds an item to the queue
 func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
 	i := queue.Item{ID: id, Reason: reason}
@@ -63,7 +73,9 @@ func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
 	}
 
 	q = q.Add(i)
+	c.logActivity(id, reason, "joined")
 	if q.Active() == i {
+		c.logActivity(id, reason, "is active")
 		return q, c.notification.JoinActive(i)
 	}
 
@@ -83,6 +95,7 @@ func (c Command) Leave(q queue.Queue, id, reason string) (queue.Queue, string) {
 
 	if q.Contains(i) {
 		q = q.Remove(i)
+		c.logActivity(id, reason, "left the queue")
 		return q, c.notification.Leave(i)
 	}
 
@@ -102,7 +115,10 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 	}
 
 	q = q.Remove(i)
+	c.logActivity(id, i.Reason, "done")
 	if len(q) > 0 {
+		n := q.Active()
+		c.logActivity(n.ID, n.Reason, "is active")
 		return q, c.notification.Done(i, q)
 	}
 	return q, c.notification.DoneNoOthers(i)
@@ -121,6 +137,9 @@ func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
 		return q, c.notification.YieldNoOthers(i)
 	}
 	q = q.Yield()
+	n := q.Active()
+	c.logActivity(id, i.Reason, "yielded")
+	c.logActivity(n.ID, n.Reason, "is active")
 	return q, c.notification.Yield(i, q)
 }
 
@@ -131,6 +150,7 @@ func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
 	if q.Active() == i {
 		return q, c.notification.JoinActive(i)
 	}
+	c.logActivity(id, reason, "barged")
 	return q, c.notification.Barge(i, q.Active())
 }
 
@@ -152,6 +172,7 @@ func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, 
 
 	if q.Contains(i) {
 		q = q.Remove(i)
+		c.logActivity(id, reason, "booted by "+c.getNameIDPair(booter))
 		return q, c.notification.Boot(booter, i)
 	}
 
@@ -180,10 +201,12 @@ func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) 
 	if ok && pendingOust.Item == i {
 		if time.Since(pendingOust.Timestamp).Seconds() < 30 && q.Active() == i {
 			q = q.Remove(i)
-
+			c.logActivity(i.ID, i.Reason, "ousted by "+c.getNameIDPair(ouster))
 			if len(q) == 0 {
 				return q, c.notification.OustNoOthers(ouster, i)
 			}
+			n := q.Active()
+			c.logActivity(n.ID, n.Reason, "is active")
 			return q, c.notification.Oust(ouster, i, q)
 		}
 	}
