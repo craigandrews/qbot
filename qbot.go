@@ -111,7 +111,7 @@ func getUserListOrDie(client guac.WebClient) (userCache *usercache.UserCache) {
 		log.Fatal(err)
 	}
 	userCache = usercache.New(users)
-	jot.Print("loaded user list: ", userCache)
+	jot.Printf("loaded user list with %d users", len(userCache.UserNames))
 	return
 }
 
