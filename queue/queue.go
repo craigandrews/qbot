@@ -1,12 +1,6 @@
 package queue
 
-import (
-	"encoding/json"
-	"io/ioutil"
-	"reflect"
-
-	"github.com/doozr/jot"
-)
+import "reflect"
 
 // Error is an error thrown when manipulating the queue
 type Error struct {
@@ -102,14 +96,4 @@ func (q Queue) Barge(i Item) Queue {
 		return Queue(append(q, w...))
 	}
 	return q.Add(i)
-}
-
-// Save serialises the queue to disk
-func (q Queue) Save(filename string) (err error) {
-	j, err := json.Marshal(q)
-	if err == nil {
-		jot.Print("queue: writing queue JSON: ", string(j))
-		err = ioutil.WriteFile(filename, j, 0644)
-	}
-	return
 }
