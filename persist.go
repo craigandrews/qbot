@@ -7,6 +7,9 @@ import (
 	"github.com/doozr/qbot/queue"
 )
 
+// Persister handles exporting the queue to persistent media
+type Persister func(queue.Queue) error
+
 // NewPersister creates a new Persister
 func createPersister(filename string) Persister {
 	var oldQ queue.Queue

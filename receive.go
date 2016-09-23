@@ -2,10 +2,31 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"sync"
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
 )
+
+// receive runs a Receiver instance in a goroutine and handles synchronisation
+func receive(receiver Receiver, done DoneChan, waitGroup *sync.WaitGroup) (events guac.EventChan) {
+	events = make(guac.EventChan)
+
+	waitGroup.Add(1)
+	jot.Print("receive starting up")
+	go func() {
+		err := receiver(events, done)
+		if err != nil {
+			log.Print("Error receiving events: ", err)
+		}
+
+		close(events)
+		jot.Print("receive done")
+		waitGroup.Done()
+	}()
+	return
+}
 
 // Receiver of events from Slack
 type Receiver func(guac.EventChan, DoneChan) error

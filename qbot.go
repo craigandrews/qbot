@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -49,10 +51,7 @@ func main() {
 	done := make(DoneChan)
 
 	// Connect to Slack
-	client, err := guac.New(token).RealTime()
-	if err != nil {
-		log.Fatal("Error connecting to Slack ", err)
-	}
+	client := connectToSlack(token)
 	log.Print("Connected to slack as ", client.Name())
 
 	// Instantiate state
@@ -71,9 +70,8 @@ func main() {
 	messageHandler := createMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
 	userChangeHandler := createUserChangeHandler(userCache)
 
-	// keepalive
-	waitGroup.Add(1)
-	go keepalive(client, done, &waitGroup)
+	// start keepalive
+	keepalive(client, done, &waitGroup)
 
 	// Receive incoming events
 	receiver := createReceiver(client)
@@ -87,17 +85,10 @@ func main() {
 	// Wait for signals to stop
 	sig := addSignalHandler()
 
-	// Wait for a signal
-	select {
-	case err := <-abort:
-		if err != nil {
-			log.Print("Error: ", err)
-		}
-		log.Print("Execution terminated - shutting down")
-	case s := <-sig:
-		log.Printf("Received %s signal - shutting down", s)
-	}
+	// Wait for a signal or an error to kill the process
+	wait(sig, abort)
 
+	// Shut it down
 	close(done)
 	client.Close()
 	waitGroup.Wait()
@@ -105,48 +96,12 @@ func main() {
 	jot.Print("qbot: shutdown complete")
 }
 
-func receive(receiver Receiver, done DoneChan, waitGroup *sync.WaitGroup) (events guac.EventChan) {
-	events = make(guac.EventChan)
-
-	waitGroup.Add(1)
-	jot.Print("receive starting up")
-	go func() {
-		err := receiver(events, done)
-		if err != nil {
-			log.Print("Error receiving events: ", err)
-		}
-
-		close(events)
-		jot.Print("receive done")
-		waitGroup.Done()
-	}()
-	return
-}
-
-func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitGroup *sync.WaitGroup) (abort chan error) {
-	abort = make(chan error)
-
-	waitGroup.Add(1)
-	jot.Print("dispatch starting up")
-	go func() {
-		err := dispatcher(events, done)
-		if err != nil {
-			abort <- err
-		}
-
-		close(abort)
-		jot.Print("dispatch done")
-		waitGroup.Done()
-	}()
-	return
-}
-
-func addSignalHandler() chan os.Signal {
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT)
-	signal.Notify(sig, syscall.SIGTERM)
-	signal.Notify(sig, syscall.SIGKILL)
-	return sig
+func connectToSlack(token string) guac.RealTimeClient {
+	client, err := guac.New(token).RealTime()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return client
 }
 
 func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
@@ -161,10 +116,35 @@ func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
 }
 
 func loadQueue(filename string) (q queue.Queue) {
-	q, err := queue.Load(filename)
-	if err != nil {
-		log.Fatalf("Error loading queue: %s", err)
+	q = queue.Queue{}
+	if _, err := os.Stat(filename); err == nil {
+		dat, err := ioutil.ReadFile(filename)
+		if err != nil {
+			log.Fatalf("Error loading queue: %s", err)
+		}
+		json.Unmarshal(dat, &q)
+		jot.Printf("loadQueue: read queue from %s: %v", filename, q)
+		log.Printf("Loaded queue from %s", filename)
 	}
-	log.Printf("Loaded queue from %s", filename)
-	return
+	return q
+}
+
+func addSignalHandler() chan os.Signal {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGKILL)
+	return sig
+}
+
+func wait(sig chan os.Signal, abort chan error) {
+	select {
+	case err := <-abort:
+		if err != nil {
+			log.Print("Error: ", err)
+		}
+		log.Print("Execution terminated - shutting down")
+	case s := <-sig:
+		log.Printf("Received %s signal - shutting down", s)
+	}
 }

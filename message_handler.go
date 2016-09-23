@@ -9,6 +9,9 @@ import (
 	"github.com/doozr/qbot/queue"
 )
 
+// MessageHandler handles an incoming message event
+type MessageHandler func(guac.MessageEvent) error
+
 func stringPop(m string) (first string, rest string) {
 	parts := strings.SplitN(m, " ", 2)
 

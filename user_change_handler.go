@@ -7,6 +7,9 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
+// UserChangeHandler handles incoming user change events
+type UserChangeHandler func(guac.UserChangeEvent) error
+
 // NewUserChangeHandler creates a new user change handler
 func createUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
 	return func(userChange guac.UserChangeEvent) error {

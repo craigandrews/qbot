@@ -3,7 +3,6 @@ package queue
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"reflect"
 
 	"github.com/doozr/jot"
@@ -27,20 +26,6 @@ type Item struct {
 
 // Queue represents a list of waiting items
 type Queue []Item
-
-// Load populates a new queue from a JSON file
-func Load(filename string) (Queue, error) {
-	q := Queue{}
-	if _, err := os.Stat(filename); err == nil {
-		dat, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return q, err
-		}
-		json.Unmarshal(dat, &q)
-		jot.Printf("queue: read queue from %s: %v", filename, q)
-	}
-	return q, nil
-}
 
 // Equal checks if the queue is the same as another queue
 func (q Queue) Equal(other Queue) bool {

@@ -7,6 +7,15 @@ import (
 	"github.com/doozr/guac"
 )
 
+// Notification represents a message to a channel
+type Notification struct {
+	Channel string
+	Message string
+}
+
+// Notifier sends notifications to channels or users
+type Notifier func(Notification) error
+
 func isUser(channel string) bool {
 	return strings.HasPrefix(channel, "U")
 }

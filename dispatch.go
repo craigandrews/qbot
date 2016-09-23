@@ -2,30 +2,31 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
-	"github.com/doozr/qbot/queue"
 )
 
-// Notification represents a message to a channel
-type Notification struct {
-	Channel string
-	Message string
+// dispatch runs a Dispatcher in a goroutine and handles synchronisation
+func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitGroup *sync.WaitGroup) (abort chan error) {
+	abort = make(chan error)
+
+	waitGroup.Add(1)
+	jot.Print("dispatch starting up")
+	go func() {
+		err := dispatcher(events, done)
+		if err != nil {
+			abort <- err
+		}
+
+		close(abort)
+		jot.Print("dispatch done")
+		waitGroup.Done()
+	}()
+	return
 }
-
-// MessageHandler handles an incoming message event
-type MessageHandler func(guac.MessageEvent) error
-
-// Notifier sends notifications to channels or users
-type Notifier func(Notification) error
-
-// Persister handles exporting the queue to persistent media
-type Persister func(queue.Queue) error
-
-// UserChangeHandler handles incoming user change events
-type UserChangeHandler func(guac.UserChangeEvent) error
 
 // Dispatcher sends incoming messages to the correct recipient
 type Dispatcher func(guac.EventChan, DoneChan) error
