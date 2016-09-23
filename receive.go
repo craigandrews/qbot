@@ -33,10 +33,22 @@ type Receiver func(guac.EventChan, DoneChan) error
 
 // New receiver instance.
 func createReceiver(client guac.RealTimeClient) Receiver {
+	isDone := func(done DoneChan) bool {
+		select {
+		case <-done:
+			return true
+		default:
+			return false
+		}
+	}
+
 	return func(events guac.EventChan, done DoneChan) (err error) {
 		var event interface{}
 		for {
 			event, err = client.Receive()
+			if isDone(done) {
+				return nil
+			}
 			if err != nil {
 				return
 			}
