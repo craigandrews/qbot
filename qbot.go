@@ -20,31 +20,20 @@ import (
 )
 
 // Version is the current release version
-var Version string
+var Version = "<unversioned build>"
 
 // DoneChan is a channel used for informing go routines to shut down
 type DoneChan chan struct{}
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: qbot <token> <data file>")
-		os.Exit(1)
-	}
-
-	if Version != "" {
-		log.Printf("Qbot version %s", Version)
-	} else {
-		log.Printf("Qbot <unversioned build>")
-	}
-
-	// Get command line parameters
-	token := os.Args[1]
-	filename := os.Args[2]
+	log.Printf("Qbot version %s", Version)
 
 	// Turn on jot if required
 	if os.Getenv("QBOT_DEBUG") == "true" {
 		jot.Enable()
 	}
+
+	token, filename := parseArgs()
 
 	// Synchronisation primitives
 	waitGroup := sync.WaitGroup{}
@@ -56,8 +45,6 @@ func main() {
 
 	// Instantiate state
 	userCache := getUserList(client)
-	name := client.Name()
-	jot.Print("qbot: name is ", name)
 	q := loadQueue(filename)
 
 	// Set up command and response processors
@@ -94,6 +81,17 @@ func main() {
 	waitGroup.Wait()
 
 	jot.Print("qbot: shutdown complete")
+}
+
+func parseArgs() (token, filename string) {
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: qbot <token> <data file>")
+		os.Exit(1)
+	}
+	// Get command line parameters
+	token = os.Args[1]
+	filename = os.Args[2]
+	return
 }
 
 func connectToSlack(token string) guac.RealTimeClient {
