@@ -33,49 +33,37 @@ func main() {
 		jot.Enable()
 	}
 
-	token, filename := parseArgs()
+	token, filename := parseCLI()
 
-	// Synchronisation primitives
 	waitGroup := sync.WaitGroup{}
 	done := make(DoneChan)
 
-	// Connect to Slack
-	client := connectToSlack(token)
-	log.Print("Connected to slack as ", client.Name())
+	q := loadQueueOrDie(filename)
 
-	// Instantiate state
-	userCache := getUserList(client)
-	q := loadQueue(filename)
+	client := connectToSlackOrDie(token)
 
-	// Set up command and response processors
+	userCache := getUserListOrDie(client)
+
 	notifications := notification.New(userCache)
 	commands := command.New(notifications, userCache)
 
-	// Create dispatchers
 	notify := createNotifier(client)
 	persist := createPersister(filename)
 	messageHandler := createMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
 	userChangeHandler := createUserChangeHandler(userCache)
 
-	// start keepalive
-	startKeepAlive(client, done, &waitGroup)
-
-	// Receive incoming events
 	receiver := createReceiver(client)
 	events := receive(receiver, done, &waitGroup)
 
-	// Dispatch incoming events
-	jot.Println("qbot: ready to receive events")
 	dispatcher := createDispatcher(client, 1*time.Minute, messageHandler, userChangeHandler)
 	abort := dispatch(dispatcher, events, done, &waitGroup)
 
-	// Wait for signals to stop
 	sig := addSignalHandler()
 
-	// Wait for a signal or an error to kill the process
+	startKeepAlive(client, done, &waitGroup)
+
 	wait(sig, abort)
 
-	// Shut it down
 	close(done)
 	client.Close()
 	waitGroup.Wait()
@@ -83,37 +71,26 @@ func main() {
 	jot.Print("qbot: shutdown complete")
 }
 
-func parseArgs() (token, filename string) {
+func parseCLI() (token, filename string) {
 	if len(os.Args) < 3 {
 		fmt.Println("Usage: qbot <token> <data file>")
 		os.Exit(1)
 	}
-	// Get command line parameters
 	token = os.Args[1]
 	filename = os.Args[2]
 	return
 }
 
-func connectToSlack(token string) guac.RealTimeClient {
+func connectToSlackOrDie(token string) guac.RealTimeClient {
 	client, err := guac.New(token).RealTime()
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Print("Connected to slack as ", client.Name())
 	return client
 }
 
-func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {
-	log.Println("Getting user list")
-	users, err := client.UsersList()
-	if err != nil {
-		log.Fatal(err)
-	}
-	userCache = usercache.New(users)
-	jot.Print("loaded user list: ", userCache)
-	return
-}
-
-func loadQueue(filename string) (q queue.Queue) {
+func loadQueueOrDie(filename string) (q queue.Queue) {
 	q = queue.Queue{}
 	if _, err := os.Stat(filename); err == nil {
 		dat, err := ioutil.ReadFile(filename)
@@ -125,6 +102,17 @@ func loadQueue(filename string) (q queue.Queue) {
 		log.Printf("Loaded queue from %s", filename)
 	}
 	return q
+}
+
+func getUserListOrDie(client guac.WebClient) (userCache *usercache.UserCache) {
+	log.Println("Getting user list")
+	users, err := client.UsersList()
+	if err != nil {
+		log.Fatal(err)
+	}
+	userCache = usercache.New(users)
+	jot.Print("loaded user list: ", userCache)
+	return
 }
 
 func addSignalHandler() chan os.Signal {
