@@ -111,16 +111,14 @@ func receive(receiver Receiver, done DoneChan, waitGroup *sync.WaitGroup) (event
 	waitGroup.Add(1)
 	jot.Print("receive starting up")
 	go func() {
-		defer func() {
-			waitGroup.Done()
-			close(events)
-			jot.Print("receive done")
-		}()
-
 		err := receiver(events, done)
 		if err != nil {
-			return
+			log.Print("Error receiving events: ", err)
 		}
+
+		close(events)
+		jot.Print("receive done")
+		waitGroup.Done()
 	}()
 	return
 }
@@ -131,17 +129,14 @@ func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitG
 	waitGroup.Add(1)
 	jot.Print("dispatch starting up")
 	go func() {
-		defer func() {
-			waitGroup.Done()
-			close(abort)
-			jot.Print("dispatch done")
-		}()
-
 		err := dispatcher(events, done)
 		if err != nil {
 			abort <- err
-			return
 		}
+
+		close(abort)
+		jot.Print("dispatch done")
+		waitGroup.Done()
 	}()
 	return
 }
