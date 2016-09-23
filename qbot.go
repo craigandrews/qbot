@@ -76,7 +76,7 @@ func main() {
 	// Dispatch incoming events
 	jot.Println("qbot: ready to receive events")
 	dispatcher := dispatch.New(messageHandler, userChangeHandler)
-	abort := dispatcher.Listen(client, 2*time.Minute, done, &waitGroup)
+	abort := dispatcher.Listen(client, 1*time.Minute, done, &waitGroup)
 
 	// Wait for signals to stop
 	sig := addSignalHandler()
