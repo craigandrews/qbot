@@ -1,36 +1,27 @@
 package dispatch
 
 import (
-	"log"
-	"sync"
+	"fmt"
 
 	"github.com/doozr/guac"
-	"github.com/doozr/jot"
 	"github.com/doozr/qbot/util"
 )
 
-// Notify handles sending messages to the Slack channel after a command runs
-func Notify(client guac.RealTimeClient, notifyChan NotifyChan, waitGroup *sync.WaitGroup) {
+// Notifier sends notifications to channels or users
+type Notifier func(Notification) error
 
-	jot.Print("notify dispatch started")
-	defer func() {
-		waitGroup.Done()
-		jot.Print("notify dispatch done")
-	}()
-
-	for n := range notifyChan {
-		if util.IsUser(n.Channel) {
-			channel, err := client.IMOpen(n.Channel)
+// NewNotifier creates a new Notifier
+func NewNotifier(client guac.RealTimeClient) Notifier {
+	return func(notification Notification) error {
+		if util.IsUser(notification.Channel) {
+			channel, err := client.IMOpen(notification.Channel)
 			if err != nil {
-				log.Printf("Could not get IM channel for user %s: %s", n.Channel, err)
-			} else {
-				n.Channel = channel
+				return fmt.Errorf("Could not get IM channel for user %s: %s", notification.Channel, err)
 			}
+			notification.Channel = channel
 		}
 
-		err := client.PostMessage(n.Channel, n.Message)
-		if err != nil {
-			log.Printf("Error when sending: %s", err)
-		}
+		err := client.PostMessage(notification.Channel, notification.Message)
+		return err
 	}
 }

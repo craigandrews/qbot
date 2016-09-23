@@ -63,33 +63,31 @@ func main() {
 	notifications := notification.New(userCache)
 	commands := command.New(notifications, userCache)
 
-	// Create channels
-	messageChan := make(dispatch.MessageChan, 100)
-	saveChan := make(dispatch.SaveChan, 5)
-	notifyChan := make(dispatch.NotifyChan, 5)
-	userChan := make(dispatch.UserChan, 5)
+	// Create dispatchers
+	notify := dispatch.NewNotifier(client)
+	persist := dispatch.NewPersister(filename)
+	messageHandler := dispatch.NewMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
+	userChangeHandler := dispatch.NewUserChangeHandler(userCache)
 
-	// Start goroutines
-	waitGroup.Add(4)
-	go dispatch.Message(name, q, commands, messageChan, saveChan, notifyChan, &waitGroup)
-	go dispatch.Save(filename, saveChan, &waitGroup)
-	go dispatch.Notify(client, notifyChan, &waitGroup)
-	go dispatch.User(userCache, userChan, &waitGroup)
+	// keepalive
+	waitGroup.Add(1)
+	go keepalive(client, done, &waitGroup)
 
 	// Dispatch incoming events
 	jot.Println("qbot: ready to receive events")
-	abort := listen(name, client, 60*time.Second, messageChan, userChan, done, &waitGroup)
+	dispatcher := dispatch.New(messageHandler, userChangeHandler)
+	abort := dispatcher.Listen(client, 2*time.Minute, done, &waitGroup)
 
 	// Wait for signals to stop
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT)
-	signal.Notify(sig, syscall.SIGTERM)
-	signal.Notify(sig, syscall.SIGKILL)
+	sig := addSignalHandler()
 
 	// Wait for a signal
 	select {
-	case <-abort:
-		log.Print("Execution aborted - shutting down")
+	case err = <-abort:
+		if err != nil {
+			log.Print("Error: ", err)
+		}
+		log.Print("Execution terminated - shutting down")
 	case s := <-sig:
 		log.Printf("Received %s signal - shutting down", s)
 	}
@@ -100,16 +98,18 @@ func main() {
 	jot.Print("qbot: closing connection")
 	client.Close()
 
-	jot.Println("qbot: closing dispatch channels")
-	close(messageChan)
-	close(saveChan)
-	close(notifyChan)
-	close(userChan)
-
 	jot.Print("qbot: waiting for dispatch to terminate")
 	waitGroup.Wait()
 
 	jot.Print("qbot: shutdown complete")
+}
+
+func addSignalHandler() chan os.Signal {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGKILL)
+	return sig
 }
 
 func getUserList(client guac.WebClient) (userCache *usercache.UserCache) {

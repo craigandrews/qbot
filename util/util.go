@@ -29,10 +29,6 @@ func StringPop(m string) (first string, rest string) {
 	return
 }
 
-func IsPrivateChannel(channel string) bool {
-	return strings.HasPrefix(channel, "D")
-}
-
 func IsUser(channel string) bool {
 	return strings.HasPrefix(channel, "U")
 }

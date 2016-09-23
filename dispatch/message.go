@@ -2,35 +2,37 @@ package dispatch
 
 import (
 	"strings"
-	"sync"
 
+	"github.com/doozr/guac"
 	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/util"
 )
 
-// Message handles executing user commands and passing on the results
-func Message(name string, q queue.Queue, commands command.Command,
-	messageChan MessageChan, saveChan SaveChan, notifyChan NotifyChan,
-	waitGroup *sync.WaitGroup) {
+// MessageHandler handles an incoming message event
+type MessageHandler func(guac.MessageEvent) error
 
-	jot.Print("message dispatch started")
-	defer func() {
-		waitGroup.Done()
-		jot.Print("message dispatch done")
-	}()
+// NewMessageHandler creates a new MessageHandler
+func NewMessageHandler(id string, name string, q queue.Queue, commands command.Command, notify Notifier, persist Persister) MessageHandler {
+	isDirectedAtUs := func(id string, name string, message guac.MessageEvent) bool {
+		return strings.HasPrefix(message.Text, name) || strings.HasPrefix(message.Text, "<@"+id+">")
+	}
 
-	for m := range messageChan {
+	isPrivateChannel := func(channel string) bool {
+		return strings.HasPrefix(channel, "D")
+	}
+
+	return func(m guac.MessageEvent) (err error) {
 		text := strings.Trim(m.Text, " \t\r\n")
-		cmd, args := util.StringPop(text)
-		cmd = strings.ToLower(cmd)
 
 		channel := m.Channel
-		oldQ := q
 		response := ""
 
-		if util.IsPrivateChannel(channel) {
+		if isPrivateChannel(channel) {
+			cmd, args := util.StringPop(text)
+			cmd = strings.ToLower(cmd)
+
 			jot.Printf("message dispatch: private message %s with cmd %s and args %v", m.Text, cmd, args)
 			switch cmd {
 			case "list":
@@ -41,7 +43,11 @@ func Message(name string, q queue.Queue, commands command.Command,
 				response = commands.MoreHelp(name)
 			}
 
-		} else {
+		} else if isDirectedAtUs(id, name, m) {
+			_, text = util.StringPop(text)
+			cmd, args := util.StringPop(text)
+			cmd = strings.ToLower(cmd)
+
 			jot.Printf("message dispatch: public message %s with cmd %s and args %v", m.Text, cmd, args)
 			switch cmd {
 			case "join":
@@ -73,11 +79,14 @@ func Message(name string, q queue.Queue, commands command.Command,
 		}
 
 		if response != "" {
-			if !q.Equal(oldQ) {
-				util.LogMultiLine(response)
-				saveChan <- q
+			err = notify(Notification{channel, response})
+			if err != nil {
+				return
 			}
-			notifyChan <- Notification{channel, response}
 		}
+
+		err = persist(q)
+
+		return
 	}
 }

@@ -2,27 +2,24 @@ package dispatch
 
 import (
 	"log"
-	"sync"
 
-	"github.com/doozr/jot"
+	"github.com/doozr/guac"
+	"github.com/doozr/qbot/usercache"
 )
 
-// Save handles serialising the queue to disk
-func Save(filename string, saveChan SaveChan, waitGroup *sync.WaitGroup) {
+// UserChangeHandler handles incoming user change events
+type UserChangeHandler func(guac.UserChangeEvent) error
 
-	jot.Print("save dispatch started")
-	defer func() {
-		waitGroup.Done()
-		jot.Print("save dispatch done")
-	}()
-
-	for q := range saveChan {
-		jot.Print("save dispath: queue to save ", q)
-		err := q.Save(filename)
-		if err != nil {
-			log.Printf("Error saving file to %s: %s", filename, err)
-		} else {
-			jot.Print("save dispatch: saved to ", filename)
+// NewUserChangeHandler creates a new user change handler
+func NewUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
+	return func(userChange guac.UserChangeEvent) error {
+		oldName := userCache.GetUserName(userChange.ID)
+		userCache.UpdateUserName(userChange.ID, userChange.Name)
+		if oldName == "" {
+			log.Printf("New user %s cached", userChange.Name)
+		} else if oldName != userChange.Name {
+			log.Printf("User %s renamed to %s", oldName, userChange.Name)
 		}
+		return nil
 	}
 }

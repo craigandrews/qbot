@@ -2,28 +2,28 @@ package dispatch
 
 import (
 	"log"
-	"sync"
 
 	"github.com/doozr/jot"
-	"github.com/doozr/qbot/usercache"
+	"github.com/doozr/qbot/queue"
 )
 
-// User handles user renaming in the user cache
-func User(userCache *usercache.UserCache, userUpdateChan UserChan, waitGroup *sync.WaitGroup) {
+// Persister handles exporting the queue to persistent media
+type Persister func(queue.Queue) error
 
-	jot.Print("user dispatch started")
-	defer func() {
-		waitGroup.Done()
-		jot.Print("user dispatch done")
-	}()
-
-	for u := range userUpdateChan {
-		oldName := userCache.GetUserName(u.ID)
-		userCache.UpdateUserName(u.ID, u.Name)
-		if oldName == "" {
-			log.Printf("New user %s cached", u.Name)
-		} else if oldName != u.Name {
-			log.Printf("User %s renamed to %s", oldName, u.Name)
+// NewPersister creates a new Persister
+func NewPersister(filename string) Persister {
+	var oldQ queue.Queue
+	return func(q queue.Queue) (err error) {
+		jot.Print("persist: queue to save ", q)
+		if !oldQ.Equal(q) {
+			err = q.Save(filename)
+			if err != nil {
+				log.Printf("Error saving file to %s: %s", filename, err)
+				return
+			}
 		}
+		oldQ = q
+		jot.Print("persist: saved to ", filename)
+		return
 	}
 }
