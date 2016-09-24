@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/doozr/jot"
 	"github.com/doozr/qbot/queue"
@@ -12,10 +13,11 @@ import (
 // Persister handles exporting the queue to persistent media
 type Persister func(queue.Queue) error
 
-// NewPersister creates a new Persister
-func createPersister(filename string) Persister {
-	var oldQ queue.Queue
+// WriteFile is a type to allow replacement of the WriteFile function for reasons
+type WriteFile func(string, []byte, os.FileMode) error
 
+// NewPersister creates a new Persister
+func createPersister(writeFile WriteFile, filename string, oldQ queue.Queue) Persister {
 	return func(q queue.Queue) (err error) {
 		jot.Print("persist: queue to save ", q)
 		if oldQ.Equal(q) {

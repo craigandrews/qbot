@@ -48,7 +48,7 @@ func main() {
 	commands := command.New(notifications, userCache)
 
 	notify := createNotifier(client)
-	persist := createPersister(filename)
+	persist := createPersister(ioutil.WriteFile, filename, q)
 	messageHandler := createMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
 	userChangeHandler := createUserChangeHandler(userCache)
 
