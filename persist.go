@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -30,8 +29,8 @@ func createPersister(writeFile WriteFile, filename string, oldQ queue.Queue) Per
 			return
 		}
 
-		jot.Print("queue: writing queue JSON: ", string(j))
-		err = ioutil.WriteFile(filename, j, 0644)
+		jot.Printf("queue: writing queue JSON %v to %s", string(j), filename)
+		err = writeFile(filename, j, 0644)
 		if err != nil {
 			log.Printf("Error saving file to %s: %s", filename, err)
 			return
