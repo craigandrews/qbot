@@ -58,7 +58,7 @@ func TestDispatcherSendsMessagesToMessageHandler(t *testing.T) {
 		close(done)
 		return nil
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		t.Fatal("Unexpected call to UserChangeHandler")
 		return nil
 	}
@@ -87,7 +87,7 @@ func TestDispatcherReturnsErrorIfMessageFails(t *testing.T) {
 	handleMessage := func(event guac.MessageEvent) error {
 		return fmt.Errorf("Error!")
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		t.Fatal("Unexpected call to UserChangeHandler")
 		return nil
 	}
@@ -108,13 +108,13 @@ func TestDispatcherReturnsErrorIfMessageFails(t *testing.T) {
 func TestDispatcherSendsUserChangesToUserChangeHandler(t *testing.T) {
 	done := make(DoneChan)
 	events := make(guac.EventChan)
-	var received *guac.UserChangeEvent
+	var received *guac.UserInfo
 
 	handleMessage := func(event guac.MessageEvent) error {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		if received != nil {
 			t.Fatal("Already received a user change ", event)
 		}
@@ -148,7 +148,7 @@ func TestDispatcherReturnsErrorIfUserChangeFails(t *testing.T) {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		return fmt.Errorf("Error!")
 	}
 	dispatcher := createDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
@@ -173,7 +173,7 @@ func TestDispatcherReturnsErrorOnTimeout(t *testing.T) {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
@@ -193,7 +193,7 @@ func TestDispatcherReturnsNoErrorIfDone(t *testing.T) {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
@@ -214,7 +214,7 @@ func TestDispatcherSwallowsUnknownEvents(t *testing.T) {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
-	handleUserChange := func(event guac.UserChangeEvent) error {
+	handleUserChange := func(event guac.UserInfo) error {
 		t.Fatal("Unexpected call to MessageHandler")
 		return nil
 	}
