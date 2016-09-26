@@ -4,12 +4,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/doozr/guac"
 	"github.com/doozr/jot"
 )
 
+// Pinger is a thing that pings
+type Pinger func() error
+
+// After is a thing that returns a channel that emits the time after a duration
+type After func(time.Duration) <-chan time.Time
+
 // startKeepAlive sends a ping request every 30 seconds
-func startKeepAlive(client guac.RealTimeClient, done DoneChan, waitGroup *sync.WaitGroup) {
+func startKeepAlive(ping Pinger, after After, done DoneChan, waitGroup *sync.WaitGroup) {
 	jot.Print("qbot.keepalive starting up")
 	waitGroup.Add(1)
 	go func() {
@@ -19,9 +24,9 @@ func startKeepAlive(client guac.RealTimeClient, done DoneChan, waitGroup *sync.W
 				jot.Print("qbot.keepalive done")
 				waitGroup.Done()
 				return
-			case <-time.After(30 * time.Second):
+			case <-after(30 * time.Second):
 				jot.Print("keepalive: ping")
-				client.Ping()
+				ping()
 			}
 		}
 	}()

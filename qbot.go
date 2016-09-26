@@ -55,7 +55,7 @@ func main() {
 	receiver := createEventReceiver(client)
 	events := receive(receiver, done, &waitGroup)
 
-	startKeepAlive(client, done, &waitGroup)
+	startKeepAlive(client.Ping, time.After, done, &waitGroup)
 
 	log.Print("Ready")
 	dispatcher := createDispatcher(1*time.Minute, messageHandler, userChangeHandler)
