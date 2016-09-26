@@ -45,12 +45,15 @@ func main() {
 	userCache := getUserListOrDie(client)
 
 	notifications := notification.New(userCache)
-	commands := command.New(notifications, userCache)
+	commands := command.New(client.Name(), notifications, userCache)
 
 	notify := createNotifier(client.IMOpen, client.PostMessage)
 	persist := createPersister(ioutil.WriteFile, filename, q)
-	messageHandler := createMessageHandler(client.ID(), client.Name(), q, commands, notify, persist)
 	userChangeHandler := createUserChangeHandler(userCache)
+
+	publicHandler := createMessageHandler(q, publicCommands(commands), notify, persist)
+	privateHandler := createMessageHandler(q, privateCommands(commands), notify, persist)
+	messageHandler := createMessageDirector(client.ID(), client.Name(), publicHandler, privateHandler)
 
 	receiver := createEventReceiver(client)
 	events := receive(receiver, done, &waitGroup)

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"testing"
+
+	"github.com/doozr/qbot/command"
 )
 
 func TestNotifySuccess(t *testing.T) {
@@ -19,7 +21,7 @@ func TestNotifySuccess(t *testing.T) {
 	}
 
 	notify := createNotifier(openIM, postMessage)
-	err := notify(Notification{
+	err := notify(command.Notification{
 		Channel: "C123456",
 		Message: "This is a message",
 	})
@@ -52,7 +54,7 @@ func TestNotifyUserSuccess(t *testing.T) {
 	}
 
 	notify := createNotifier(openIM, postMessage)
-	err := notify(Notification{
+	err := notify(command.Notification{
 		Channel: "U654321",
 		Message: "This is a message",
 	})
@@ -79,7 +81,7 @@ func TestErrorOnChannelOpenFailure(t *testing.T) {
 	}
 
 	notify := createNotifier(openIM, postMessage)
-	err := notify(Notification{
+	err := notify(command.Notification{
 		Channel: "U654321",
 		Message: "This is a message",
 	})
@@ -98,7 +100,7 @@ func TestErrorOnPostFailure(t *testing.T) {
 	}
 
 	notify := createNotifier(openIM, postMessage)
-	err := notify(Notification{
+	err := notify(command.Notification{
 		Channel: "C123456",
 		Message: "This is a message",
 	})

@@ -9,6 +9,7 @@ import (
 	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
+	"github.com/doozr/qbot/util"
 )
 
 // PendingOust contains an oust request that must be fulfilled
@@ -17,16 +18,26 @@ type PendingOust struct {
 	Timestamp time.Time
 }
 
+// CmdFn is a function for a command
+type CmdFn func(q queue.Queue, channel string, user string, args string) (queue.Queue, Notification)
+
+// Notification represents a message to a channel
+type Notification struct {
+	Channel string
+	Message string
+}
+
 // Command provides the API to the various commands supported by the bot
 type Command struct {
+	name         string
 	notification notification.Notification
 	userCache    *usercache.UserCache
 	pendingOusts map[string]PendingOust
 }
 
 // New returns a new Command instance
-func New(n notification.Notification, uc *usercache.UserCache) Command {
-	c := Command{n, uc, make(map[string]PendingOust)}
+func New(name string, n notification.Notification, uc *usercache.UserCache) Command {
+	c := Command{name, n, uc, make(map[string]PendingOust)}
 	return c
 }
 
@@ -61,57 +72,57 @@ func (c Command) logActivity(id, reason, text string) {
 }
 
 // Join adds an item to the queue
-func (c Command) Join(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := queue.Item{ID: id, Reason: reason}
+func (c Command) Join(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+	i := queue.Item{ID: id, Reason: args}
 
 	if i.Reason == "" {
-		return q, c.notification.JoinNoReason(i)
+		return q, Notification{ch, c.notification.JoinNoReason(i)}
 	}
 
 	if q.Contains(i) {
-		return q, ""
+		return q, Notification{ch, ""}
 	}
 
 	q = q.Add(i)
-	c.logActivity(id, reason, "joined")
+	c.logActivity(id, args, "joined")
 	if q.Active() == i {
-		c.logActivity(id, reason, "is active")
-		return q, c.notification.JoinActive(i)
+		c.logActivity(id, args, "is active")
+		return q, Notification{ch, c.notification.JoinActive(i)}
 	}
 
-	return q, c.notification.Join(i)
+	return q, Notification{ch, c.notification.Join(i)}
 }
 
 // Leave removes an item from the queue
-func (c Command) Leave(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i, ok := c.findItem(q, id, reason)
+func (c Command) Leave(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+	i, ok := c.findItem(q, id, args)
 	if !ok {
-		return q, c.notification.LeaveNoEntry(id, reason)
+		return q, Notification{ch, c.notification.LeaveNoEntry(id, args)}
 	}
 
 	if q.Active() == i {
-		return q, c.notification.LeaveActive(i)
+		return q, Notification{ch, c.notification.LeaveActive(i)}
 	}
 
 	if q.Contains(i) {
 		q = q.Remove(i)
-		c.logActivity(id, reason, "left the queue")
-		return q, c.notification.Leave(i)
+		c.logActivity(id, args, "left the queue")
+		return q, Notification{ch, c.notification.Leave(i)}
 	}
 
-	return q, ""
+	return q, Notification{ch, ""}
 }
 
 // Done removes the active user from the queue
-func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
+func (c Command) Done(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
-		return q, ""
+		return q, Notification{ch, ""}
 	}
 
 	i := q.Active()
 
 	if i.ID != id {
-		return q, c.notification.DoneNotActive(id)
+		return q, Notification{ch, c.notification.DoneNotActive(id)}
 	}
 
 	q = q.Remove(i)
@@ -119,80 +130,81 @@ func (c Command) Done(q queue.Queue, id string) (queue.Queue, string) {
 	if len(q) > 0 {
 		n := q.Active()
 		c.logActivity(n.ID, n.Reason, "is active")
-		return q, c.notification.Done(i, q)
+		return q, Notification{ch, c.notification.Done(i, q)}
 	}
-	return q, c.notification.DoneNoOthers(i)
+	return q, Notification{ch, c.notification.DoneNoOthers(i)}
 }
 
 // Yield allows the second place ahead of the active user
-func (c Command) Yield(q queue.Queue, id string) (queue.Queue, string) {
+func (c Command) Yield(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
-		return q, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})
+		return q, Notification{ch, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})}
 	}
 	i := q.Active()
 	if i.ID != id {
-		return q, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})
+		return q, Notification{ch, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})}
 	}
 	if len(q) < 2 {
-		return q, c.notification.YieldNoOthers(i)
+		return q, Notification{ch, c.notification.YieldNoOthers(i)}
 	}
 	q = q.Yield()
 	n := q.Active()
 	c.logActivity(id, i.Reason, "yielded")
 	c.logActivity(n.ID, n.Reason, "is active")
-	return q, c.notification.Yield(i, q)
+	return q, Notification{ch, c.notification.Yield(i, q)}
 }
 
 // Barge adds a user to the front of the queue
-func (c Command) Barge(q queue.Queue, id, reason string) (queue.Queue, string) {
-	i := queue.Item{ID: id, Reason: reason}
+func (c Command) Barge(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+	i := queue.Item{ID: id, Reason: args}
 	q = q.Barge(i)
 	if q.Active() == i {
-		return q, c.notification.JoinActive(i)
+		return q, Notification{ch, c.notification.JoinActive(i)}
 	}
-	c.logActivity(id, reason, "barged")
-	return q, c.notification.Barge(i, q.Active())
+	c.logActivity(id, args, "barged")
+	return q, Notification{ch, c.notification.Barge(i, q.Active())}
 }
 
 // Boot kicks someone from the waiting list
-func (c Command) Boot(q queue.Queue, booter, name, reason string) (queue.Queue, string) {
+func (c Command) Boot(q queue.Queue, ch, booter, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
-		return q, ""
+		return q, Notification{ch, ""}
 	}
 
+	name, reason := util.StringPop(args)
 	id := c.getIDFromName(name)
 	i, ok := c.findItem(q, id, reason)
 	if !ok {
-		return q, c.notification.BootNoEntry(booter, name, reason)
+		return q, Notification{ch, c.notification.BootNoEntry(booter, name, reason)}
 	}
 
 	if q.Active() == i {
-		return q, c.notification.OustNotBoot(booter)
+		return q, Notification{ch, c.notification.OustNotBoot(booter)}
 	}
 
 	if q.Contains(i) {
 		q = q.Remove(i)
 		c.logActivity(id, reason, "booted by "+c.getNameIDPair(booter))
-		return q, c.notification.Boot(booter, i)
+		return q, Notification{ch, c.notification.Boot(booter, i)}
 	}
 
-	return q, ""
+	return q, Notification{ch, ""}
 }
 
 // Oust boots the current token holder and gives it to the next person
-func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) {
+func (c Command) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
-		return q, ""
+		return q, Notification{ch, ""}
 	}
 
-	id := c.getIDFromName(name)
+	id := c.getIDFromName(args)
 	if id == "" {
-		return q, c.notification.OustNotActive(ouster)
+		return q, Notification{ch, c.notification.OustNotActive(ouster)}
 	}
 
 	i := q.Active()
 	if i.ID != id {
-		return q, c.notification.OustNotActive(ouster)
+		return q, Notification{ch, c.notification.OustNotActive(ouster)}
 	}
 
 	// If a previous request has been lodged in the last 30 seconds
@@ -203,23 +215,23 @@ func (c Command) Oust(q queue.Queue, ouster, name string) (queue.Queue, string) 
 			q = q.Remove(i)
 			c.logActivity(i.ID, i.Reason, "ousted by "+c.getNameIDPair(ouster))
 			if len(q) == 0 {
-				return q, c.notification.OustNoOthers(ouster, i)
+				return q, Notification{ch, c.notification.OustNoOthers(ouster, i)}
 			}
 			n := q.Active()
 			c.logActivity(n.ID, n.Reason, "is active")
-			return q, c.notification.Oust(ouster, i, q)
+			return q, Notification{ch, c.notification.Oust(ouster, i, q)}
 		}
 	}
 
 	c.pendingOusts[ouster] = PendingOust{i, time.Now()}
 
-	return q, c.notification.OustConfirm(ouster, i)
+	return q, Notification{ch, c.notification.OustConfirm(ouster, i)}
 }
 
 // List shows who has the token and who is waiting
-func (c Command) List(q queue.Queue) string {
+func (c Command) List(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
-		return "Nobody has the token, and nobody is waiting"
+		return q, Notification{ch, "Nobody has the token, and nobody is waiting"}
 	}
 
 	a := q.Active()
@@ -227,7 +239,7 @@ func (c Command) List(q queue.Queue) string {
 	for ix, i := range q.Waiting() {
 		s += fmt.Sprintf("\n%d: %s (%s)", ix+2, c.userCache.GetUserName(i.ID), i.Reason)
 	}
-	return s
+	return q, Notification{ch, s}
 }
 
 func cmdList(cmds [][]string) string {
@@ -239,8 +251,8 @@ func cmdList(cmds [][]string) string {
 }
 
 // Help provides brief assistance
-func (c Command) Help(name string) string {
-	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
+func (c Command) Help(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", c.name)
 
 	s += cmdList([][]string{
 		[]string{"list", "Show who has the token and who is waiting"},
@@ -252,12 +264,12 @@ func (c Command) Help(name string) string {
 		[]string{"help", "Show this text"},
 		[]string{"morehelp", "Show more detailed help and extra actions"},
 	})
-	return s
+	return q, Notification{id, s}
 }
 
 // MoreHelp provides much needed assistance
-func (c Command) MoreHelp(name string) string {
-	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", name)
+func (c Command) MoreHelp(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", c.name)
 
 	s += "*If you don't have the token and need it:*\n"
 	s += cmdList([][]string{
@@ -290,5 +302,5 @@ func (c Command) MoreHelp(name string) string {
 		[]string{"list", "Show who has the token and who is waiting"},
 		[]string{"help", "Show this text"},
 	})
-	return s
+	return q, Notification{id, s}
 }

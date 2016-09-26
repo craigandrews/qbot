@@ -7,33 +7,19 @@ import (
 	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
+	"github.com/doozr/qbot/util"
 )
 
 // MessageHandler handles an incoming message event
 type MessageHandler func(guac.MessageEvent) error
 
-func stringPop(m string) (first string, rest string) {
-	parts := strings.SplitN(m, " ", 2)
+// CommandMap is a dictionary of command strings to functions
+type CommandMap map[string]command.CmdFn
 
-	if len(parts) < 1 {
-		return
-	}
-	first = parts[0]
-
-	rest = ""
-	if len(parts) > 1 {
-		rest = strings.Trim(parts[1], " \t\r\n")
-	}
-
-	return
-}
-
-// NewMessageHandler creates a new MessageHandler
-func createMessageHandler(id string, name string, q queue.Queue, commands command.Command,
-	notify Notifier, persist Persister) MessageHandler {
-
-	isDirectedAtUs := func(id string, name string, message guac.MessageEvent) bool {
-		return strings.HasPrefix(message.Text, name) || strings.HasPrefix(message.Text, "<@"+id+">")
+// createMessageDirector creates a message handler that forwards messages to a public or private handler
+func createMessageDirector(id string, name string, publicHandler MessageHandler, privateHandler MessageHandler) MessageHandler {
+	isDirectedAtUs := func(text string) bool {
+		return strings.HasPrefix(text, name) || strings.HasPrefix(text, "<@"+id+">")
 	}
 
 	isPrivateChannel := func(channel string) bool {
@@ -41,72 +27,35 @@ func createMessageHandler(id string, name string, q queue.Queue, commands comman
 	}
 
 	return func(m guac.MessageEvent) (err error) {
+		if isPrivateChannel(m.Channel) {
+			return privateHandler(m)
+		} else if isDirectedAtUs(m.Text) {
+			return publicHandler(m)
+		}
+		return
+	}
+}
+
+// NewMessageHandler creates a message handler that calls a command function
+func createMessageHandler(q queue.Queue, commands CommandMap,
+	notify Notifier, persist Persister) MessageHandler {
+	return func(m guac.MessageEvent) (err error) {
 		text := strings.Trim(m.Text, " \t\r\n")
 
-		channel := m.Channel
-		response := ""
+		var response command.Notification
 
-		if isPrivateChannel(channel) {
-			cmd, args := stringPop(text)
-			cmd = strings.ToLower(cmd)
+		cmd, args := util.StringPop(text)
+		cmd = strings.ToLower(cmd)
 
-			jot.Printf("message dispatch: private message %s with cmd %s and args %v", m.Text, cmd, args)
-			switch cmd {
-			case "list":
-				response = commands.List(q)
-			case "help":
-				response = commands.Help(name)
-			case "morehelp":
-				response = commands.MoreHelp(name)
-			}
-
-		} else if isDirectedAtUs(id, name, m) {
-			_, text = stringPop(text)
-			cmd, args := stringPop(text)
-			cmd = strings.ToLower(cmd)
-
-			jot.Printf("message dispatch: public message %s with cmd %s and args %v", m.Text, cmd, args)
-			switch cmd {
-			case "join":
-				q, response = commands.Join(q, m.User, args)
-			case "leave":
-				q, response = commands.Leave(q, m.User, args)
-			case "done":
-				q, response = commands.Done(q, m.User)
-			case "drop":
-				q, response = commands.Done(q, m.User)
-			case "yield":
-				q, response = commands.Yield(q, m.User)
-			case "barge":
-				q, response = commands.Barge(q, m.User, args)
-			case "boot":
-				id, reason := stringPop(args)
-				q, response = commands.Boot(q, m.User, id, reason)
-			case "oust":
-				q, response = commands.Oust(q, m.User, args)
-			case "list":
-				response = commands.List(q)
-			case "help":
-				response = commands.Help(name)
-				channel = m.User
-			case "morehelp":
-				response = commands.MoreHelp(name)
-				channel = m.User
-			}
+		jot.Printf("message dispatch: message %s with cmd %s and args %v", m.Text, cmd, args)
+		if fn, ok := commands[cmd]; ok {
+			q, response = fn(q, m.Channel, m.User, args)
 		}
 
-		if response != "" {
-			err = notify(Notification{
-				Channel: channel,
-				Message: response,
-			})
-			if err != nil {
-				return
-			}
+		err = notify(response)
+		if err == nil {
+			err = persist(q)
 		}
-
-		err = persist(q)
-
 		return
 	}
 }

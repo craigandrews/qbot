@@ -3,16 +3,12 @@ package main
 import (
 	"fmt"
 	"strings"
+
+	"github.com/doozr/qbot/command"
 )
 
-// Notification represents a message to a channel
-type Notification struct {
-	Channel string
-	Message string
-}
-
 // Notifier sends notifications to channels or users
-type Notifier func(Notification) error
+type Notifier func(command.Notification) error
 
 // IMOpener is a function that opens an IM with a given user
 type IMOpener func(string) (string, error)
@@ -35,7 +31,10 @@ func createNotifier(openIM IMOpener, postMessage MessagePoster) Notifier {
 		return
 	}
 
-	return func(notification Notification) (err error) {
+	return func(notification command.Notification) (err error) {
+		if notification.Message == "" {
+			return
+		}
 		channel, err := openChannelIfUser(notification.Channel)
 		if err != nil {
 			return fmt.Errorf("Could not get open channel for %s: %s", notification.Channel, err)
