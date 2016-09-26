@@ -30,6 +30,7 @@ func createMessageDirector(id string, name string, publicHandler MessageHandler,
 		if isPrivateChannel(m.Channel) {
 			return privateHandler(m)
 		} else if isDirectedAtUs(m.Text) {
+			_, m.Text = util.StringPop(m.Text)
 			return publicHandler(m)
 		}
 		return
@@ -50,11 +51,10 @@ func createMessageHandler(q queue.Queue, commands CommandMap,
 		jot.Printf("message dispatch: message %s with cmd %s and args %v", m.Text, cmd, args)
 		if fn, ok := commands[cmd]; ok {
 			q, response = fn(q, m.Channel, m.User, args)
-		}
 
-		err = notify(response)
-		if err == nil {
-			err = persist(q)
+			if err = notify(response); err == nil {
+				err = persist(q)
+			}
 		}
 		return
 	}
