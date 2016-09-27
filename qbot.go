@@ -14,7 +14,6 @@ import (
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
 	"github.com/doozr/qbot/command"
-	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
 )
@@ -44,8 +43,7 @@ func main() {
 
 	userCache := getUserListOrDie(client)
 
-	notifications := notification.New(userCache)
-	commands := command.New(client.Name(), notifications, userCache)
+	commands := command.New(client.Name(), userCache)
 
 	notify := createNotifier(client.IMOpen, client.PostMessage)
 	persist := createPersister(ioutil.WriteFile, filename, q)

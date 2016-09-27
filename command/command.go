@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/doozr/qbot/notification"
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
 	"github.com/doozr/qbot/util"
@@ -30,14 +29,15 @@ type Notification struct {
 // Command provides the API to the various commands supported by the bot
 type Command struct {
 	name         string
-	notification notification.Notifications
+	response     responses
 	userCache    *usercache.UserCache
 	pendingOusts map[string]PendingOust
 }
 
 // New returns a new Command instance
-func New(name string, n notification.Notifications, uc *usercache.UserCache) Command {
-	c := Command{name, n, uc, make(map[string]PendingOust)}
+func New(name string, uc *usercache.UserCache) Command {
+	r := responses{uc}
+	c := Command{name, r, uc, make(map[string]PendingOust)}
 	return c
 }
 
@@ -76,7 +76,7 @@ func (c Command) Join(q queue.Queue, ch, id, args string) (queue.Queue, Notifica
 	i := queue.Item{ID: id, Reason: args}
 
 	if i.Reason == "" {
-		return q, Notification{ch, c.notification.JoinNoReason(i)}
+		return q, Notification{ch, c.response.JoinNoReason(i)}
 	}
 
 	if q.Contains(i) {
@@ -87,27 +87,27 @@ func (c Command) Join(q queue.Queue, ch, id, args string) (queue.Queue, Notifica
 	c.logActivity(id, args, "joined")
 	if q.Active() == i {
 		c.logActivity(id, args, "is active")
-		return q, Notification{ch, c.notification.JoinActive(i)}
+		return q, Notification{ch, c.response.JoinActive(i)}
 	}
 
-	return q, Notification{ch, c.notification.Join(i)}
+	return q, Notification{ch, c.response.Join(i)}
 }
 
 // Leave removes an item from the queue
 func (c Command) Leave(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	i, ok := c.findItem(q, id, args)
 	if !ok {
-		return q, Notification{ch, c.notification.LeaveNoEntry(id, args)}
+		return q, Notification{ch, c.response.LeaveNoEntry(id, args)}
 	}
 
 	if q.Active() == i {
-		return q, Notification{ch, c.notification.LeaveActive(i)}
+		return q, Notification{ch, c.response.LeaveActive(i)}
 	}
 
 	if q.Contains(i) {
 		q = q.Remove(i)
 		c.logActivity(id, args, "left the queue")
-		return q, Notification{ch, c.notification.Leave(i)}
+		return q, Notification{ch, c.response.Leave(i)}
 	}
 
 	return q, Notification{ch, ""}
@@ -122,7 +122,7 @@ func (c Command) Done(q queue.Queue, ch, id, args string) (queue.Queue, Notifica
 	i := q.Active()
 
 	if i.ID != id {
-		return q, Notification{ch, c.notification.DoneNotActive(id)}
+		return q, Notification{ch, c.response.DoneNotActive(id)}
 	}
 
 	q = q.Remove(i)
@@ -130,28 +130,28 @@ func (c Command) Done(q queue.Queue, ch, id, args string) (queue.Queue, Notifica
 	if len(q) > 0 {
 		n := q.Active()
 		c.logActivity(n.ID, n.Reason, "is active")
-		return q, Notification{ch, c.notification.Done(i, q)}
+		return q, Notification{ch, c.response.Done(i, q)}
 	}
-	return q, Notification{ch, c.notification.DoneNoOthers(i)}
+	return q, Notification{ch, c.response.DoneNoOthers(i)}
 }
 
 // Yield allows the second place ahead of the active user
 func (c Command) Yield(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
-		return q, Notification{ch, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})}
+		return q, Notification{ch, c.response.YieldNotActive(queue.Item{ID: id, Reason: ""})}
 	}
 	i := q.Active()
 	if i.ID != id {
-		return q, Notification{ch, c.notification.YieldNotActive(queue.Item{ID: id, Reason: ""})}
+		return q, Notification{ch, c.response.YieldNotActive(queue.Item{ID: id, Reason: ""})}
 	}
 	if len(q) < 2 {
-		return q, Notification{ch, c.notification.YieldNoOthers(i)}
+		return q, Notification{ch, c.response.YieldNoOthers(i)}
 	}
 	q = q.Yield()
 	n := q.Active()
 	c.logActivity(id, i.Reason, "yielded")
 	c.logActivity(n.ID, n.Reason, "is active")
-	return q, Notification{ch, c.notification.Yield(i, q)}
+	return q, Notification{ch, c.response.Yield(i, q)}
 }
 
 // Barge adds a user to the front of the queue
@@ -159,10 +159,10 @@ func (c Command) Barge(q queue.Queue, ch, id, args string) (queue.Queue, Notific
 	i := queue.Item{ID: id, Reason: args}
 	q = q.Barge(i)
 	if q.Active() == i {
-		return q, Notification{ch, c.notification.JoinActive(i)}
+		return q, Notification{ch, c.response.JoinActive(i)}
 	}
 	c.logActivity(id, args, "barged")
-	return q, Notification{ch, c.notification.Barge(i, q.Active())}
+	return q, Notification{ch, c.response.Barge(i, q.Active())}
 }
 
 // Boot kicks someone from the waiting list
@@ -175,17 +175,17 @@ func (c Command) Boot(q queue.Queue, ch, booter, args string) (queue.Queue, Noti
 	id := c.getIDFromName(name)
 	i, ok := c.findItem(q, id, reason)
 	if !ok {
-		return q, Notification{ch, c.notification.BootNoEntry(booter, name, reason)}
+		return q, Notification{ch, c.response.BootNoEntry(booter, name, reason)}
 	}
 
 	if q.Active() == i {
-		return q, Notification{ch, c.notification.OustNotBoot(booter)}
+		return q, Notification{ch, c.response.OustNotBoot(booter)}
 	}
 
 	if q.Contains(i) {
 		q = q.Remove(i)
 		c.logActivity(id, reason, "booted by "+c.getNameIDPair(booter))
-		return q, Notification{ch, c.notification.Boot(booter, i)}
+		return q, Notification{ch, c.response.Boot(booter, i)}
 	}
 
 	return q, Notification{ch, ""}
@@ -199,12 +199,12 @@ func (c Command) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue, Noti
 
 	id := c.getIDFromName(args)
 	if id == "" {
-		return q, Notification{ch, c.notification.OustNotActive(ouster)}
+		return q, Notification{ch, c.response.OustNotActive(ouster)}
 	}
 
 	i := q.Active()
 	if i.ID != id {
-		return q, Notification{ch, c.notification.OustNotActive(ouster)}
+		return q, Notification{ch, c.response.OustNotActive(ouster)}
 	}
 
 	// If a previous request has been lodged in the last 30 seconds
@@ -215,17 +215,17 @@ func (c Command) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue, Noti
 			q = q.Remove(i)
 			c.logActivity(i.ID, i.Reason, "ousted by "+c.getNameIDPair(ouster))
 			if len(q) == 0 {
-				return q, Notification{ch, c.notification.OustNoOthers(ouster, i)}
+				return q, Notification{ch, c.response.OustNoOthers(ouster, i)}
 			}
 			n := q.Active()
 			c.logActivity(n.ID, n.Reason, "is active")
-			return q, Notification{ch, c.notification.Oust(ouster, i, q)}
+			return q, Notification{ch, c.response.Oust(ouster, i, q)}
 		}
 	}
 
 	c.pendingOusts[ouster] = PendingOust{i, time.Now()}
 
-	return q, Notification{ch, c.notification.OustConfirm(ouster, i)}
+	return q, Notification{ch, c.response.OustConfirm(ouster, i)}
 }
 
 // List shows who has the token and who is waiting
