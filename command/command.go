@@ -30,13 +30,13 @@ type Notification struct {
 // Command provides the API to the various commands supported by the bot
 type Command struct {
 	name         string
-	notification notification.Notification
+	notification notification.Notifications
 	userCache    *usercache.UserCache
 	pendingOusts map[string]PendingOust
 }
 
 // New returns a new Command instance
-func New(name string, n notification.Notification, uc *usercache.UserCache) Command {
+func New(name string, n notification.Notifications, uc *usercache.UserCache) Command {
 	c := Command{name, n, uc, make(map[string]PendingOust)}
 	return c
 }
