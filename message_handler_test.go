@@ -24,25 +24,11 @@ func TestDispatchesMessage(t *testing.T) {
 	initialQueue := queue.Queue{}
 	event := makeTestEvent("test the args")
 
-	expectedQueue := queue.Queue{
-		queue.Item{ID: "U1234", Reason: "Some reason"},
-	}
-	expectedNotification := command.Notification{Channel: "C1234", Message: "This is a message"}
 	commands := map[string]command.CmdFn{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
-			if !q.Equal(initialQueue) {
-				t.Fatal("Incorrect queue passed to command ", initialQueue, q)
-			}
-			if channel != event.Channel {
-				t.Fatal("Incorrect channel passed to command ", event.Channel, channel)
-			}
-			if user != event.User {
-				t.Fatal("Incorrect user passed to command ", event.User, user)
-			}
-			if args != "the args" {
-				t.Fatal("Incorrect args passed to command ", "the args", args)
-			}
-			return expectedQueue, expectedNotification
+			q = q.Add(queue.Item{ID: user, Reason: args})
+			n := command.Notification{Channel: channel, Message: "This is a message"}
+			return q, n
 		},
 	}
 
@@ -64,10 +50,17 @@ func TestDispatchesMessage(t *testing.T) {
 		t.Fatal("Unexpected error ", err)
 	}
 
+	expectedNotification := command.Notification{
+		Channel: "C1234",
+		Message: "This is a message",
+	}
 	if !reflect.DeepEqual(expectedNotification, receivedNotification) {
 		t.Fatal("Received unexpected notification ", expectedNotification, receivedNotification)
 	}
 
+	expectedQueue := queue.Queue{
+		queue.Item{ID: "U1234", Reason: "the args"},
+	}
 	if !receivedQueue.Equal(expectedQueue) {
 		t.Fatal("Received unexpected qeueue", expectedQueue, receivedQueue)
 	}
@@ -94,10 +87,7 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 	}
 
 	handler := createMessageHandler(initialQueue, commands, notify, persist)
-	err := handler(event)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	handler(event)
 
 	if calls != 1 {
 		t.Fatalf("Expected command to be called exactly once, was called %d times", calls)
@@ -111,7 +101,7 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 	commands := map[string]command.CmdFn{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
 			t.Fatal("Unexpected call to command")
-			return q, command.Notification{Channel: channel, Message: "response"}
+			return q, command.Notification{}
 		},
 	}
 
@@ -126,10 +116,7 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 	}
 
 	handler := createMessageHandler(initialQueue, commands, notify, persist)
-	err := handler(event)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	handler(event)
 }
 
 func TestDoesNotPersistIfNotifyFails(t *testing.T) {
