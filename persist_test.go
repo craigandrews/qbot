@@ -20,13 +20,10 @@ func TestDifferentQueueIsSaved(t *testing.T) {
 	}
 
 	persist := createPersister(writeFile, "output.json", queue.Queue{})
-	err := persist(queue.Queue{
+	persist(queue.Queue{
 		queue.Item{ID: "U12345", Reason: "A reason"},
 		queue.Item{ID: "U67890", Reason: "Another reason"},
 	})
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
 
 	if fileWritten != "output.json" {
 		t.Fatal("Incorrect file written: ", fileWritten)
@@ -53,10 +50,7 @@ func TestIdenticalQueueIsNotWritten(t *testing.T) {
 	}
 
 	persist := createPersister(writeFile, "output.json", q)
-	err := persist(q)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	persist(q)
 }
 
 func TestReturnsErrorIfWriteFails(t *testing.T) {
@@ -71,15 +65,14 @@ func TestReturnsErrorIfWriteFails(t *testing.T) {
 	}
 }
 
-func TestSavesIfFirstAttemptFails(t *testing.T) {
-	calls := 0
+func TestStillSavesAfterFailure(t *testing.T) {
+	called := false
 	var contentWritten []byte
 	writeFile := func(f string, c []byte, p os.FileMode) error {
-		if calls == 0 {
-			calls++
+		if !called {
+			called = true
 			return fmt.Errorf("Error!")
 		}
-		calls++
 		contentWritten = c
 		return nil
 	}
@@ -90,23 +83,8 @@ func TestSavesIfFirstAttemptFails(t *testing.T) {
 	}
 
 	persist := createPersister(writeFile, "output.json", queue.Queue{})
-	err := persist(q)
-	if err == nil {
-		t.Fatal("Expected error on first call")
-	}
-
-	if contentWritten != nil {
-		t.Fatal("Expected no content written, got ", string(contentWritten))
-	}
-
-	err = persist(q)
-	if err != nil {
-		t.Fatal("Unexpected error on second call ", err)
-	}
-
-	if calls != 2 {
-		t.Fatal("Expected 2 calls, got ", calls)
-	}
+	persist(q)
+	persist(q)
 
 	if string(contentWritten) != `[{"ID":"U12345","Reason":"A reason"},{"ID":"U67890","Reason":"Another reason"}]` {
 		t.Fatal("Incorrect content written: ", contentWritten)
