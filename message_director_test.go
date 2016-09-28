@@ -8,6 +8,16 @@ import (
 	"github.com/doozr/guac"
 )
 
+func getTestMessageEvent(user, channel, text string) guac.MessageEvent {
+	return guac.MessageEvent{
+		Type:    "message",
+		ID:      1234,
+		User:    user,
+		Channel: channel,
+		Text:    text,
+	}
+}
+
 func TestPrivateMessageIsRouted(t *testing.T) {
 	var received guac.MessageEvent
 	privateHandler := func(m guac.MessageEvent) error {
@@ -19,18 +29,9 @@ func TestPrivateMessageIsRouted(t *testing.T) {
 		return nil
 	}
 
-	event := guac.MessageEvent{
-		Type:    "message",
-		ID:      1234,
-		User:    "U4321",
-		Channel: "D1A2B3C",
-		Text:    "This is a message",
-	}
+	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
 	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
-	err := director(event)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	director(event)
 
 	if !reflect.DeepEqual(event, received) {
 		t.Fatal("Event does not match ", event, received)
@@ -46,13 +47,7 @@ func TestErrorReturnedWhenPrivateMessageFails(t *testing.T) {
 		return nil
 	}
 
-	event := guac.MessageEvent{
-		Type:    "message",
-		ID:      1234,
-		User:    "U4321",
-		Channel: "D1A2B3C",
-		Text:    "This is a message",
-	}
+	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
 	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
 	err := director(event)
 	if err == nil {
@@ -71,21 +66,11 @@ func TestPublicMessageWithNameIsRouted(t *testing.T) {
 		return nil
 	}
 
-	event := guac.MessageEvent{
-		Type:    "message",
-		ID:      1234,
-		User:    "U4321",
-		Channel: "C1A2B3C",
-		Text:    "myname: This is a message",
-	}
+	event := getTestMessageEvent("U4321", "C1A2B3C", "myname: This is a message")
 	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
-	err := director(event)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	director(event)
 
-	expected := event
-	expected.Text = "This is a message"
+	expected := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
 	if !reflect.DeepEqual(expected, received) {
 		t.Fatal("Event does not match ", event, received)
 	}
@@ -102,21 +87,11 @@ func TestPublicMessageWithIDIsRouted(t *testing.T) {
 		return nil
 	}
 
-	event := guac.MessageEvent{
-		Type:    "message",
-		ID:      1234,
-		User:    "U4321",
-		Channel: "C1A2B3C",
-		Text:    "<@U123> This is a message",
-	}
+	event := getTestMessageEvent("U4321", "C1A2B3C", "<@U123> This is a message")
 	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
-	err := director(event)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	director(event)
 
-	expected := event
-	expected.Text = "This is a message"
+	expected := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
 	if !reflect.DeepEqual(expected, received) {
 		t.Fatal("Event does not match ", event, received)
 	}
@@ -131,13 +106,7 @@ func TestErrorReturnedIfPublicMessageFailed(t *testing.T) {
 		return fmt.Errorf("Error!")
 	}
 
-	event := guac.MessageEvent{
-		Type:    "message",
-		ID:      1234,
-		User:    "U4321",
-		Channel: "C1A2B3C",
-		Text:    "<@U123> This is a message",
-	}
+	event := getTestMessageEvent("U4321", "C1A2B3C", "<@U123> This is a message")
 	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
 	err := director(event)
 	if err == nil {
@@ -155,16 +124,7 @@ func TestPublicMessageWithoutNameOrIDIsNotRouted(t *testing.T) {
 		return nil
 	}
 
-	event := guac.MessageEvent{
-		Type:    "message",
-		ID:      1234,
-		User:    "U4321",
-		Channel: "C1A2B3C",
-		Text:    "This is a message",
-	}
+	event := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
 	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
-	err := director(event)
-	if err != nil {
-		t.Fatal("Unexpected error ", err)
-	}
+	director(event)
 }
