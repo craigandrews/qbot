@@ -1,8 +1,9 @@
-package main
+package qbot
 
 import "github.com/doozr/qbot/command"
 
-func publicCommands(commands command.Command) (commandMap CommandMap) {
+// PublicCommands are commands accessible from public channels
+func PublicCommands(commands command.Command) (commandMap CommandMap) {
 	commandMap = CommandMap{
 		"join":     commands.Join,
 		"leave":    commands.Leave,

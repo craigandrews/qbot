@@ -1,4 +1,4 @@
-package main_test
+package qbot_test
 
 import (
 	"fmt"

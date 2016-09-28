@@ -8,7 +8,7 @@ recipient so they know immediately that it's their turn to merge, release, make 
 
 Grab it with `go get`:
 
-    go get github.com/doozr/qbot
+    go get github.com/doozr/qbot/cmd/qbot
 
 Or clone the project and build it with `go build`.
 
