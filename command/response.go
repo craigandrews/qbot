@@ -9,7 +9,7 @@ import (
 
 // responses builds mad-libbed reply strings
 type responses struct {
-	UserCache *usercache.UserCache
+	UserCache usercache.UserCache
 }
 
 func (n responses) getUserName(id string) (username string) {

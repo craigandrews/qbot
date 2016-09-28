@@ -9,8 +9,8 @@ import (
 	"github.com/doozr/jot"
 )
 
-// dispatch runs a Dispatcher in a goroutine and handles synchronisation
-func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitGroup *sync.WaitGroup) (abort chan error) {
+// Dispatch runs a Dispatcher in a goroutine and handles synchronisation
+func Dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitGroup *sync.WaitGroup) (abort chan error) {
 	abort = make(chan error)
 
 	waitGroup.Add(1)
@@ -31,8 +31,8 @@ func dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitG
 // Dispatcher sends incoming messages to the correct recipient
 type Dispatcher func(guac.EventChan, DoneChan) error
 
-// createDispatcher creates a new Dispatcher instance
-func createDispatcher(timeout time.Duration, handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
+// CreateDispatcher creates a new Dispatcher instance
+func CreateDispatcher(timeout time.Duration, handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
 
 	return func(events guac.EventChan, done DoneChan) (err error) {
 		for {

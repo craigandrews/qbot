@@ -10,8 +10,8 @@ import (
 // UserChangeHandler handles incoming user change events
 type UserChangeHandler func(guac.UserInfo)
 
-// NewUserChangeHandler creates a new user change handler
-func createUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
+// CreateUserChangeHandler creates a new user change handler
+func CreateUserChangeHandler(userCache usercache.UserCache) UserChangeHandler {
 	return func(userChange guac.UserInfo) {
 		oldName := userCache.GetUserName(userChange.ID)
 		userCache.UpdateUserName(userChange.ID, userChange.Name)

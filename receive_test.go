@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"fmt"
@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/doozr/guac"
+	. "github.com/doozr/qbot"
 )
 
 func testReceiveSuccess(t *testing.T, receiver EventReceiver) {
 	done := make(DoneChan)
 	waitGroup := sync.WaitGroup{}
 
-	events := receive(receiver, done, &waitGroup)
+	events := Receive(receiver, done, &waitGroup)
 	select {
 	case e := <-events:
 		if e.(string) != "test" {
@@ -56,7 +57,7 @@ func TestReceiverPushesEventsToChannel(t *testing.T) {
 			return "test event", nil
 		},
 	}
-	receiver := createEventReceiver(client)
+	receiver := CreateEventReceiver(client)
 
 	events := make(guac.EventChan)
 	done := make(DoneChan)
@@ -80,7 +81,7 @@ func TestReceiverQuitsOnError(t *testing.T) {
 			return nil, fmt.Errorf("Error!")
 		},
 	}
-	receiver := createEventReceiver(client)
+	receiver := CreateEventReceiver(client)
 
 	events := make(guac.EventChan)
 	done := make(DoneChan)
@@ -97,7 +98,7 @@ func TestReceiverReturnsErrorOnNilEvent(t *testing.T) {
 			return nil, nil
 		},
 	}
-	receiver := createEventReceiver(client)
+	receiver := CreateEventReceiver(client)
 
 	events := make(guac.EventChan)
 	done := make(DoneChan)
@@ -114,7 +115,7 @@ func TestReceiverShutsDownWhenDoneClosed(t *testing.T) {
 			return "test event", nil
 		},
 	}
-	receiver := createEventReceiver(client)
+	receiver := CreateEventReceiver(client)
 
 	events := make(guac.EventChan)
 	done := make(DoneChan)
@@ -135,7 +136,7 @@ func TestReceiverReturnsNoErrorWhenDoneClosed(t *testing.T) {
 			return nil, fmt.Errorf("Error!")
 		},
 	}
-	receiver := createEventReceiver(client)
+	receiver := CreateEventReceiver(client)
 
 	events := make(guac.EventChan)
 	done := make(DoneChan)

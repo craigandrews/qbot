@@ -13,8 +13,8 @@ import (
 // MessageHandler handles an incoming message event
 type MessageHandler func(guac.MessageEvent) error
 
-// NewMessageHandler creates a message handler that calls a command function
-func createMessageHandler(q queue.Queue, commands CommandMap,
+// CreateMessageHandler creates a message handler that calls a command function
+func CreateMessageHandler(q queue.Queue, commands CommandMap,
 	notify Notifier, persist Persister) MessageHandler {
 	return func(m guac.MessageEvent) (err error) {
 		text := strings.Trim(m.Text, " \t\r\n")

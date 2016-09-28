@@ -13,8 +13,8 @@ type Pinger func() error
 // After is a thing that returns a channel that emits the time after a duration
 type After func(time.Duration) <-chan time.Time
 
-// startKeepAlive sends a ping request every 30 seconds
-func startKeepAlive(ping Pinger, after After, done DoneChan, waitGroup *sync.WaitGroup) {
+// StartKeepAlive sends a ping request every 30 seconds
+func StartKeepAlive(ping Pinger, after After, done DoneChan, waitGroup *sync.WaitGroup) {
 	jot.Print("qbot.keepalive starting up")
 	waitGroup.Add(1)
 	go func() {

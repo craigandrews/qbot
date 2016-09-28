@@ -15,8 +15,8 @@ type Persister func(queue.Queue) error
 // WriteFile is a type to allow replacement of the WriteFile function for reasons
 type WriteFile func(string, []byte, os.FileMode) error
 
-// NewPersister creates a new Persister
-func createPersister(writeFile WriteFile, filename string, oldQ queue.Queue) Persister {
+// CreatePersister creates a new Persister
+func CreatePersister(writeFile WriteFile, filename string, oldQ queue.Queue) Persister {
 	return func(q queue.Queue) (err error) {
 		jot.Print("persist: queue to save ", q)
 		if oldQ.Equal(q) {

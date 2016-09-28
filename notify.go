@@ -20,8 +20,8 @@ func isUser(channel string) bool {
 	return strings.HasPrefix(channel, "U")
 }
 
-// NewNotifier creates a new Notifier
-func createNotifier(openIM IMOpener, postMessage MessagePoster) Notifier {
+// CreateNotifier creates a new Notifier
+func CreateNotifier(openIM IMOpener, postMessage MessagePoster) Notifier {
 	openChannelIfUser := func(user string) (channel string, err error) {
 		if !isUser(user) {
 			channel = user

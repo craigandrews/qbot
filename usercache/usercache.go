@@ -11,6 +11,7 @@ type UserCache interface {
 	GetUserName(string) string
 	GetUserID(string) string
 	UpdateUserName(string, string)
+	Count() int
 }
 
 // userCache contains a mutex controlled list of user info objects keyed on ID
@@ -57,4 +58,9 @@ func (u *userCache) GetUserID(name string) (id string) {
 	}
 	u.Mux.Unlock()
 	return
+}
+
+// Count the number of users in the cache
+func (u *userCache) Count() int {
+	return len(u.UserNames)
 }

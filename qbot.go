@@ -45,22 +45,22 @@ func main() {
 
 	commands := command.New(client.Name(), userCache)
 
-	notify := createNotifier(client.IMOpen, client.PostMessage)
-	persist := createPersister(ioutil.WriteFile, filename, q)
-	userChangeHandler := createUserChangeHandler(userCache)
+	notify := CreateNotifier(client.IMOpen, client.PostMessage)
+	persist := CreatePersister(ioutil.WriteFile, filename, q)
+	userChangeHandler := CreateUserChangeHandler(userCache)
 
-	publicHandler := createMessageHandler(q, publicCommands(commands), notify, persist)
-	privateHandler := createMessageHandler(q, privateCommands(commands), notify, persist)
-	messageHandler := createMessageDirector(client.ID(), client.Name(), publicHandler, privateHandler)
+	publicHandler := CreateMessageHandler(q, publicCommands(commands), notify, persist)
+	privateHandler := CreateMessageHandler(q, privateCommands(commands), notify, persist)
+	messageHandler := CreateMessageDirector(client.ID(), client.Name(), publicHandler, privateHandler)
 
-	receiver := createEventReceiver(client)
-	events := receive(receiver, done, &waitGroup)
+	receiver := CreateEventReceiver(client)
+	events := Receive(receiver, done, &waitGroup)
 
-	startKeepAlive(client.Ping, time.After, done, &waitGroup)
+	StartKeepAlive(client.Ping, time.After, done, &waitGroup)
 
 	log.Print("Ready")
-	dispatcher := createDispatcher(1*time.Minute, messageHandler, userChangeHandler)
-	abort := dispatch(dispatcher, events, done, &waitGroup)
+	dispatcher := CreateDispatcher(1*time.Minute, messageHandler, userChangeHandler)
+	abort := Dispatch(dispatcher, events, done, &waitGroup)
 	sig := addSignalHandler()
 	wait(sig, abort)
 
@@ -104,14 +104,14 @@ func loadQueueOrDie(filename string) (q queue.Queue) {
 	return q
 }
 
-func getUserListOrDie(client guac.WebClient) (userCache *usercache.UserCache) {
+func getUserListOrDie(client guac.WebClient) (userCache usercache.UserCache) {
 	log.Println("Getting user list")
 	users, err := client.UsersList()
 	if err != nil {
 		log.Fatal(err)
 	}
 	userCache = usercache.New(users)
-	jot.Printf("loaded user list with %d users", len(userCache.UserNames))
+	jot.Printf("loaded user list with %d users", userCache.Count())
 	return
 }
 

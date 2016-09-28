@@ -1,8 +1,9 @@
-package queue
+package queue_test
 
 import (
 	"testing"
 
+	. "github.com/doozr/qbot/queue"
 	"github.com/stretchr/testify/assert"
 )
 

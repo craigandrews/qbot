@@ -1,9 +1,10 @@
-package usercache
+package usercache_test
 
 import (
 	"testing"
 
 	"github.com/doozr/guac"
+	. "github.com/doozr/qbot/usercache"
 )
 
 func TestAddsNewEntry(t *testing.T) {

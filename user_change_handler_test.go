@@ -1,15 +1,16 @@
-package main
+package main_test
 
 import (
 	"testing"
 
 	"github.com/doozr/guac"
+	. "github.com/doozr/qbot"
 	"github.com/doozr/qbot/usercache"
 )
 
-func getTestUserChangeHandler() (*usercache.UserCache, UserChangeHandler) {
+func getTestUserChangeHandler() (usercache.UserCache, UserChangeHandler) {
 	cache := usercache.New([]guac.UserInfo{})
-	return cache, createUserChangeHandler(cache)
+	return cache, CreateUserChangeHandler(cache)
 }
 
 func TestAddsNewUser(t *testing.T) {

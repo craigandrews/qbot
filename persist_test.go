@@ -1,10 +1,11 @@
-package main
+package main_test
 
 import (
 	"fmt"
 	"os"
 	"testing"
 
+	. "github.com/doozr/qbot"
 	"github.com/doozr/qbot/queue"
 )
 
@@ -19,11 +20,8 @@ func TestDifferentQueueIsSaved(t *testing.T) {
 		return nil
 	}
 
-	persist := createPersister(writeFile, "output.json", queue.Queue{})
-	persist(queue.Queue{
-		queue.Item{ID: "U12345", Reason: "A reason"},
-		queue.Item{ID: "U67890", Reason: "Another reason"},
-	})
+	persist := CreatePersister(writeFile, "output.json", queue.Queue{})
+	persist(queue.Queue([]queue.Item{queue.Item{ID: "U12345", Reason: "A reason"}, queue.Item{ID: "U67890", Reason: "Another reason"}}))
 
 	if fileWritten != "output.json" {
 		t.Fatal("Incorrect file written: ", fileWritten)
@@ -44,12 +42,12 @@ func TestIdenticalQueueIsNotWritten(t *testing.T) {
 		return nil
 	}
 
-	q := queue.Queue{
+	q := queue.Queue([]queue.Item{
 		queue.Item{ID: "U12345", Reason: "A reason"},
 		queue.Item{ID: "U67890", Reason: "Another reason"},
-	}
+	})
 
-	persist := createPersister(writeFile, "output.json", q)
+	persist := CreatePersister(writeFile, "output.json", q)
 	persist(q)
 }
 
@@ -58,8 +56,8 @@ func TestReturnsErrorIfWriteFails(t *testing.T) {
 		return fmt.Errorf("Error!")
 	}
 
-	persist := createPersister(writeFile, "output.json", queue.Queue{})
-	err := persist(queue.Queue{queue.Item{ID: "U1234", Reason: "A reason"}})
+	persist := CreatePersister(writeFile, "output.json", queue.Queue{})
+	err := persist(queue.Queue([]queue.Item{queue.Item{ID: "U1234", Reason: "A reason"}}))
 	if err == nil {
 		t.Fatal("Expected error")
 	}
@@ -77,12 +75,12 @@ func TestStillSavesAfterFailure(t *testing.T) {
 		return nil
 	}
 
-	q := queue.Queue{
+	q := queue.Queue([]queue.Item{
 		queue.Item{ID: "U12345", Reason: "A reason"},
 		queue.Item{ID: "U67890", Reason: "Another reason"},
-	}
+	})
 
-	persist := createPersister(writeFile, "output.json", queue.Queue{})
+	persist := CreatePersister(writeFile, "output.json", queue.Queue{})
 	persist(q)
 	persist(q)
 

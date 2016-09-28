@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/doozr/guac"
+	. "github.com/doozr/qbot"
 	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 )
@@ -44,7 +45,7 @@ func TestDispatchesMessage(t *testing.T) {
 		return nil
 	}
 
-	handler := createMessageHandler(initialQueue, commands, notify, persist)
+	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
 	err := handler(event)
 	if err != nil {
 		t.Fatal("Unexpected error ", err)
@@ -58,9 +59,9 @@ func TestDispatchesMessage(t *testing.T) {
 		t.Fatal("Received unexpected notification ", expectedNotification, receivedNotification)
 	}
 
-	expectedQueue := queue.Queue{
+	expectedQueue := queue.Queue([]queue.Item{
 		queue.Item{ID: "U1234", Reason: "the args"},
-	}
+	})
 	if !receivedQueue.Equal(expectedQueue) {
 		t.Fatal("Received unexpected qeueue", expectedQueue, receivedQueue)
 	}
@@ -86,7 +87,7 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 		return nil
 	}
 
-	handler := createMessageHandler(initialQueue, commands, notify, persist)
+	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
 	handler(event)
 
 	if calls != 1 {
@@ -115,7 +116,7 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 		return nil
 	}
 
-	handler := createMessageHandler(initialQueue, commands, notify, persist)
+	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
 	handler(event)
 }
 
@@ -138,7 +139,7 @@ func TestDoesNotPersistIfNotifyFails(t *testing.T) {
 		return nil
 	}
 
-	handler := createMessageHandler(initialQueue, commands, notify, persist)
+	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
 	err := handler(event)
 	if err == nil {
 		t.Fatal("Expected error")
@@ -163,7 +164,7 @@ func TestReturnsErrorIfPersistFails(t *testing.T) {
 		return fmt.Errorf("Error!")
 	}
 
-	handler := createMessageHandler(initialQueue, commands, notify, persist)
+	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
 	err := handler(event)
 	if err == nil {
 		t.Fatal("Expected error")

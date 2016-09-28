@@ -30,12 +30,12 @@ type Notification struct {
 type Command struct {
 	name         string
 	response     responses
-	userCache    *usercache.UserCache
+	userCache    usercache.UserCache
 	pendingOusts map[string]PendingOust
 }
 
 // New returns a new Command instance
-func New(name string, uc *usercache.UserCache) Command {
+func New(name string, uc usercache.UserCache) Command {
 	r := responses{uc}
 	c := Command{name, r, uc, make(map[string]PendingOust)}
 	return c

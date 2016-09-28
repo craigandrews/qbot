@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/doozr/guac"
+	. "github.com/doozr/qbot"
 )
 
 func testDispatchCleanShutDown(t *testing.T, dispatcher Dispatcher) {
@@ -14,7 +15,7 @@ func testDispatchCleanShutDown(t *testing.T, dispatcher Dispatcher) {
 	events := make(guac.EventChan)
 	waitGroup := sync.WaitGroup{}
 
-	abort := dispatch(dispatcher, events, done, &waitGroup)
+	abort := Dispatch(dispatcher, events, done, &waitGroup)
 	select {
 	case <-abort:
 	case <-time.After(2 * time.Second):
@@ -55,7 +56,7 @@ func testMessageDispatch(handleMessage MessageHandler, handleUserChange UserChan
 		close(done)
 	}()
 
-	dispatcher := createDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
 	return dispatcher(events, done)
 }
 
@@ -128,7 +129,7 @@ func testUserChangeDispatch(handleMessage MessageHandler, handleUserChange UserC
 		close(done)
 	}()
 
-	dispatcher := createDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
 	return dispatcher(events, done)
 }
 
@@ -186,7 +187,7 @@ func TestDispatcherReturnsErrorOnTimeout(t *testing.T) {
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
-	dispatcher := createDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
 
 	err := dispatcher(events, done)
 	if err == nil {
@@ -203,7 +204,7 @@ func TestDispatcherReturnsNoErrorIfDone(t *testing.T) {
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
-	dispatcher := createDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
 
 	close(done)
 	err := dispatcher(events, done)
@@ -223,7 +224,7 @@ func TestDispatcherSwallowsUnknownEvents(t *testing.T) {
 	handleUserChange := func(event guac.UserInfo) {
 		t.Fatal("Unexpected call to MessageHandler")
 	}
-	dispatcher := createDispatcher(1*time.Second, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(1*time.Second, handleMessage, handleUserChange)
 
 	// events is blocking so these things must be read in sequence
 	go func() {

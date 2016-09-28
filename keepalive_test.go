@@ -1,9 +1,11 @@
-package main
+package main_test
 
 import (
 	"sync"
 	"testing"
 	"time"
+
+	. "github.com/doozr/qbot"
 )
 
 func TestSendsMultiplePingsUntilDone(t *testing.T) {
@@ -27,7 +29,7 @@ func TestSendsMultiplePingsUntilDone(t *testing.T) {
 		return nil
 	}
 
-	startKeepAlive(pinger, after, done, &waitGroup)
+	StartKeepAlive(pinger, after, done, &waitGroup)
 	waitGroup.Wait()
 
 	if calls != expectedCalls {
@@ -49,6 +51,6 @@ func TestSendsNoPingsIfDoneBeforeTimeout(t *testing.T) {
 		return nil
 	}
 
-	startKeepAlive(pinger, after, done, &waitGroup)
+	StartKeepAlive(pinger, after, done, &waitGroup)
 	waitGroup.Wait()
 }

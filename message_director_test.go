@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/doozr/guac"
+	. "github.com/doozr/qbot"
 )
 
 func getTestMessageEvent(user, channel, text string) guac.MessageEvent {
@@ -30,7 +31,7 @@ func TestPrivateMessageIsRouted(t *testing.T) {
 	}
 
 	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
-	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
+	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
 	director(event)
 
 	if !reflect.DeepEqual(event, received) {
@@ -48,7 +49,7 @@ func TestErrorReturnedWhenPrivateMessageFails(t *testing.T) {
 	}
 
 	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
-	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
+	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
 	err := director(event)
 	if err == nil {
 		t.Fatal("Expected error")
@@ -67,7 +68,7 @@ func TestPublicMessageWithNameIsRouted(t *testing.T) {
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "myname: This is a message")
-	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
+	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
 	director(event)
 
 	expected := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
@@ -88,7 +89,7 @@ func TestPublicMessageWithIDIsRouted(t *testing.T) {
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "<@U123> This is a message")
-	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
+	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
 	director(event)
 
 	expected := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
@@ -107,7 +108,7 @@ func TestErrorReturnedIfPublicMessageFailed(t *testing.T) {
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "<@U123> This is a message")
-	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
+	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
 	err := director(event)
 	if err == nil {
 		t.Fatal("Expected error ", err)
@@ -125,6 +126,6 @@ func TestPublicMessageWithoutNameOrIDIsNotRouted(t *testing.T) {
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
-	director := createMessageDirector("U123", "myname", publicHandler, privateHandler)
+	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
 	director(event)
 }
