@@ -7,20 +7,20 @@ import (
 	"github.com/doozr/qbot/command"
 )
 
-// Notifier sends notifications to channels or users
+// Notifier sends notifications to channels or users.
 type Notifier func(command.Notification) error
 
-// IMOpener is a function that opens an IM with a given user
+// IMOpener is a function that opens an IM with a given user.
 type IMOpener func(string) (string, error)
 
-// MessagePoster is a function that posts a message to a channel
+// MessagePoster is a function that posts a message to a channel.
 type MessagePoster func(string, string) error
 
 func isUser(channel string) bool {
 	return strings.HasPrefix(channel, "U")
 }
 
-// CreateNotifier creates a new Notifier
+// CreateNotifier creates a new Notifier.
 func CreateNotifier(openIM IMOpener, postMessage MessagePoster) Notifier {
 	openChannelIfUser := func(user string) (channel string, err error) {
 		if !isUser(user) {

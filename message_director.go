@@ -8,10 +8,10 @@ import (
 	"github.com/doozr/qbot/util"
 )
 
-// CommandMap is a dictionary of command strings to functions
+// CommandMap is a dictionary of command strings to functions.
 type CommandMap map[string]command.CmdFn
 
-// CreateMessageDirector creates a message handler that forwards messages to a public or private handler
+// CreateMessageDirector creates a message handler that forwards messages to a public or private handler.
 func CreateMessageDirector(id string, name string, publicHandler MessageHandler, privateHandler MessageHandler) MessageHandler {
 	isDirectedAtUs := func(text string) bool {
 		return strings.HasPrefix(text, name) || strings.HasPrefix(text, "<@"+id+">")

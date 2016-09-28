@@ -7,13 +7,13 @@ import (
 	"github.com/doozr/jot"
 )
 
-// Pinger is a thing that pings
+// Pinger is a thing that pings.
 type Pinger func() error
 
-// After is a thing that returns a channel that emits the time after a duration
+// After is a thing that returns a channel that emits the time after a duration. See time.After().
 type After func(time.Duration) <-chan time.Time
 
-// StartKeepAlive sends a ping request every 30 seconds
+// StartKeepAlive sends a ping request every 30 seconds.
 func StartKeepAlive(ping Pinger, after After, done DoneChan, waitGroup *sync.WaitGroup) {
 	jot.Print("qbot.keepalive starting up")
 	waitGroup.Add(1)

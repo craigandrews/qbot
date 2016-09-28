@@ -28,10 +28,10 @@ func Dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitG
 	return
 }
 
-// Dispatcher sends incoming messages to the correct recipient
+// Dispatcher sends incoming messages to the correct recipient.
 type Dispatcher func(guac.EventChan, DoneChan) error
 
-// CreateDispatcher creates a new Dispatcher instance
+// CreateDispatcher creates a new Dispatcher instance.
 func CreateDispatcher(timeout time.Duration, handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
 
 	return func(events guac.EventChan, done DoneChan) (err error) {

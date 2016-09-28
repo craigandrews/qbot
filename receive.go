@@ -9,7 +9,7 @@ import (
 	"github.com/doozr/jot"
 )
 
-// Receive runs a Receiver instance in a goroutine and handles synchronisation
+// Receive runs a Receiver instance in a goroutine and handles synchronisation.
 func Receive(receiver EventReceiver, done DoneChan, waitGroup *sync.WaitGroup) (events guac.EventChan) {
 	events = make(guac.EventChan)
 
@@ -28,10 +28,10 @@ func Receive(receiver EventReceiver, done DoneChan, waitGroup *sync.WaitGroup) (
 	return
 }
 
-// EventReceiver receives events from Slack and pushes them to a channel
+// EventReceiver receives events from Slack and pushes them to a channel.
 type EventReceiver func(guac.EventChan, DoneChan) error
 
-// Receiver is anything with a Receive method for interface{}
+// Receiver is anything with a Receive method for interface{}.
 type Receiver interface {
 	Receive() (interface{}, error)
 }

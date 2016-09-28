@@ -7,10 +7,10 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
-// UserChangeHandler handles incoming user change events
+// UserChangeHandler handles incoming user change events.
 type UserChangeHandler func(guac.UserInfo)
 
-// CreateUserChangeHandler creates a new user change handler
+// CreateUserChangeHandler creates a new user change handler.
 func CreateUserChangeHandler(userCache usercache.UserCache) UserChangeHandler {
 	return func(userChange guac.UserInfo) {
 		oldName := userCache.GetUserName(userChange.ID)

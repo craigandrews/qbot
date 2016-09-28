@@ -10,10 +10,10 @@ import (
 	"github.com/doozr/qbot/util"
 )
 
-// MessageHandler handles an incoming message event
+// MessageHandler handles an incoming message event.
 type MessageHandler func(guac.MessageEvent) error
 
-// CreateMessageHandler creates a message handler that calls a command function
+// CreateMessageHandler creates a message handler that calls a command function.
 func CreateMessageHandler(q queue.Queue, commands CommandMap,
 	notify Notifier, persist Persister) MessageHandler {
 	return func(m guac.MessageEvent) (err error) {
