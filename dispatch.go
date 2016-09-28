@@ -54,7 +54,7 @@ func createDispatcher(timeout time.Duration, handleMessage MessageHandler, handl
 					err = handleMessage(m)
 
 				case guac.UserChangeEvent:
-					err = handleUserChange(m.UserInfo)
+					handleUserChange(m.UserInfo)
 
 				case guac.PingPongEvent:
 					jot.Print("dispatcher: pong")

@@ -7,38 +7,34 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
-func TestAddsNewUser(t *testing.T) {
+func getTestUserChangeHandler() (*usercache.UserCache, UserChangeHandler) {
 	cache := usercache.New([]guac.UserInfo{})
-	handler := createUserChangeHandler(cache)
+	return cache, createUserChangeHandler(cache)
+}
 
-	err := handler(guac.UserInfo{
+func TestAddsNewUser(t *testing.T) {
+	userCache, handler := getTestUserChangeHandler()
+
+	handler(guac.UserInfo{
 		ID:   "U1234",
 		Name: "Mr Test",
 	})
-	if err != nil {
-		t.Fatal("Unexpected error")
-	}
 
-	if cache.GetUserName("U1234") != "Mr Test" {
+	if userCache.GetUserName("U1234") != "Mr Test" {
 		t.Fatal("Expected user to be added")
 	}
 }
 
 func TestUpdatesExistingUser(t *testing.T) {
-	cache := usercache.New([]guac.UserInfo{
-		guac.UserInfo{ID: "U1234", Name: "Mr Oldname"},
-	})
-	handler := createUserChangeHandler(cache)
+	userCache, handler := getTestUserChangeHandler()
+	userCache.UpdateUserName("U1234", "Mr Oldname")
 
-	err := handler(guac.UserInfo{
+	handler(guac.UserInfo{
 		ID:   "U1234",
 		Name: "Mr Test",
 	})
-	if err != nil {
-		t.Fatal("Unexpected error")
-	}
 
-	if cache.GetUserName("U1234") != "Mr Test" {
+	if userCache.GetUserName("U1234") != "Mr Test" {
 		t.Fatal("Expected user to be updated")
 	}
 }

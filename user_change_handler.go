@@ -8,11 +8,11 @@ import (
 )
 
 // UserChangeHandler handles incoming user change events
-type UserChangeHandler func(guac.UserInfo) error
+type UserChangeHandler func(guac.UserInfo)
 
 // NewUserChangeHandler creates a new user change handler
 func createUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
-	return func(userChange guac.UserInfo) error {
+	return func(userChange guac.UserInfo) {
 		oldName := userCache.GetUserName(userChange.ID)
 		userCache.UpdateUserName(userChange.ID, userChange.Name)
 		if oldName == "" {
@@ -20,6 +20,5 @@ func createUserChangeHandler(userCache *usercache.UserCache) UserChangeHandler {
 		} else if oldName != userChange.Name {
 			log.Printf("User %s renamed to %s", oldName, userChange.Name)
 		}
-		return nil
 	}
 }
