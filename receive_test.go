@@ -9,11 +9,7 @@ import (
 	"github.com/doozr/guac"
 )
 
-func TestReceiveRunsReceiverInBackground(t *testing.T) {
-	receiver := func(events guac.EventChan, done DoneChan) error {
-		events <- "test"
-		return nil
-	}
+func testReceiveSuccess(t *testing.T, receiver EventReceiver) {
 	done := make(DoneChan)
 	waitGroup := sync.WaitGroup{}
 
@@ -30,25 +26,20 @@ func TestReceiveRunsReceiverInBackground(t *testing.T) {
 	waitGroup.Wait()
 }
 
+func TestReceiveRunsReceiverInBackground(t *testing.T) {
+	receiver := func(events guac.EventChan, done DoneChan) error {
+		events <- "test"
+		return nil
+	}
+	testReceiveSuccess(t, receiver)
+}
+
 func TestReceiveShutDownCleanlyWithErrors(t *testing.T) {
 	receiver := func(events guac.EventChan, done DoneChan) error {
 		events <- "test"
 		return fmt.Errorf("Error!")
 	}
-	done := make(DoneChan)
-	waitGroup := sync.WaitGroup{}
-
-	events := receive(receiver, done, &waitGroup)
-	select {
-	case e := <-events:
-		if e.(string) != "test" {
-			t.Fatal("Expected test event")
-		}
-	case <-time.After(2 * time.Second):
-		t.Fatal("Expected event within 2 seconds")
-	}
-
-	waitGroup.Wait()
+	testReceiveSuccess(t, receiver)
 }
 
 type TestRealTimeReceiver struct {
@@ -128,11 +119,8 @@ func TestReceiverShutsDownWhenDoneClosed(t *testing.T) {
 	events := make(guac.EventChan)
 	done := make(DoneChan)
 	close(done)
-	err := receiver(events, done)
 
-	if err != nil {
-		t.Fatal("Expected no error ", err)
-	}
+	receiver(events, done)
 
 	select {
 	case e := <-events:
@@ -152,15 +140,9 @@ func TestReceiverReturnsNoErrorWhenDoneClosed(t *testing.T) {
 	events := make(guac.EventChan)
 	done := make(DoneChan)
 	close(done)
-	err := receiver(events, done)
 
+	err := receiver(events, done)
 	if err != nil {
 		t.Fatal("Expected no error ", err)
-	}
-
-	select {
-	case e := <-events:
-		t.Fatal("Expected nothing on queue ", e)
-	default:
 	}
 }
