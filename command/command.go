@@ -71,17 +71,6 @@ func (c Command) logActivity(id, reason, text string) {
 	log.Printf("%s (%s) %s", c.getNameIDPair(id), reason, text)
 }
 
-// Barge adds a user to the front of the queue
-func (c Command) Barge(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
-	i := queue.Item{ID: id, Reason: args}
-	q = q.Barge(i)
-	if q.Active() == i {
-		return q, Notification{ch, c.response.JoinActive(i)}
-	}
-	c.logActivity(id, args, "barged")
-	return q, Notification{ch, c.response.Barge(i, q.Active())}
-}
-
 // Boot kicks someone from the waiting list
 func (c Command) Boot(q queue.Queue, ch, booter, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
