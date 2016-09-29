@@ -27,8 +27,6 @@ var userCache = usercache.New([]guac.UserInfo{
 	{"U789", "andrew"},
 })
 
-var command = New(name, userCache)
-
 func testCommand(t *testing.T, fn CmdFn, tests []CommandTest) {
 	for _, tt := range tests {
 		q, r := fn(tt.startQueue, tt.channel, tt.user, tt.reason)

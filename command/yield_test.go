@@ -3,10 +3,12 @@ package command_test
 import (
 	"testing"
 
+	. "github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 )
 
 func TestYield(t *testing.T) {
+	command := New(name, userCache)
 	testCommand(t, command.Yield, []CommandTest{
 		{
 			test:             "do not yield if nobody can receive it",

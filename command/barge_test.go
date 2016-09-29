@@ -3,10 +3,12 @@ package command_test
 import (
 	"testing"
 
+	. "github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 )
 
 func TestBarge(t *testing.T) {
+	command := New(name, userCache)
 	testCommand(t, command.Barge, []CommandTest{
 		{
 			test:             "make active if queue empty",
