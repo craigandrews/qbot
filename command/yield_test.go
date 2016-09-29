@@ -6,23 +6,23 @@ import (
 	"github.com/doozr/qbot/queue"
 )
 
-func TestDone(t *testing.T) {
-	testCommand(t, command.Done, []CommandTest{
+func TestYield(t *testing.T) {
+	testCommand(t, command.Yield, []CommandTest{
 		{
-			test:             "drop token",
+			test:             "do not yield if nobody can receive it",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Banana"}}),
 			channel:          "C1A2B3C",
 			user:             "U123",
-			expectedQueue:    queue.Queue{},
-			expectedResponse: "<@U123|craig> (Banana) has finished with the token\nThe token is up for grabs",
+			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Banana"}}),
+			expectedResponse: "<@U123|craig> You cannot yield if there is nobody waiting",
 		},
 		{
-			test:             "drop token and give it to the next in line",
+			test:             "yield token and give it to the next in line",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Banana"}, {"U456", "Next up"}}),
 			channel:          "C1A2B3C",
 			user:             "U123",
-			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Next up"}}),
-			expectedResponse: "<@U123|craig> (Banana) has finished with the token\n*<@U456|edward> (Next up) now has the token*",
+			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Next up"}, {"U123", "Banana"}}),
+			expectedResponse: "<@U123|craig> (Banana) has yielded the token\n*<@U456|edward> (Next up) now has the token*",
 		},
 		{
 			test:             "warns if user does not have the token",
@@ -30,7 +30,7 @@ func TestDone(t *testing.T) {
 			channel:          "C1A2B3C",
 			user:             "U456",
 			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Banana"}, {"U456", "Next up"}}),
-			expectedResponse: "<@U456|edward> You cannot be done if you don't have the token",
+			expectedResponse: "<@U456|edward> You cannot yield if you do not have the token",
 		},
 		{
 			test:             "does nothing if the queue is empty",
