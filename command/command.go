@@ -4,17 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
 )
-
-// PendingOust contains an oust request that must be fulfilled
-type PendingOust struct {
-	Item      queue.Item
-	Timestamp time.Time
-}
 
 // CmdFn is a function for a command
 type CmdFn func(q queue.Queue, channel string, user string, args string) (queue.Queue, Notification)
@@ -27,16 +20,15 @@ type Notification struct {
 
 // Command provides the API to the various commands supported by the bot
 type Command struct {
-	name         string
-	response     responses
-	userCache    usercache.UserCache
-	pendingOusts map[string]PendingOust
+	name      string
+	response  responses
+	userCache usercache.UserCache
 }
 
 // New returns a new Command instance
 func New(name string, uc usercache.UserCache) Command {
 	r := responses{uc}
-	c := Command{name, r, uc, make(map[string]PendingOust)}
+	c := Command{name, r, uc}
 	return c
 }
 
@@ -68,43 +60,6 @@ func (c Command) getNameIDPair(id string) (pair string) {
 
 func (c Command) logActivity(id, reason, text string) {
 	log.Printf("%s (%s) %s", c.getNameIDPair(id), reason, text)
-}
-
-// Oust boots the current token holder and gives it to the next person
-func (c Command) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue, Notification) {
-	if len(q) == 0 {
-		return q, Notification{ch, ""}
-	}
-
-	id := c.getIDFromName(args)
-	if id == "" {
-		return q, Notification{ch, c.response.OustNotActive(ouster)}
-	}
-
-	i := q.Active()
-	if i.ID != id {
-		return q, Notification{ch, c.response.OustNotActive(ouster)}
-	}
-
-	// If a previous request has been lodged in the last 30 seconds
-	// and all is well then oust the active user
-	pendingOust, ok := c.pendingOusts[ouster]
-	if ok && pendingOust.Item == i {
-		if time.Since(pendingOust.Timestamp).Seconds() < 30 && q.Active() == i {
-			q = q.Remove(i)
-			c.logActivity(i.ID, i.Reason, "ousted by "+c.getNameIDPair(ouster))
-			if len(q) == 0 {
-				return q, Notification{ch, c.response.OustNoOthers(ouster, i)}
-			}
-			n := q.Active()
-			c.logActivity(n.ID, n.Reason, "is active")
-			return q, Notification{ch, c.response.Oust(ouster, i, q)}
-		}
-	}
-
-	c.pendingOusts[ouster] = PendingOust{i, time.Now()}
-
-	return q, Notification{ch, c.response.OustConfirm(ouster, i)}
 }
 
 // List shows who has the token and who is waiting
@@ -171,7 +126,7 @@ func (c Command) MoreHelp(q queue.Queue, ch, id, args string) (queue.Queue, Noti
 
 	s += "\n*If you need to get rid of somebody who is in the way:*\n"
 	s += cmdList([][]string{
-		[]string{"oust <name>", "Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)"},
+		[]string{"oust <name>", "Forcibly take the token from the token holder and put them first in the queue"},
 		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
 		[]string{"boot <name> <reason prefix>", "Kick somebody out of the waiting list (match the entry with reason that starts with <reason prefix>)"},
 	})

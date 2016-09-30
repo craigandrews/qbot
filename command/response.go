@@ -148,6 +148,11 @@ func (n responses) OustNotActive(ouster string) string {
 	return fmt.Sprintf("%s You can only oust the token holder", n.link(ouster))
 }
 
+// OustNoTarget tells the user they must specify a target to oust
+func (n responses) OustNoTarget(ouster string) string {
+	return fmt.Sprintf("%s You must specify who you want to oust", n.link(ouster))
+}
+
 // OustNoOthers is a successful oust when nobody can pick up the token
 func (n responses) OustNoOthers(ouster string, i queue.Item) string {
 	return n.ousted(ouster, i)
