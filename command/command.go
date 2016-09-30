@@ -8,7 +8,6 @@ import (
 
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
-	"github.com/doozr/qbot/util"
 )
 
 // PendingOust contains an oust request that must be fulfilled
@@ -69,32 +68,6 @@ func (c Command) getNameIDPair(id string) (pair string) {
 
 func (c Command) logActivity(id, reason, text string) {
 	log.Printf("%s (%s) %s", c.getNameIDPair(id), reason, text)
-}
-
-// Boot kicks someone from the waiting list
-func (c Command) Boot(q queue.Queue, ch, booter, args string) (queue.Queue, Notification) {
-	if len(q) == 0 {
-		return q, Notification{ch, ""}
-	}
-
-	name, reason := util.StringPop(args)
-	id := c.getIDFromName(name)
-	i, ok := c.findItem(q, id, reason)
-	if !ok {
-		return q, Notification{ch, c.response.BootNoEntry(booter, name, reason)}
-	}
-
-	if q.Active() == i {
-		return q, Notification{ch, c.response.OustNotBoot(booter)}
-	}
-
-	if q.Contains(i) {
-		q = q.Remove(i)
-		c.logActivity(id, reason, "booted by "+c.getNameIDPair(booter))
-		return q, Notification{ch, c.response.Boot(booter, i)}
-	}
-
-	return q, Notification{ch, ""}
 }
 
 // Oust boots the current token holder and gives it to the next person

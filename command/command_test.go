@@ -14,7 +14,7 @@ type CommandTest struct {
 	startQueue       queue.Queue
 	channel          string
 	user             string
-	reason           string
+	args             string
 	expectedQueue    queue.Queue
 	expectedResponse string
 }
@@ -29,7 +29,7 @@ var userCache = usercache.New([]guac.UserInfo{
 
 func testCommand(t *testing.T, fn CmdFn, tests []CommandTest) {
 	for _, tt := range tests {
-		q, r := fn(tt.startQueue, tt.channel, tt.user, tt.reason)
+		q, r := fn(tt.startQueue, tt.channel, tt.user, tt.args)
 		assertQueue(t, tt.test, tt.expectedQueue, q)
 		assertResponse(t, tt.test, tt.channel, tt.expectedResponse, r)
 	}
