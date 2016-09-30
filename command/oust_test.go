@@ -12,11 +12,11 @@ func TestOust(t *testing.T) {
 	testCommand(t, cmd.Oust, []CommandTest{
 		{
 			test:             "swap active with next in line",
-			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
+			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U789", "Last"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
 			args:             "craig",
-			expectedQueue:    queue.Queue([]queue.Item{{"U456", "First"}, {"U123", "Active"}}),
+			expectedQueue:    queue.Queue([]queue.Item{{"U456", "First"}, {"U123", "Active"}, {"U789", "Last"}}),
 			expectedResponse: "<@U789|andrew> ousted <@U123|craig> (Active)\n*<@U456|edward> (First) now has the token*",
 		},
 		{
