@@ -57,6 +57,6 @@ Address each command to the bot (`<bot name>: <command>`)
 * `barge <reason>` - Barge to the front of the queue so you get the token next (only with good reason!)
 * `boot <name>` - Kick somebody out of the waiting list (their most recent entry is removed)
 * `boot <name> <reason>` - Kick somebody out of the waiting list (their most recent entry starting with <reason> is removed)
-* `oust` - Forcibly take the token from the token holder and kick them out of the queue (only with VERY good reason!)
+* `oust` - Force the token holder to yield to the next in line
 * `list` - Show who has the token and who is waiting
 * `help` - Show the help text

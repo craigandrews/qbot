@@ -126,7 +126,7 @@ func (c Command) MoreHelp(q queue.Queue, ch, id, args string) (queue.Queue, Noti
 
 	s += "\n*If you need to get rid of somebody who is in the way:*\n"
 	s += cmdList([][]string{
-		[]string{"oust <name>", "Forcibly take the token from the token holder and put them first in the queue"},
+		[]string{"oust <name>", "Force the token holder to yield to the next in line"},
 		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
 		[]string{"boot <name> <reason prefix>", "Kick somebody out of the waiting list (match the entry with reason that starts with <reason prefix>)"},
 	})
