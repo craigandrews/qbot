@@ -3,13 +3,13 @@ package command_test
 import (
 	"testing"
 
-	. "github.com/doozr/qbot/command"
+	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 )
 
 func TestDone(t *testing.T) {
-	command := New(name, userCache)
-	testCommand(t, command.Done, []CommandTest{
+	cmd := command.New(name, userCache)
+	testCommand(t, cmd.Done, []CommandTest{
 		{
 			test:             "drop token",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Banana"}}),

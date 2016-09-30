@@ -3,13 +3,13 @@ package command_test
 import (
 	"testing"
 
-	. "github.com/doozr/qbot/command"
+	"github.com/doozr/qbot/command"
 	"github.com/doozr/qbot/queue"
 )
 
 func TestLeave(t *testing.T) {
-	command := New(name, userCache)
-	testCommand(t, command.Leave, []CommandTest{
+	cmd := command.New(name, userCache)
+	testCommand(t, cmd.Leave, []CommandTest{
 		{
 			test:             "do nothing if not present",
 			startQueue:       queue.Queue([]queue.Item{{"U456", "Already here"}}),
