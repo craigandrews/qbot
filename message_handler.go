@@ -13,6 +13,9 @@ import (
 // MessageHandler handles an incoming message event.
 type MessageHandler func(guac.MessageEvent) error
 
+// CommandMap is a dictionary of command strings to functions.
+type CommandMap map[string]command.Command
+
 // CreateMessageHandler creates a message handler that calls a command function.
 func CreateMessageHandler(q queue.Queue, commands CommandMap,
 	notify Notifier, persist Persister) MessageHandler {

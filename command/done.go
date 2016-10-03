@@ -3,7 +3,7 @@ package command
 import "github.com/doozr/qbot/queue"
 
 // Done removes the active user from the queue
-func (c Command) Done(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+func (c QueueCommands) Done(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
 		return q, Notification{ch, ""}
 	}

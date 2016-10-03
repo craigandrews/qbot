@@ -3,7 +3,7 @@ package command
 import "github.com/doozr/qbot/queue"
 
 // Oust boots the current token holder and gives it to the next person
-func (c Command) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue, Notification) {
+func (c QueueCommands) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
 		return q, Notification{ch, ""}
 	}

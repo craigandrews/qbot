@@ -27,7 +27,7 @@ var userCache = usercache.New([]guac.UserInfo{
 	{"U789", "andrew"},
 })
 
-func testCommand(t *testing.T, fn CmdFn, tests []CommandTest) {
+func testCommand(t *testing.T, fn Command, tests []CommandTest) {
 	for _, tt := range tests {
 		q, r := fn(tt.startQueue, tt.channel, tt.user, tt.args)
 		assertQueue(t, tt.test, tt.expectedQueue, q)

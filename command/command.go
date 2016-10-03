@@ -9,8 +9,8 @@ import (
 	"github.com/doozr/qbot/usercache"
 )
 
-// CmdFn is a function for a command
-type CmdFn func(q queue.Queue, channel string, user string, args string) (queue.Queue, Notification)
+// Command is a function for a command
+type Command func(q queue.Queue, channel string, user string, args string) (queue.Queue, Notification)
 
 // Notification represents a message to a channel
 type Notification struct {
@@ -18,21 +18,21 @@ type Notification struct {
 	Message string
 }
 
-// Command provides the API to the various commands supported by the bot
-type Command struct {
+// QueueCommands provides the API to the various commands supported by the bot
+type QueueCommands struct {
 	name      string
 	response  responses
 	userCache usercache.UserCache
 }
 
 // New returns a new Command instance
-func New(name string, uc usercache.UserCache) Command {
+func New(name string, uc usercache.UserCache) QueueCommands {
 	r := responses{uc}
-	c := Command{name, r, uc}
+	c := QueueCommands{name, r, uc}
 	return c
 }
 
-func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
+func (c QueueCommands) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
 	for ix := len(q) - 1; ix >= 0; ix-- {
 		if q[ix].ID == id && strings.HasPrefix(q[ix].Reason, reason) {
 			ok = true
@@ -43,7 +43,7 @@ func (c Command) findItem(q queue.Queue, id, reason string) (item queue.Item, ok
 	return
 }
 
-func (c Command) getIDFromName(name string) (id string) {
+func (c QueueCommands) getIDFromName(name string) (id string) {
 	id = ""
 	if strings.HasPrefix(name, "<@") {
 		id = strings.Trim(name, "<@>")
@@ -53,12 +53,12 @@ func (c Command) getIDFromName(name string) (id string) {
 	return
 }
 
-func (c Command) getNameIDPair(id string) (pair string) {
+func (c QueueCommands) getNameIDPair(id string) (pair string) {
 	name := c.userCache.GetUserName(id)
 	return fmt.Sprintf("<%s|%s>", id, name)
 }
 
-func (c Command) logActivity(id, reason, text string) {
+func (c QueueCommands) logActivity(id, reason, text string) {
 	log.Printf("%s (%s) %s", c.getNameIDPair(id), reason, text)
 }
 
@@ -71,7 +71,7 @@ func cmdList(cmds [][]string) string {
 }
 
 // Help provides brief assistance
-func (c Command) Help(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", c.name)
 
 	s += cmdList([][]string{
@@ -88,7 +88,7 @@ func (c Command) Help(q queue.Queue, ch, id, args string) (queue.Queue, Notifica
 }
 
 // MoreHelp provides much needed assistance
-func (c Command) MoreHelp(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+func (c QueueCommands) MoreHelp(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", c.name)
 
 	s += "*If you don't have the token and need it:*\n"

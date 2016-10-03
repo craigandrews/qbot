@@ -7,7 +7,7 @@ import (
 )
 
 // List shows who has the token and who is waiting
-func (c Command) List(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+func (c QueueCommands) List(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
 		return q, Notification{ch, "Nobody has the token, and nobody is waiting"}
 	}

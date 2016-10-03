@@ -6,7 +6,7 @@ import (
 )
 
 // Boot kicks someone from the waiting list
-func (c Command) Boot(q queue.Queue, ch, booter, args string) (queue.Queue, Notification) {
+func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
 		return q, Notification{ch, ""}
 	}

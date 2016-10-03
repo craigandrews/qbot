@@ -25,7 +25,7 @@ func TestDispatchesMessage(t *testing.T) {
 	initialQueue := queue.Queue{}
 	event := makeTestEvent("test the args")
 
-	commands := map[string]command.CmdFn{
+	commands := map[string]command.Command{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
 			q = q.Add(queue.Item{ID: user, Reason: args})
 			n := command.Notification{Channel: channel, Message: "This is a message"}
@@ -72,7 +72,7 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 	event := makeTestEvent("TEST UPPER CASE")
 
 	calls := 0
-	commands := map[string]command.CmdFn{
+	commands := map[string]command.Command{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
 			calls++
 			return q, command.Notification{Channel: channel, Message: "response"}
@@ -99,7 +99,7 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 	initialQueue := queue.Queue{}
 	event := makeTestEvent("NOT FOUND")
 
-	commands := map[string]command.CmdFn{
+	commands := map[string]command.Command{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
 			t.Fatal("Unexpected call to command")
 			return q, command.Notification{}
@@ -124,7 +124,7 @@ func TestDoesNotPersistIfNotifyFails(t *testing.T) {
 	initialQueue := queue.Queue{}
 	event := makeTestEvent("test with errors")
 
-	commands := map[string]command.CmdFn{
+	commands := map[string]command.Command{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
 			return q, command.Notification{Channel: channel, Message: "response"}
 		},
@@ -150,7 +150,7 @@ func TestReturnsErrorIfPersistFails(t *testing.T) {
 	initialQueue := queue.Queue{}
 	event := makeTestEvent("test with errors")
 
-	commands := map[string]command.CmdFn{
+	commands := map[string]command.Command{
 		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
 			return q, command.Notification{Channel: channel, Message: "response"}
 		},

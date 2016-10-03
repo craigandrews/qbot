@@ -3,7 +3,7 @@ package command
 import "github.com/doozr/qbot/queue"
 
 // Join adds an item to the queue
-func (c Command) Join(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+func (c QueueCommands) Join(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	i := queue.Item{ID: id, Reason: args}
 
 	if i.Reason == "" {

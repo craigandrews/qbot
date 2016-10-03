@@ -3,7 +3,7 @@ package command
 import "github.com/doozr/qbot/queue"
 
 // Yield allows the second place ahead of the active user
-func (c Command) Yield(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
+func (c QueueCommands) Yield(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	if len(q) == 0 {
 		return q, Notification{ch, ""}
 	}
