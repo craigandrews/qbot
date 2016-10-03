@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	log.Printf("Qbot version %s", qbot.Version)
+	log.Printf("Qbot version %s", qbot.Version())
 
 	// Turn on jot if required
 	if os.Getenv("QBOT_DEBUG") == "true" {
