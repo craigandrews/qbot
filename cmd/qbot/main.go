@@ -87,16 +87,23 @@ func connectToSlackOrDie(token string) guac.RealTimeClient {
 
 func loadQueueOrDie(filename string) (q queue.Queue) {
 	q = queue.Queue{}
-	if _, err := os.Stat(filename); err == nil {
-		dat, err := ioutil.ReadFile(filename)
-		if err != nil {
-			log.Fatalf("Error loading queue: %s", err)
-		}
-		json.Unmarshal(dat, &q)
-		jot.Printf("loadQueue: read queue from %s: %v", filename, q)
-		log.Printf("Loaded queue from %s", filename)
+	if _, err := os.Stat(filename); err != nil {
+		return
 	}
-	return q
+
+	dat, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatalf("Error loading queue: %s", err)
+	}
+
+	err = json.Unmarshal(dat, &q)
+	if err != nil {
+		log.Fatalf("Error parsing queue: %s", err)
+	}
+
+	jot.Printf("loadQueue: read queue from %s: %v", filename, q)
+	log.Printf("Loaded queue from %s", filename)
+	return
 }
 
 func getUserListOrDie(client guac.WebClient) (userCache usercache.UserCache) {

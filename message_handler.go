@@ -25,13 +25,19 @@ func CreateMessageHandler(q queue.Queue, commands CommandMap,
 		cmd = strings.ToLower(cmd)
 
 		jot.Printf("message dispatch: message %s with cmd %s and args %v", m.Text, cmd, args)
-		if fn, ok := commands[cmd]; ok {
-			q, response = fn(q, m.Channel, m.User, args)
-
-			if err = notify(response); err == nil {
-				err = persist(q)
-			}
+		fn, ok := commands[cmd]
+		if !ok {
+			return
 		}
+
+		q, response = fn(q, m.Channel, m.User, args)
+
+		err = notify(response)
+		if err != nil {
+			return
+		}
+
+		err = persist(q)
 		return
 	}
 }
