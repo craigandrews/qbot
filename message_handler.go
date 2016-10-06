@@ -17,8 +17,7 @@ type MessageHandler func(queue.Queue, guac.MessageEvent) (queue.Queue, error)
 type CommandMap map[string]command.Command
 
 // CreateMessageHandler creates a message handler that calls a command function.
-func CreateMessageHandler(commands CommandMap,
-	notify Notifier, persist Persister) MessageHandler {
+func CreateMessageHandler(commands CommandMap, notify Notifier) MessageHandler {
 	return func(oq queue.Queue, m guac.MessageEvent) (q queue.Queue, err error) {
 		text := strings.Trim(m.Text, " \t\r\n")
 
@@ -37,11 +36,6 @@ func CreateMessageHandler(commands CommandMap,
 		q, response = fn(oq, m.Channel, m.User, args)
 
 		err = notify(response)
-		if err != nil {
-			return
-		}
-
-		err = persist(q)
 		return
 	}
 }

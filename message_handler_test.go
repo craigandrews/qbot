@@ -39,13 +39,7 @@ func TestDispatchesMessage(t *testing.T) {
 		return nil
 	}
 
-	var persistedQueue queue.Queue
-	persist := func(q queue.Queue) error {
-		persistedQueue = q
-		return nil
-	}
-
-	handler := CreateMessageHandler(commands, notify, persist)
+	handler := CreateMessageHandler(commands, notify)
 	receivedQueue, err := handler(initialQueue, event)
 	if err != nil {
 		t.Fatal("Unexpected error ", err)
@@ -65,9 +59,6 @@ func TestDispatchesMessage(t *testing.T) {
 	if !receivedQueue.Equal(expectedQueue) {
 		t.Fatal("Received unexpected queue", expectedQueue, receivedQueue)
 	}
-	if !persistedQueue.Equal(expectedQueue) {
-		t.Fatal("Persisted unexpected queue", expectedQueue, persistedQueue)
-	}
 }
 
 func TestDispatchCaseInsensitive(t *testing.T) {
@@ -86,11 +77,7 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 		return nil
 	}
 
-	persist := func(q queue.Queue) error {
-		return nil
-	}
-
-	handler := CreateMessageHandler(commands, notify, persist)
+	handler := CreateMessageHandler(commands, notify)
 	handler(initialQueue, event)
 
 	if calls != 1 {
@@ -114,12 +101,7 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 		return nil
 	}
 
-	persist := func(q queue.Queue) error {
-		t.Fatal("Unexpected called to persist")
-		return nil
-	}
-
-	handler := CreateMessageHandler(commands, notify, persist)
+	handler := CreateMessageHandler(commands, notify)
 	receivedQueue, _ := handler(initialQueue, event)
 
 	if !receivedQueue.Equal(initialQueue) {
@@ -127,7 +109,7 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 	}
 }
 
-func TestDoesNotPersistIfNotifyFails(t *testing.T) {
+func TestReturnsErrorIfNotifyFails(t *testing.T) {
 	initialQueue := queue.Queue{}
 	event := makeTestEvent("test with errors")
 
@@ -141,42 +123,9 @@ func TestDoesNotPersistIfNotifyFails(t *testing.T) {
 		return fmt.Errorf("Error!")
 	}
 
-	persist := func(q queue.Queue) error {
-		t.Fatal("Unexpected called to persist")
-		return nil
-	}
-
-	handler := CreateMessageHandler(commands, notify, persist)
+	handler := CreateMessageHandler(commands, notify)
 	_, err := handler(initialQueue, event)
 	if err == nil {
 		t.Fatal("Expected error")
 	}
 }
-
-func TestReturnsErrorIfPersistFails(t *testing.T) {
-	initialQueue := queue.Queue{}
-	event := makeTestEvent("test with errors")
-
-	commands := map[string]command.Command{
-		"test": func(q queue.Queue, channel string, user string, args string) (queue.Queue, command.Notification) {
-			return q, command.Notification{Channel: channel, Message: "response"}
-		},
-	}
-
-	notify := func(n command.Notification) error {
-		return nil
-	}
-
-	persist := func(q queue.Queue) error {
-		return fmt.Errorf("Error!")
-	}
-
-	handler := CreateMessageHandler(commands, notify, persist)
-	_, err := handler(initialQueue, event)
-	if err == nil {
-		t.Fatal("Expected error")
-	}
-}
-
-// returns new queue from command
-// returns same queue if invalid command

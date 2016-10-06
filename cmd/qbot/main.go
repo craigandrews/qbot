@@ -44,9 +44,10 @@ func main() {
 	persist := qbot.CreatePersister(ioutil.WriteFile, filename, q)
 	userChangeHandler := qbot.CreateUserChangeHandler(userCache)
 
-	publicHandler := qbot.CreateMessageHandler(qbot.PublicCommands(commands), notify, persist)
-	privateHandler := qbot.CreateMessageHandler(qbot.PrivateCommands(commands), notify, persist)
-	messageHandler := qbot.CreateMessageDirector(client.ID(), client.Name(), publicHandler, privateHandler)
+	publicHandler := qbot.CreateMessageHandler(qbot.PublicCommands(commands), notify)
+	persistHandler := qbot.CreateMessagePersister(persist, publicHandler)
+	privateHandler := qbot.CreateMessageHandler(qbot.PrivateCommands(commands), notify)
+	messageHandler := qbot.CreateMessageDirector(client.ID(), client.Name(), persistHandler, privateHandler)
 
 	receiver := qbot.CreateEventReceiver(client)
 	events := qbot.Receive(receiver, done, &waitGroup)
