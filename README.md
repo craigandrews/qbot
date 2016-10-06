@@ -10,9 +10,8 @@ Grab it with `go get`:
 
     go get github.com/doozr/qbot/cmd/qbot
 
-Or clone the project and build it with `go build`.
-
-Alternatively grab a binary from the releases page, unzip it and you're good to go.
+Or clone the project and build it with `./build.sh` to get proper
+versioning.
 
 ## Run the bot
 
