@@ -39,14 +39,14 @@ func TestDispatchesMessage(t *testing.T) {
 		return nil
 	}
 
-	var receivedQueue queue.Queue
+	var persistedQueue queue.Queue
 	persist := func(q queue.Queue) error {
-		receivedQueue = q
+		persistedQueue = q
 		return nil
 	}
 
 	handler := CreateMessageHandler(commands, notify, persist)
-	_, err := handler(initialQueue, event)
+	receivedQueue, err := handler(initialQueue, event)
 	if err != nil {
 		t.Fatal("Unexpected error ", err)
 	}
@@ -63,7 +63,10 @@ func TestDispatchesMessage(t *testing.T) {
 		queue.Item{ID: "U1234", Reason: "the args"},
 	})
 	if !receivedQueue.Equal(expectedQueue) {
-		t.Fatal("Received unexpected qeueue", expectedQueue, receivedQueue)
+		t.Fatal("Received unexpected queue", expectedQueue, receivedQueue)
+	}
+	if !persistedQueue.Equal(expectedQueue) {
+		t.Fatal("Persisted unexpected queue", expectedQueue, persistedQueue)
 	}
 }
 
@@ -96,7 +99,7 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 }
 
 func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
-	initialQueue := queue.Queue{}
+	initialQueue := queue.Queue([]queue.Item{{"U123", "Tomato"}})
 	event := makeTestEvent("NOT FOUND")
 
 	commands := map[string]command.Command{
@@ -117,7 +120,11 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 	}
 
 	handler := CreateMessageHandler(commands, notify, persist)
-	handler(initialQueue, event)
+	receivedQueue, _ := handler(initialQueue, event)
+
+	if !receivedQueue.Equal(initialQueue) {
+		t.Fatal("Unexpected queue", initialQueue, receivedQueue)
+	}
 }
 
 func TestDoesNotPersistIfNotifyFails(t *testing.T) {
