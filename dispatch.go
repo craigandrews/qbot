@@ -7,6 +7,7 @@ import (
 
 	"github.com/doozr/guac"
 	"github.com/doozr/jot"
+	"github.com/doozr/qbot/queue"
 )
 
 // Dispatch runs a Dispatcher in a goroutine and handles synchronisation
@@ -32,7 +33,7 @@ func Dispatch(dispatcher Dispatcher, events guac.EventChan, done DoneChan, waitG
 type Dispatcher func(guac.EventChan, DoneChan) error
 
 // CreateDispatcher creates a new Dispatcher instance.
-func CreateDispatcher(timeout time.Duration, handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
+func CreateDispatcher(q queue.Queue, timeout time.Duration, handleMessage MessageHandler, handleUserChange UserChangeHandler) Dispatcher {
 
 	return func(events guac.EventChan, done DoneChan) (err error) {
 		for {
@@ -51,7 +52,7 @@ func CreateDispatcher(timeout time.Duration, handleMessage MessageHandler, handl
 				switch m := event.(type) {
 				case guac.MessageEvent:
 					jot.Print("dispatcher received message: ", m)
-					err = handleMessage(m)
+					q, err = handleMessage(q, m)
 
 				case guac.UserChangeEvent:
 					handleUserChange(m.UserInfo)

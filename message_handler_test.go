@@ -45,8 +45,8 @@ func TestDispatchesMessage(t *testing.T) {
 		return nil
 	}
 
-	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
-	err := handler(event)
+	handler := CreateMessageHandler(commands, notify, persist)
+	_, err := handler(initialQueue, event)
 	if err != nil {
 		t.Fatal("Unexpected error ", err)
 	}
@@ -87,8 +87,8 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 		return nil
 	}
 
-	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
-	handler(event)
+	handler := CreateMessageHandler(commands, notify, persist)
+	handler(initialQueue, event)
 
 	if calls != 1 {
 		t.Fatalf("Expected command to be called exactly once, was called %d times", calls)
@@ -116,8 +116,8 @@ func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
 		return nil
 	}
 
-	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
-	handler(event)
+	handler := CreateMessageHandler(commands, notify, persist)
+	handler(initialQueue, event)
 }
 
 func TestDoesNotPersistIfNotifyFails(t *testing.T) {
@@ -139,8 +139,8 @@ func TestDoesNotPersistIfNotifyFails(t *testing.T) {
 		return nil
 	}
 
-	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
-	err := handler(event)
+	handler := CreateMessageHandler(commands, notify, persist)
+	_, err := handler(initialQueue, event)
 	if err == nil {
 		t.Fatal("Expected error")
 	}
@@ -164,9 +164,12 @@ func TestReturnsErrorIfPersistFails(t *testing.T) {
 		return fmt.Errorf("Error!")
 	}
 
-	handler := CreateMessageHandler(initialQueue, commands, notify, persist)
-	err := handler(event)
+	handler := CreateMessageHandler(commands, notify, persist)
+	_, err := handler(initialQueue, event)
 	if err == nil {
 		t.Fatal("Expected error")
 	}
 }
+
+// returns new queue from command
+// returns same queue if invalid command

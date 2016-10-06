@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/doozr/guac"
+	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/util"
 )
 
@@ -17,13 +18,13 @@ func CreateMessageDirector(id string, name string, publicHandler MessageHandler,
 		return strings.HasPrefix(channel, "D")
 	}
 
-	return func(m guac.MessageEvent) (err error) {
+	return func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		if isPrivateChannel(m.Channel) {
-			return privateHandler(m)
+			return privateHandler(q, m)
 		} else if isDirectedAtUs(m.Text) {
 			_, m.Text = util.StringPop(m.Text)
-			return publicHandler(m)
+			return publicHandler(q, m)
 		}
-		return
+		return q, nil
 	}
 }

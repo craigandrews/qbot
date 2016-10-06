@@ -44,8 +44,8 @@ func main() {
 	persist := qbot.CreatePersister(ioutil.WriteFile, filename, q)
 	userChangeHandler := qbot.CreateUserChangeHandler(userCache)
 
-	publicHandler := qbot.CreateMessageHandler(q, qbot.PublicCommands(commands), notify, persist)
-	privateHandler := qbot.CreateMessageHandler(q, qbot.PrivateCommands(commands), notify, persist)
+	publicHandler := qbot.CreateMessageHandler(qbot.PublicCommands(commands), notify, persist)
+	privateHandler := qbot.CreateMessageHandler(qbot.PrivateCommands(commands), notify, persist)
 	messageHandler := qbot.CreateMessageDirector(client.ID(), client.Name(), publicHandler, privateHandler)
 
 	receiver := qbot.CreateEventReceiver(client)
@@ -54,7 +54,7 @@ func main() {
 	qbot.StartKeepAlive(client.Ping, time.After, done, &waitGroup)
 
 	log.Print("Ready")
-	dispatcher := qbot.CreateDispatcher(1*time.Minute, messageHandler, userChangeHandler)
+	dispatcher := qbot.CreateDispatcher(q, 1*time.Minute, messageHandler, userChangeHandler)
 	abort := qbot.Dispatch(dispatcher, events, done, &waitGroup)
 	sig := addSignalHandler()
 	wait(sig, abort)

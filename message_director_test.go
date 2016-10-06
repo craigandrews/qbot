@@ -7,6 +7,7 @@ import (
 
 	"github.com/doozr/guac"
 	. "github.com/doozr/qbot"
+	"github.com/doozr/qbot/queue"
 )
 
 func getTestMessageEvent(user, channel, text string) guac.MessageEvent {
@@ -21,18 +22,18 @@ func getTestMessageEvent(user, channel, text string) guac.MessageEvent {
 
 func TestPrivateMessageIsRouted(t *testing.T) {
 	var received guac.MessageEvent
-	privateHandler := func(m guac.MessageEvent) error {
+	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		received = m
-		return nil
+		return q, nil
 	}
-	publicHandler := func(m guac.MessageEvent) error {
+	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to public handler")
-		return nil
+		return q, nil
 	}
 
 	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	director(event)
+	director(queue.Queue{}, event)
 
 	if !reflect.DeepEqual(event, received) {
 		t.Fatal("Event does not match ", event, received)
@@ -40,17 +41,17 @@ func TestPrivateMessageIsRouted(t *testing.T) {
 }
 
 func TestErrorReturnedWhenPrivateMessageFails(t *testing.T) {
-	privateHandler := func(m guac.MessageEvent) error {
-		return fmt.Errorf("Error!")
+	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
+		return q, fmt.Errorf("Error!")
 	}
-	publicHandler := func(m guac.MessageEvent) error {
+	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to public handler")
-		return nil
+		return q, nil
 	}
 
 	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	err := director(event)
+	_, err := director(queue.Queue{}, event)
 	if err == nil {
 		t.Fatal("Expected error")
 	}
@@ -58,18 +59,18 @@ func TestErrorReturnedWhenPrivateMessageFails(t *testing.T) {
 
 func TestPublicMessageWithNameIsRouted(t *testing.T) {
 	var received guac.MessageEvent
-	privateHandler := func(m guac.MessageEvent) error {
+	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to private handler")
-		return nil
+		return q, nil
 	}
-	publicHandler := func(m guac.MessageEvent) error {
+	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		received = m
-		return nil
+		return q, nil
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "myname: This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	director(event)
+	director(queue.Queue{}, event)
 
 	expected := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
 	if !reflect.DeepEqual(expected, received) {
@@ -79,18 +80,18 @@ func TestPublicMessageWithNameIsRouted(t *testing.T) {
 
 func TestPublicMessageWithIDIsRouted(t *testing.T) {
 	var received guac.MessageEvent
-	privateHandler := func(m guac.MessageEvent) error {
+	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to private handler")
-		return nil
+		return q, nil
 	}
-	publicHandler := func(m guac.MessageEvent) error {
+	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		received = m
-		return nil
+		return q, nil
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "<@U123> This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	director(event)
+	director(queue.Queue{}, event)
 
 	expected := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
 	if !reflect.DeepEqual(expected, received) {
@@ -99,33 +100,36 @@ func TestPublicMessageWithIDIsRouted(t *testing.T) {
 }
 
 func TestErrorReturnedIfPublicMessageFailed(t *testing.T) {
-	privateHandler := func(m guac.MessageEvent) error {
+	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to private handler")
-		return nil
+		return q, nil
 	}
-	publicHandler := func(m guac.MessageEvent) error {
-		return fmt.Errorf("Error!")
+	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
+		return q, fmt.Errorf("Error!")
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "<@U123> This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	err := director(event)
+	_, err := director(queue.Queue{}, event)
 	if err == nil {
 		t.Fatal("Expected error ", err)
 	}
 }
 
 func TestPublicMessageWithoutNameOrIDIsNotRouted(t *testing.T) {
-	privateHandler := func(m guac.MessageEvent) error {
+	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to private handler")
-		return nil
+		return q, nil
 	}
-	publicHandler := func(m guac.MessageEvent) error {
+	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to public handler")
-		return nil
+		return q, nil
 	}
 
 	event := getTestMessageEvent("U4321", "C1A2B3C", "This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	director(event)
+	director(queue.Queue{}, event)
 }
+
+// returns new queue from each one
+// returns same queue if neither match

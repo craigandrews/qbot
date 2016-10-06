@@ -8,6 +8,7 @@ import (
 
 	"github.com/doozr/guac"
 	. "github.com/doozr/qbot"
+	"github.com/doozr/qbot/queue"
 )
 
 func testDispatchCleanShutDown(t *testing.T, dispatcher Dispatcher) {
@@ -56,15 +57,15 @@ func testMessageDispatch(handleMessage MessageHandler, handleUserChange UserChan
 		close(done)
 	}()
 
-	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(queue.Queue{}, 1*time.Millisecond, handleMessage, handleUserChange)
 	return dispatcher(events, done)
 }
 
 func TestDispatcherSendsMessagesToMessageHandler(t *testing.T) {
 	var received *guac.MessageEvent
-	handleMessage := func(event guac.MessageEvent) error {
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
 		received = &event
-		return nil
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
@@ -77,9 +78,9 @@ func TestDispatcherSendsMessagesToMessageHandler(t *testing.T) {
 
 func TestDispatcherSendsMessagesOnlyOnce(t *testing.T) {
 	calls := 0
-	handleMessage := func(event guac.MessageEvent) error {
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
 		calls++
-		return nil
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
@@ -92,8 +93,8 @@ func TestDispatcherSendsMessagesOnlyOnce(t *testing.T) {
 
 func TestDispatcherDoesNotSendMessageToUserChangeHandler(t *testing.T) {
 	calls := 0
-	handleMessage := func(event guac.MessageEvent) error {
-		return nil
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 		calls++
@@ -106,8 +107,8 @@ func TestDispatcherDoesNotSendMessageToUserChangeHandler(t *testing.T) {
 }
 
 func TestDispatcherReturnsErrorIfMessageFails(t *testing.T) {
-	handleMessage := func(event guac.MessageEvent) error {
-		return fmt.Errorf("Error!")
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		return q, fmt.Errorf("Error!")
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
@@ -129,14 +130,14 @@ func testUserChangeDispatch(handleMessage MessageHandler, handleUserChange UserC
 		close(done)
 	}()
 
-	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(queue.Queue{}, 1*time.Millisecond, handleMessage, handleUserChange)
 	return dispatcher(events, done)
 }
 
 func TestDispatcherSendsUserChangesToUserChangeHandler(t *testing.T) {
 	var received *guac.UserInfo
-	handleMessage := func(event guac.MessageEvent) error {
-		return nil
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 		received = &event
@@ -150,9 +151,9 @@ func TestDispatcherSendsUserChangesToUserChangeHandler(t *testing.T) {
 
 func TestDispatcherDoesNotSendUserChangeToMessageHandler(t *testing.T) {
 	calls := 0
-	handleMessage := func(event guac.MessageEvent) error {
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
 		calls++
-		return nil
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
@@ -165,8 +166,8 @@ func TestDispatcherDoesNotSendUserChangeToMessageHandler(t *testing.T) {
 
 func TestDispatcherSendsUserChangeOnlyOnce(t *testing.T) {
 	calls := 0
-	handleMessage := func(event guac.MessageEvent) error {
-		return nil
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 		calls++
@@ -182,12 +183,12 @@ func TestDispatcherReturnsErrorOnTimeout(t *testing.T) {
 	done := make(DoneChan)
 	events := make(guac.EventChan)
 
-	handleMessage := func(event guac.MessageEvent) error {
-		return nil
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
-	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(queue.Queue{}, 1*time.Millisecond, handleMessage, handleUserChange)
 
 	err := dispatcher(events, done)
 	if err == nil {
@@ -199,12 +200,12 @@ func TestDispatcherReturnsNoErrorIfDone(t *testing.T) {
 	done := make(DoneChan)
 	events := make(guac.EventChan)
 
-	handleMessage := func(event guac.MessageEvent) error {
-		return nil
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 	}
-	dispatcher := CreateDispatcher(1*time.Millisecond, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(queue.Queue{}, 1*time.Millisecond, handleMessage, handleUserChange)
 
 	close(done)
 	err := dispatcher(events, done)
@@ -217,14 +218,14 @@ func TestDispatcherSwallowsUnknownEvents(t *testing.T) {
 	done := make(DoneChan)
 	events := make(guac.EventChan)
 
-	handleMessage := func(event guac.MessageEvent) error {
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to MessageHandler")
-		return nil
+		return q, nil
 	}
 	handleUserChange := func(event guac.UserInfo) {
 		t.Fatal("Unexpected call to MessageHandler")
 	}
-	dispatcher := CreateDispatcher(1*time.Second, handleMessage, handleUserChange)
+	dispatcher := CreateDispatcher(queue.Queue{}, 1*time.Second, handleMessage, handleUserChange)
 
 	// events is blocking so these things must be read in sequence
 	go func() {
@@ -237,5 +238,42 @@ func TestDispatcherSwallowsUnknownEvents(t *testing.T) {
 	case <-events:
 		t.Fatal("Expected event to have been swallowed")
 	default:
+	}
+}
+
+func TestDispatcherPassesUpdatedQueueToMessageHandler(t *testing.T) {
+	done := make(DoneChan)
+	events := make(guac.EventChan)
+	expectedQueue := queue.Queue([]queue.Item{queue.Item{ID: "U123", Reason: "Tomato"}})
+	var receivedQueue queue.Queue
+
+	called := false
+	handleMessage := func(q queue.Queue, event guac.MessageEvent) (queue.Queue, error) {
+		if !called {
+			called = true
+			return expectedQueue, nil
+		}
+		receivedQueue = q
+		return q, nil
+	}
+	handleUserChange := func(event guac.UserInfo) {
+		t.Fatal("Unexpected call to MessageHandler")
+	}
+	dispatcher := CreateDispatcher(queue.Queue{}, 1*time.Second, handleMessage, handleUserChange)
+
+	// events is blocking so these things must be read in sequence
+	go func() {
+		events <- guac.MessageEvent{
+			Text: "test event",
+		}
+		events <- guac.MessageEvent{
+			Text: "a second event",
+		}
+		close(done)
+	}()
+	dispatcher(events, done)
+
+	if !receivedQueue.Equal(expectedQueue) {
+		t.Fatal("Unexpected queue received on second call", expectedQueue, receivedQueue)
 	}
 }
