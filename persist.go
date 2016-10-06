@@ -20,6 +20,7 @@ func CreatePersister(writeFile WriteFile, filename string, oldQ queue.Queue) Per
 	return func(q queue.Queue) (err error) {
 		jot.Print("persist: queue to save ", q)
 		if oldQ.Equal(q) {
+			jot.Print("persist: not saving identical queue")
 			return
 		}
 
@@ -37,6 +38,7 @@ func CreatePersister(writeFile WriteFile, filename string, oldQ queue.Queue) Per
 		}
 
 		oldQ = q
+		jot.Print("perist old queue is now: ", q)
 		jot.Print("persist: saved to ", filename)
 		return
 	}

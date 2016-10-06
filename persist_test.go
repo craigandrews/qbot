@@ -37,18 +37,28 @@ func TestDifferentQueueIsSaved(t *testing.T) {
 }
 
 func TestIdenticalQueueIsNotWritten(t *testing.T) {
+	calls := 0
 	writeFile := func(f string, c []byte, p os.FileMode) error {
-		t.Fatal("Unexpected call to writeFile")
+		calls++
 		return nil
 	}
 
-	q := queue.Queue([]queue.Item{
+	oq := queue.Queue([]queue.Item{
+		queue.Item{ID: "U12345", Reason: "A reason"},
+		queue.Item{ID: "U67890", Reason: "Another reason"},
+	})
+	nq := queue.Queue([]queue.Item{
 		queue.Item{ID: "U12345", Reason: "A reason"},
 		queue.Item{ID: "U67890", Reason: "Another reason"},
 	})
 
-	persist := CreatePersister(writeFile, "output.json", q)
-	persist(q)
+	persist := CreatePersister(writeFile, "output.json", oq)
+	persist(oq)
+	persist(nq)
+
+	if calls > 1 {
+		t.Fatal("Expected 1 call to persist, got ", calls)
+	}
 }
 
 func TestReturnsErrorIfWriteFails(t *testing.T) {
