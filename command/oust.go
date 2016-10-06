@@ -22,9 +22,9 @@ func (c QueueCommands) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue
 		return q, Notification{ch, c.response.OustNotActive(ouster)}
 	}
 
+	c.logActivity(i.ID, i.Reason, "ousted by "+c.getNameIDPair(ouster))
 	if len(q) == 1 {
 		q = q.Remove(i)
-		c.logActivity(i.ID, i.Reason, "ousted by "+c.getNameIDPair(ouster))
 		return q, Notification{ch, c.response.OustNoOthers(ouster, i)}
 	}
 
