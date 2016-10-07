@@ -18,13 +18,16 @@ func CreateMessageDirector(id string, name string, publicHandler MessageHandler,
 		return strings.HasPrefix(channel, "D")
 	}
 
-	return func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
+	return func(oq queue.Queue, m guac.MessageEvent) (q queue.Queue, err error) {
+		q = oq
 		if isPrivateChannel(m.Channel) {
-			return privateHandler(q, m)
+			// Private channels should never cause state change
+			_, err = privateHandler(q, m)
 		} else if isDirectedAtUs(m.Text) {
+			// Public channels can cause state change
 			_, m.Text = util.StringPop(m.Text)
-			return publicHandler(q, m)
+			q, err = publicHandler(q, m)
 		}
-		return q, nil
+		return
 	}
 }

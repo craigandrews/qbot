@@ -40,10 +40,10 @@ func TestPrivateMessageIsRouted(t *testing.T) {
 	}
 }
 
-func TestPrivateMessageGetsNewQueue(t *testing.T) {
-	var expected = queue.Queue([]queue.Item{{"U123", "Tomato"}})
+func TestPrivateMessageDoesNotGetNewQueue(t *testing.T) {
+	var expected = queue.Queue{}
 	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
-		return expected, nil
+		return queue.Queue([]queue.Item{{"U123", "Tomato"}}), nil
 	}
 	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to public handler")
@@ -52,10 +52,10 @@ func TestPrivateMessageGetsNewQueue(t *testing.T) {
 
 	event := getTestMessageEvent("U4321", "D1A2B3C", "This is a message")
 	director := CreateMessageDirector("U123", "myname", publicHandler, privateHandler)
-	received, _ := director(queue.Queue{}, event)
+	received, _ := director(expected, event)
 
 	if !received.Equal(expected) {
-		t.Fatal("Queue does not match ", expected, received)
+		t.Fatal("Queue should match original ", expected, received)
 	}
 }
 
