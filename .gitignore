@@ -33,3 +33,5 @@ debug.test
 out
 
 *.json
+
+/qbot
