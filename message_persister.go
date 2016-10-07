@@ -5,8 +5,8 @@ import (
 	"github.com/doozr/qbot/queue"
 )
 
-// CreateMessagePersister creates a message handler that call another and persists the result
-func CreateMessagePersister(persist Persister, fn MessageHandler) MessageHandler {
+// CreatePersistedMessageHandler creates a message handler that call another and persists the result
+func CreatePersistedMessageHandler(fn MessageHandler, persist Persister) MessageHandler {
 	return func(oq queue.Queue, m guac.MessageEvent) (q queue.Queue, err error) {
 		q, err = fn(oq, m)
 		if err != nil {

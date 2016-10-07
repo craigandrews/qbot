@@ -26,7 +26,7 @@ func TestPassesOnParameters(t *testing.T) {
 	event := makeTestEvent("text")
 	expectedQueue := queue.Queue([]queue.Item{{"U123", "Tomato"}})
 
-	handler := CreateMessagePersister(persist, fn)
+	handler := CreatePersistedMessageHandler(fn, persist)
 	handler(expectedQueue, event)
 
 	if !expectedQueue.Equal(receivedQueue) {
@@ -53,7 +53,7 @@ func TestPersistsReturnedQueue(t *testing.T) {
 
 	event := makeTestEvent("text")
 
-	handler := CreateMessagePersister(persist, fn)
+	handler := CreatePersistedMessageHandler(fn, persist)
 	handler(queue.Queue{}, event)
 
 	if !expectedQueue.Equal(receivedQueue) {
@@ -74,7 +74,7 @@ func TestReturnsReturnedQueue(t *testing.T) {
 
 	event := makeTestEvent("text")
 
-	handler := CreateMessagePersister(persist, fn)
+	handler := CreatePersistedMessageHandler(fn, persist)
 	receivedQueue, _ := handler(queue.Queue{}, event)
 
 	if !expectedQueue.Equal(receivedQueue) {
@@ -95,7 +95,7 @@ func TestDoesNotPersistOnError(t *testing.T) {
 
 	event := makeTestEvent("text")
 
-	handler := CreateMessagePersister(persist, fn)
+	handler := CreatePersistedMessageHandler(fn, persist)
 	_, err := handler(queue.Queue{}, event)
 
 	if calls != 0 {
@@ -118,7 +118,7 @@ func TestReturnsPersistError(t *testing.T) {
 
 	event := makeTestEvent("text")
 
-	handler := CreateMessagePersister(persist, fn)
+	handler := CreatePersistedMessageHandler(fn, persist)
 	_, err := handler(queue.Queue{}, event)
 
 	if err == nil {

@@ -37,17 +37,17 @@ func main() {
 	client := connectToSlackOrDie(token)
 
 	userCache := getUserListOrDie(client)
-
-	commands := command.New(client.Name(), userCache)
-
-	notify := qbot.CreateNotifier(client.IMOpen, client.PostMessage)
-	persist := qbot.CreatePersister(ioutil.WriteFile, filename, q)
 	userChangeHandler := qbot.CreateUserChangeHandler(userCache)
+	commands := command.New(client.Name(), userCache)
+	notify := qbot.CreateNotifier(client.IMOpen, client.PostMessage)
 
-	publicHandler := qbot.CreateMessageHandler(qbot.PublicCommands(commands), notify)
-	persistHandler := qbot.CreateMessagePersister(persist, publicHandler)
-	privateHandler := qbot.CreateMessageHandler(qbot.PrivateCommands(commands), notify)
-	messageHandler := qbot.CreateMessageDirector(client.ID(), client.Name(), persistHandler, privateHandler)
+	handlePublicMessage := qbot.CreatePersistedMessageHandler(
+		qbot.CreateMessageHandler(qbot.PublicCommands(commands), notify),
+		qbot.CreatePersister(ioutil.WriteFile, filename, q))
+
+	handlePrivateMessage := qbot.CreateMessageHandler(qbot.PrivateCommands(commands), notify)
+
+	handleMessage := qbot.CreateMessageDirector(client.ID(), client.Name(), handlePublicMessage, handlePrivateMessage)
 
 	receiver := qbot.CreateEventReceiver(client)
 	events := qbot.Receive(receiver, done, &waitGroup)
@@ -55,7 +55,7 @@ func main() {
 	qbot.StartKeepAlive(client.Ping, time.After, done, &waitGroup)
 
 	log.Print("Ready")
-	dispatcher := qbot.CreateDispatcher(q, 1*time.Minute, messageHandler, userChangeHandler)
+	dispatcher := qbot.CreateDispatcher(q, 1*time.Minute, handleMessage, userChangeHandler)
 	abort := qbot.Dispatch(dispatcher, events, done, &waitGroup)
 	sig := addSignalHandler()
 	wait(sig, abort)
