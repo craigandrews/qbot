@@ -26,7 +26,7 @@ func TestJoin(t *testing.T) {
 			user:             "U123",
 			args:             "Banana",
 			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}, {"U123", "Banana"}}),
-			expectedResponse: "<@U123|craig> (Banana) has joined the queue",
+			expectedResponse: "<@U123|craig> (Banana) is now 1st in line",
 		},
 		{
 			test:             "do nothing when entry already exists",
@@ -44,7 +44,16 @@ func TestJoin(t *testing.T) {
 			user:             "U456",
 			args:             "Banana",
 			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}, {"U456", "Banana"}}),
-			expectedResponse: "<@U456|edward> (Banana) has joined the queue",
+			expectedResponse: "<@U456|edward> (Banana) is now 1st in line",
+		},
+		{
+			test:             "do not join if no reason provided",
+			startQueue:       queue.Queue([]queue.Item{}),
+			channel:          "C1A2B3C",
+			user:             "U456",
+			args:             "",
+			expectedQueue:    queue.Queue([]queue.Item{}),
+			expectedResponse: "<@U456|edward> You must provide a reason for joining",
 		},
 	})
 }

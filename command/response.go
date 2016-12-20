@@ -5,6 +5,7 @@ import (
 
 	"github.com/doozr/qbot/queue"
 	"github.com/doozr/qbot/usercache"
+	"github.com/doozr/qbot/util"
 )
 
 // responses builds mad-libbed reply strings
@@ -17,19 +18,11 @@ func (n responses) getUserName(id string) (username string) {
 	return
 }
 
-func (n responses) getUserID(name string) (id string) {
-	id = n.UserCache.GetUserID(name)
-	return
-}
-
 func (n responses) link(i string) string {
 	return fmt.Sprintf("<@%s|%s>", i, n.getUserName(i))
 }
 
 func (n responses) item(i queue.Item) string {
-	if i.Reason == "" {
-		return n.link(i.ID)
-	}
 	return fmt.Sprintf("%s (%s)", n.link(i.ID), i.Reason)
 }
 
@@ -54,8 +47,9 @@ func (n responses) ousted(ouster string, i queue.Item) string {
 }
 
 // Join is a successful join to the queue
-func (n responses) Join(i queue.Item) string {
-	return fmt.Sprintf("%s has joined the queue", n.item(i))
+func (n responses) Join(i queue.Item, position int) string {
+	suffix := util.Suffix(position)
+	return fmt.Sprintf("%s is now %d%s in line", n.item(i), position, suffix)
 }
 
 // JoinNoReason tells the user that a reason is required on join
@@ -156,10 +150,4 @@ func (n responses) OustNoTarget(ouster string) string {
 // OustNoOthers is a successful oust when nobody can pick up the token
 func (n responses) OustNoOthers(ouster string, i queue.Item) string {
 	return n.ousted(ouster, i)
-}
-
-// OustConfirm asks the ouster if they are sure
-func (n responses) OustConfirm(ouster string, i queue.Item) string {
-	return fmt.Sprintf("%s Are you sure you want to oust %s?\n(Repeat this command within 30 seconds to confirm)",
-		n.link(ouster), n.link(i.ID))
 }

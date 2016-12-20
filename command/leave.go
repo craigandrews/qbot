@@ -13,11 +13,7 @@ func (c QueueCommands) Leave(q queue.Queue, ch, id, args string) (queue.Queue, N
 		return q, Notification{ch, c.response.LeaveActive(i)}
 	}
 
-	if q.Contains(i) {
-		q = q.Remove(i)
-		c.logActivity(i.ID, i.Reason, "left the queue")
-		return q, Notification{ch, c.response.Leave(i)}
-	}
-
-	return q, Notification{ch, ""}
+	q = q.Remove(i)
+	c.logActivity(i.ID, i.Reason, "left the queue")
+	return q, Notification{ch, c.response.Leave(i)}
 }

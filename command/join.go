@@ -21,5 +21,6 @@ func (c QueueCommands) Join(q queue.Queue, ch, id, args string) (queue.Queue, No
 		return q, Notification{ch, c.response.JoinActive(i)}
 	}
 
-	return q, Notification{ch, c.response.Join(i)}
+	position := len(q) - 1
+	return q, Notification{ch, c.response.Join(i, position)}
 }
