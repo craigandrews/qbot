@@ -69,7 +69,7 @@ func (n responses) Leave(i queue.Item) string {
 
 // LeaveActive tells the user they should use done rather than leave if they have the token
 func (n responses) LeaveActive(i queue.Item) string {
-	return fmt.Sprintf("%s You have the token, did you mean 'done'?", n.link(i.ID))
+	return fmt.Sprintf("%s You have the token, did you mean `done` or `drop`?", n.link(i.ID))
 }
 
 // LeaveNoEntry tells the user that an entry with the requested reason does not exist

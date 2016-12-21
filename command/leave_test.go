@@ -62,7 +62,7 @@ func TestLeave(t *testing.T) {
 			user:             "U456",
 			args:             "",
 			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}}),
-			expectedResponse: "<@U456|edward> You have the token, did you mean 'done'?",
+			expectedResponse: "<@U456|edward> You have the token, did you mean `done` or `drop`?",
 		},
 	})
 }
