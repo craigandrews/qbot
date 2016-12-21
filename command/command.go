@@ -70,25 +70,8 @@ func cmdList(cmds [][]string) string {
 	return c
 }
 
-// Help provides brief assistance
+// Help provides much needed assistance
 func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
-	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", c.name)
-
-	s += cmdList([][]string{
-		[]string{"list", "Show who has the token and who is waiting"},
-		[]string{"join <reason>", "Join the queue and give a reason why"},
-		[]string{"done", "Release the token once you are done with it"},
-		[]string{"drop", "Drop the token and leave the queue (note: actually just an alias of `done`)"},
-		[]string{"yield", "Relinquish the token and swap places with the next in line"},
-		[]string{"leave <reason>", "Leave the queue (your most recent entry starting with <reason> is removed)"},
-		[]string{"help", "Show this text"},
-		[]string{"morehelp", "Show more detailed help and extra actions"},
-	})
-	return q, Notification{id, s}
-}
-
-// MoreHelp provides much needed assistance
-func (c QueueCommands) MoreHelp(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	s := fmt.Sprintf("Address each command to the bot (`%s: <command>`)\n\n", c.name)
 
 	s += "*If you don't have the token and need it:*\n"
