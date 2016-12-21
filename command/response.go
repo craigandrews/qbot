@@ -132,8 +132,7 @@ func (n responses) OustNotBoot(booter string) string {
 }
 
 // Oust is a successful oust
-func (n responses) Oust(ouster string, i queue.Item, q queue.Queue) string {
-	a := q.Active()
+func (n responses) Oust(ouster string, i queue.Item, a queue.Item) string {
 	return fmt.Sprintf("%s\n%s", n.ousted(ouster, i), n.nowHasToken(a))
 }
 

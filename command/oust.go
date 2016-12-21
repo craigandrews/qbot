@@ -31,5 +31,5 @@ func (c QueueCommands) Oust(q queue.Queue, ch, ouster, args string) (queue.Queue
 	q = q.Yield()
 	n := q.Active()
 	c.logActivity(n.ID, n.Reason, "is active")
-	return q, Notification{ch, c.response.Oust(ouster, i, q)}
+	return q, Notification{ch, c.response.Oust(ouster, i, n)}
 }
