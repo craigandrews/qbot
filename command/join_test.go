@@ -26,7 +26,16 @@ func TestJoin(t *testing.T) {
 			user:             "U123",
 			args:             "Banana",
 			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}, {"U123", "Banana"}}),
-			expectedResponse: "<@U123|craig> (Banana) is now 1st in line",
+			expectedResponse: "<@U123|craig> (Banana) is now next in line",
+		},
+		{
+			test:             "join as inactive gives ordinal position",
+			startQueue:       queue.Queue([]queue.Item{{"U456", "Already here"}, {"U456", "And again"}}),
+			channel:          "C1A2B3C",
+			user:             "U123",
+			args:             "Banana",
+			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}, {"U456", "And again"}, {"U123", "Banana"}}),
+			expectedResponse: "<@U123|craig> (Banana) is now 2nd in line",
 		},
 		{
 			test:             "do nothing when entry already exists",
@@ -44,7 +53,7 @@ func TestJoin(t *testing.T) {
 			user:             "U456",
 			args:             "Banana",
 			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}, {"U456", "Banana"}}),
-			expectedResponse: "<@U456|edward> (Banana) is now 1st in line",
+			expectedResponse: "<@U456|edward> (Banana) is now next in line",
 		},
 		{
 			test:             "do not join if no reason provided",

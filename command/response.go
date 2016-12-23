@@ -48,8 +48,12 @@ func (n responses) ousted(ouster string, i queue.Item) string {
 
 // Join is a successful join to the queue
 func (n responses) Join(i queue.Item, position int) string {
-	suffix := util.Suffix(position)
-	return fmt.Sprintf("%s is now %d%s in line", n.item(i), position, suffix)
+	ordinal := "next"
+	if position > 1 {
+		suffix := util.Suffix(position)
+		ordinal = fmt.Sprintf("%d%s", position, suffix)
+	}
+	return fmt.Sprintf("%s is now %s in line", n.item(i), ordinal)
 }
 
 // JoinNoReason tells the user that a reason is required on join
