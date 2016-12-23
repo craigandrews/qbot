@@ -35,7 +35,7 @@ func TestJoin(t *testing.T) {
 			user:             "U123",
 			args:             "Banana",
 			expectedQueue:    queue.Queue([]queue.Item{{"U456", "Already here"}, {"U456", "And again"}, {"U123", "Banana"}}),
-			expectedResponse: "<@U123|craig> (Banana) is now 2nd in line",
+			expectedResponse: "<@U123|craig> (Banana) is now 3rd in line",
 		},
 		{
 			test:             "do nothing when entry already exists",

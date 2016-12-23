@@ -49,7 +49,7 @@ func (n responses) ousted(ouster string, i queue.Item) string {
 // Join is a successful join to the queue
 func (n responses) Join(i queue.Item, position int) string {
 	ordinal := "next"
-	if position > 1 {
+	if position > 2 {
 		suffix := util.Suffix(position)
 		ordinal = fmt.Sprintf("%d%s", position, suffix)
 	}
