@@ -32,11 +32,27 @@ func New(name string, uc usercache.UserCache) QueueCommands {
 	return c
 }
 
-func (c QueueCommands) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
+func (c QueueCommands) isFuzzyMatch(i queue.Item, id, reason string) (match bool) {
+	match = i.ID == id && strings.HasPrefix(i.Reason, reason)
+	return
+}
+
+func (c QueueCommands) findItemReverse(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
 	for ix := len(q) - 1; ix >= 0; ix-- {
-		if q[ix].ID == id && strings.HasPrefix(q[ix].Reason, reason) {
+		if c.isFuzzyMatch(q[ix], id, reason) {
 			ok = true
 			item = q[ix]
+			break
+		}
+	}
+	return
+}
+
+func (c QueueCommands) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
+	for _, i := range q {
+		if c.isFuzzyMatch(i, id, reason) {
+			ok = true
+			item = i
 			break
 		}
 	}

@@ -13,7 +13,7 @@ func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue
 
 	name, reason := util.StringPop(args)
 	id := c.getIDFromName(name)
-	i, ok := c.findItem(q, id, reason)
+	i, ok := c.findItemReverse(q, id, reason)
 	if !ok {
 		return q, Notification{ch, c.response.BootNoEntry(booter, name, reason)}
 	}
