@@ -107,6 +107,8 @@ func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, No
 	s += cmdList([][]string{
 		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
 		[]string{"leave <reason prefix>", "Leave the queue (match the entry with reason that starts with <reason prefix>)"},
+		[]string{"delegate <user>", "Delegate your place to someone else (your most recent entry is delegated)"},
+		[]string{"delegate <user> <reason prefix>", "Delegate your place to someone else (match the entry with reason that starts with <reason prefix>)"},
 	})
 
 	s += "\n*If you need to get rid of somebody who is in the way:*\n"

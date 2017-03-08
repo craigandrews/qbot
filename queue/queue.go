@@ -92,8 +92,18 @@ func (q Queue) Yield() Queue {
 func (q Queue) Barge(i Item) Queue {
 	if len(q) > 1 && q.Active() != i {
 		w := q.Remove(i).Waiting()
-		q := Queue{q.Active(), i}
+		q = Queue{q.Active(), i}
 		return Queue(append(q, w...))
 	}
 	return q.Add(i)
+}
+
+// Delegate swaps an item for another in the same position
+func (q Queue) Delegate(i Item, n Item) Queue {
+	for ix := range q {
+		if q[ix] == i {
+			q[ix] = n
+		}
+	}
+	return q
 }

@@ -170,3 +170,24 @@ func TestBargeWhenPresent(t *testing.T) {
 	expected := []Item{Mick, Colin, Jimmy}
 	assert.Equal(t, expected, q.Waiting())
 }
+
+func TestDelegateWhenPresent(t *testing.T) {
+	q := Queue{John, Colin, Mick}
+	q = q.Delegate(Colin, Jimmy)
+	expected := []Item{Jimmy, Mick}
+	assert.Equal(t, expected, q.Waiting())
+}
+
+func TestDelegateWhenActive(t *testing.T) {
+	q := Queue{John, Colin, Mick}
+	q = q.Delegate(John, Jimmy)
+	expected := Jimmy
+	assert.Equal(t, expected, q.Active())
+}
+
+func TestDelegateWhenNotPresent(t *testing.T) {
+	q := Queue{John, Colin, Mick}
+	q = q.Delegate(Jimmy, Colin)
+	expected := []Item{Colin, Mick}
+	assert.Equal(t, expected, q.Waiting())
+}

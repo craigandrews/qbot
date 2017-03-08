@@ -154,3 +154,19 @@ func (n responses) OustNoTarget(ouster string) string {
 func (n responses) OustNoOthers(ouster string, i queue.Item) string {
 	return n.ousted(ouster, i)
 }
+
+func (n responses) Delegate(i queue.Item, target string) string {
+	return fmt.Sprintf("%s has delegated to %s", n.item(i), n.link(target))
+}
+
+func (n responses) DelegateActive(i queue.Item, ni queue.Item) string {
+	return fmt.Sprintf("%s\n%s", n.Delegate(i, ni.ID), n.nowHasToken(ni))
+}
+
+func (n responses) DelegateNoSuchUser(delegator, target string) string {
+	return fmt.Sprintf("%s You cannot delegate to %s because they don't exist", n.link(delegator), target)
+}
+
+func (n responses) DelegateNoEntry(delegator string) string {
+	return fmt.Sprintf("%s You cannot delegate if you are not in the queue", n.link(delegator))
+}
