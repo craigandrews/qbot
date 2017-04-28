@@ -8,7 +8,7 @@ import (
 )
 
 func TestOust(t *testing.T) {
-	cmd := command.New(name, userCache)
+	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Oust, []CommandTest{
 		{
 			test:             "swap active with next in line",

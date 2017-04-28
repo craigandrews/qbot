@@ -8,7 +8,7 @@ import (
 )
 
 func TestDone(t *testing.T) {
-	cmd := command.New(name, userCache)
+	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Done, []CommandTest{
 		{
 			test:             "drop token",

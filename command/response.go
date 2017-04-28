@@ -170,3 +170,11 @@ func (n responses) DelegateNoSuchUser(delegator, target string) string {
 func (n responses) DelegateNoEntry(delegator string) string {
 	return fmt.Sprintf("%s You cannot delegate if you are not in the queue", n.link(delegator))
 }
+
+func (n responses) RefuseToken() string {
+	return "What am I going to do with the token?"
+}
+
+func (n responses) RefuseTokenActive(i queue.Item, ni queue.Item) string {
+	return fmt.Sprintf("%s\n:zap: :zap: AT LAST! ULTIMATE POWER! :zap: :zap:\n\nJust kidding ... I don't need the token, you can have it back\n%s", n.DelegateActive(i, ni), n.DelegateActive(ni, i))
+}

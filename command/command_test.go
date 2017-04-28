@@ -19,12 +19,14 @@ type CommandTest struct {
 	expectedResponse string
 }
 
+var id = "U12345"
 var name = "the_bot_name"
 
 var userCache = usercache.New([]guac.UserInfo{
 	{"U123", "craig"},
 	{"U456", "edward"},
 	{"U789", "andrew"},
+	{id, name},
 })
 
 func testCommand(t *testing.T, fn Command, tests []CommandTest) {

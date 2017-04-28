@@ -8,7 +8,7 @@ import (
 )
 
 func TestBoot(t *testing.T) {
-	cmd := command.New(name, userCache)
+	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Boot, []CommandTest{
 		{
 			test:             "remove last entry with matching prefix is reason provided",

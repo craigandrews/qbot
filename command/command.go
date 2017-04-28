@@ -20,15 +20,16 @@ type Notification struct {
 
 // QueueCommands provides the API to the various commands supported by the bot
 type QueueCommands struct {
+	id        string
 	name      string
 	response  responses
 	userCache usercache.UserCache
 }
 
 // New returns a new Command instance
-func New(name string, uc usercache.UserCache) QueueCommands {
+func New(id string, name string, uc usercache.UserCache) QueueCommands {
 	r := responses{uc}
-	c := QueueCommands{name, r, uc}
+	c := QueueCommands{id, name, r, uc}
 	return c
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 func TestYield(t *testing.T) {
-	cmd := command.New(name, userCache)
+	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Yield, []CommandTest{
 		{
 			test:             "do not yield if nobody can receive it",

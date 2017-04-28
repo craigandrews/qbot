@@ -8,7 +8,7 @@ import (
 )
 
 func TestBarge(t *testing.T) {
-	cmd := command.New(name, userCache)
+	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Barge, []CommandTest{
 		{
 			test:             "make active if queue empty",

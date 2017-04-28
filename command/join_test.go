@@ -8,7 +8,7 @@ import (
 )
 
 func TestJoin(t *testing.T) {
-	cmd := command.New(name, userCache)
+	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Join, []CommandTest{
 		{
 			test:             "join as active when queue is empty",

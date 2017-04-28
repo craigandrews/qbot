@@ -22,11 +22,20 @@ func (c QueueCommands) Delegate(q queue.Queue, ch, owner, args string) (queue.Qu
 		return q, Notification{ch, c.response.DelegateNoEntry(owner)}
 	}
 
+	isActive := q.Active() == i
 	n := queue.Item{ID: id, Reason: i.Reason}
+
+	if id == c.id {
+		if isActive {
+			return q, Notification{ch, c.response.RefuseTokenActive(i, n)}
+		}
+		return q, Notification{ch, c.response.RefuseToken()}
+	}
+
 	q = q.Delegate(i, n)
 
 	c.logActivity(owner, i.Reason, "delegated to "+c.getNameIDPair(id))
-	if q.Active() == n {
+	if isActive {
 		c.logActivity(n.ID, n.Reason, "is active")
 		return q, Notification{ch, c.response.DelegateActive(i, n)}
 	}

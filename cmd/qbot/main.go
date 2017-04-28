@@ -38,7 +38,7 @@ func main() {
 
 	userCache := getUserListOrDie(client)
 	userChangeHandler := qbot.CreateUserChangeHandler(userCache)
-	commands := command.New(client.Name(), userCache)
+	commands := command.New(client.ID(), client.Name(), userCache)
 	notify := qbot.CreateNotifier(client.IMOpen, client.PostMessage)
 
 	handlePublicMessage := qbot.CreatePersistedMessageHandler(
