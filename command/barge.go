@@ -6,12 +6,10 @@ import "github.com/doozr/qbot/queue"
 func (c QueueCommands) Barge(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
 	i := queue.Item{ID: id, Reason: args}
 
-	if args == "" {
-		if found, ok := c.findItem(q, id, args); ok {
-			i = found
-		} else {
-			return q, Notification{ch, c.response.JoinNoReason(i)}
-		}
+	if found, ok := c.findItem(q, id, args); ok {
+		i = found
+	} else if args == "" {
+		return q, Notification{ch, c.response.JoinNoReason(i)}
 	}
 
 	q = q.Barge(i)

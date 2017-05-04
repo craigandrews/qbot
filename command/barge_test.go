@@ -38,6 +38,15 @@ func TestBarge(t *testing.T) {
 			expectedResponse: "<@U789|andrew> (Needs barge) barged to the front\n<@U123|craig> (Banana) still has the token",
 		},
 		{
+			test:             "move to 2nd place if already lower in queue and partial reason specified",
+			startQueue:       queue.Queue([]queue.Item{{"U123", "Banana"}, {"U456", "Next up"}, {"U789", "Needs barge"}}),
+			channel:          "C1A2B3C",
+			user:             "U789",
+			args:             "Needs",
+			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Banana"}, {"U789", "Needs barge"}, {"U456", "Next up"}}),
+			expectedResponse: "<@U789|andrew> (Needs barge) barged to the front\n<@U123|craig> (Banana) still has the token",
+		},
+		{
 			test:             "error if no reason and not in queue",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Banana"}, {"U456", "Next up"}}),
 			channel:          "C1A2B3C",
