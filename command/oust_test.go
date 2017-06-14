@@ -26,7 +26,7 @@ func TestOust(t *testing.T) {
 			user:             "U789",
 			args:             "craig",
 			expectedQueue:    queue.Queue{},
-			expectedResponse: "<@U789|andrew> ousted <@U123|craig> (Active)",
+			expectedResponse: "<@U789|andrew> ousted <@U123|craig> (Active)\nThe token is up for grabs",
 		},
 		{
 			test:             "warns if target not active",

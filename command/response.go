@@ -152,7 +152,7 @@ func (n responses) OustNoTarget(ouster string) string {
 
 // OustNoOthers is a successful oust when nobody can pick up the token
 func (n responses) OustNoOthers(ouster string, i queue.Item) string {
-	return n.ousted(ouster, i)
+	return fmt.Sprintf("%s\n%s", n.ousted(ouster, i), n.upForGrabs())
 }
 
 func (n responses) Delegate(i queue.Item, target string) string {
