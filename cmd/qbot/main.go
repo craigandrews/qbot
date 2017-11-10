@@ -43,7 +43,7 @@ func main() {
 
 	handlePublicMessage := qbot.CreatePersistedMessageHandler(
 		qbot.CreateMessageHandler(qbot.PublicCommands(commands), notify),
-		qbot.CreatePersister(ioutil.WriteFile, filename, q))
+		qbot.CreatePersister(writeFile, filename, q))
 
 	handlePrivateMessage := qbot.CreateMessageHandler(qbot.PrivateCommands(commands), notify)
 
@@ -84,6 +84,20 @@ func connectToSlackOrDie(token string) guac.RealTimeClient {
 	}
 	log.Print("Connected to slack as ", client.Name())
 	return client
+}
+
+func writeFile(filename string, content []byte, mode os.FileMode) (err error) {
+	tempFilename := filename + ".tmp"
+
+	jot.Printf("Writing temp file to %s", tempFilename)
+	err = ioutil.WriteFile(tempFilename, content, 0644)
+	if err != nil {
+		return
+	}
+
+	jot.Printf("Move temp file %s to %s", tempFilename, filename)
+	err = os.Rename(tempFilename, filename)
+	return
 }
 
 func loadQueueOrDie(filename string) (q queue.Queue) {
