@@ -21,6 +21,7 @@ import (
 
 func main() {
 	log.Printf("Qbot version %s", qbot.Version())
+	log.Println("https://github.com/doozr/qbot")
 
 	// Turn on jot if required
 	if os.Getenv("QBOT_DEBUG") == "true" {
