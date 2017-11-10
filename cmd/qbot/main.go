@@ -90,7 +90,7 @@ func writeFile(filename string, content []byte, mode os.FileMode) (err error) {
 	tempFilename := filename + ".tmp"
 
 	jot.Printf("Writing temp file to %s", tempFilename)
-	err = ioutil.WriteFile(tempFilename, content, 0644)
+	err = ioutil.WriteFile(tempFilename, content, mode)
 	if err != nil {
 		return
 	}
