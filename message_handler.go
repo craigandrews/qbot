@@ -29,8 +29,11 @@ func CreateMessageHandler(commands CommandMap, notify Notifier) MessageHandler {
 		jot.Printf("message dispatch: message %s with cmd %s and args %v", m.Text, cmd, args)
 		fn, ok := commands[cmd]
 		if !ok {
-			q = oq
-			return
+			fn, ok = commands["help"]
+			if !ok {
+				q = oq
+				return
+			}
 		}
 
 		q, response = fn(oq, m.Channel, m.User, args)
