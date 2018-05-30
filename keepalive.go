@@ -1,6 +1,7 @@
 package qbot
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -26,7 +27,10 @@ func StartKeepAlive(ping Pinger, after After, done DoneChan, waitGroup *sync.Wai
 				return
 			case <-after(30 * time.Second):
 				jot.Print("keepalive: ping")
-				ping()
+				err := ping()
+				if err != nil {
+					log.Printf("Error while sending keepalive ping: %s", err)
+				}
 			}
 		}
 	}()
