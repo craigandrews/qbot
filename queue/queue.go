@@ -9,6 +9,12 @@ type Item struct {
 // Queue represents a list of waiting items
 type Queue []Item
 
+func (q Queue) clone() Queue {
+	nq := make(Queue, len(q))
+	copy(nq, q)
+	return nq
+}
+
 // Equal checks if the queue is the same as another queue
 func (q Queue) Equal(other Queue) bool {
 	if len(q) != len(other) {
@@ -53,7 +59,7 @@ func (q Queue) Active() Item {
 // Waiting returns all items in the queue in order except the Active item
 func (q Queue) Waiting() []Item {
 	if len(q) > 1 {
-		return q[1:]
+		return q[1:].clone()
 	}
 	return []Item{}
 }
@@ -63,9 +69,9 @@ func (q Queue) Remove(i Item) Queue {
 	for ix := range q {
 		if q[ix] == i {
 			if ix == 0 {
-				return q[1:]
+				return q[1:].clone()
 			} else if ix == len(q)-1 {
-				return q[:ix]
+				return q[:ix].clone()
 			}
 			return append(q[:ix], q[ix+1:]...)
 		}
@@ -78,6 +84,7 @@ func (q Queue) Yield() Queue {
 	if len(q) < 2 {
 		return q
 	}
+	q = q.clone()
 	q[0], q[1] = q[1], q[0]
 	return q
 }
@@ -98,6 +105,7 @@ func (q Queue) Barge(i Item) Queue {
 
 // Delegate swaps an item for another in the same position
 func (q Queue) Delegate(i Item, n Item) Queue {
+	q = q.clone()
 	for ix := range q {
 		if q[ix] == i {
 			q[ix] = n
