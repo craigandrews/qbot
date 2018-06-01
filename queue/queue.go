@@ -1,17 +1,5 @@
 package queue
 
-import "reflect"
-
-// Error is an error thrown when manipulating the queue
-type Error struct {
-	msg string
-}
-
-// Error returns the error message
-func (e Error) Error() string {
-	return e.msg
-}
-
 // Item represents a person with a job in the queue
 type Item struct {
 	ID     string
@@ -23,7 +11,17 @@ type Queue []Item
 
 // Equal checks if the queue is the same as another queue
 func (q Queue) Equal(other Queue) bool {
-	return reflect.DeepEqual(q, other)
+	if len(q) != len(other) {
+		return false
+	}
+
+	for ix := range q {
+		if q[ix] != other[ix] {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Add appends an item to the queue unless it already exists
@@ -31,8 +29,7 @@ func (q Queue) Add(i Item) Queue {
 	if q.Contains(i) {
 		return q
 	}
-	q = append(q, i)
-	return q
+	return append(q, i)
 }
 
 // Contains returns true if the item exists in the queue
@@ -45,20 +42,20 @@ func (q Queue) Contains(i Item) bool {
 	return false
 }
 
-// Active returns the first item in the queue or panics if the queue is empty
+// Active returns the first item in the queue or empty item if the queue is empty
 func (q Queue) Active() Item {
 	if len(q) > 0 {
 		return q[0]
 	}
-	panic(Error{"Queue is empty"})
+	return Item{}
 }
 
 // Waiting returns all items in the queue in order except the Active item
 func (q Queue) Waiting() []Item {
-	if len(q) > 0 {
+	if len(q) > 1 {
 		return q[1:]
 	}
-	return []Item(q)
+	return []Item{}
 }
 
 // Remove removes an item from the queue
@@ -66,11 +63,11 @@ func (q Queue) Remove(i Item) Queue {
 	for ix := range q {
 		if q[ix] == i {
 			if ix == 0 {
-				return Queue(q[1:])
+				return q[1:]
 			} else if ix == len(q)-1 {
-				return Queue(q[:ix])
+				return q[:ix]
 			}
-			return Queue(append(q[:ix], q[ix+1:]...))
+			return append(q[:ix], q[ix+1:]...)
 		}
 	}
 	return q
@@ -78,24 +75,25 @@ func (q Queue) Remove(i Item) Queue {
 
 // Yield swaps the Active item with the first Waiting item
 func (q Queue) Yield() Queue {
-	if len(q) > 1 {
-		oq := q
-		q = Queue{q[1], q[0]}
-		if len(oq) > 2 {
-			q = append(q, oq[2:]...)
-		}
+	if len(q) < 2 {
+		return q
 	}
+	q[0], q[1] = q[1], q[0]
 	return q
 }
 
 // Barge adds a new item to the second place in the queue, or moves an existing item to second place
 func (q Queue) Barge(i Item) Queue {
-	if len(q) > 1 && q.Active() != i {
-		w := q.Remove(i).Waiting()
-		q = Queue{q.Active(), i}
-		return Queue(append(q, w...))
+	if q.Active() == i {
+		return q
 	}
-	return q.Add(i)
+
+	if len(q) < 2 {
+		return q.Add(i)
+	}
+
+	w := q.Remove(i).Waiting()
+	return append(Queue{q.Active(), i}, w...)
 }
 
 // Delegate swaps an item for another in the same position

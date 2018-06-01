@@ -7,19 +7,40 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var John = Item{"john", "done some coding"}
-var Jimmy = Item{"jimmy", "fix some bugs"}
-var Mick = Item{"mick", "refactoring"}
-var Colin = Item{"colin", "adding bugs"}
+var John = Item{ID: "john", Reason: "done some coding"}
+var Jimmy = Item{ID: "jimmy", Reason: "fix some bugs"}
+var Mick = Item{ID: "mick", Reason: "refactoring"}
+var Colin = Item{ID: "colin", Reason: "adding bugs"}
+
+func TestEqual(t *testing.T) {
+	q := Queue{John, Jimmy, Mick}
+	other := Queue{John, Jimmy, Mick}
+
+	assert.Equal(t, true, q.Equal(other))
+}
+
+func TestUnequalIfDifferentLengths(t *testing.T) {
+	q := Queue{John, Jimmy, Mick}
+	other := Queue{John, Jimmy}
+
+	assert.Equal(t, false, q.Equal(other))
+}
+
+func TestUnequalIfDifferentContent(t *testing.T) {
+	q := Queue{John, Jimmy, Mick}
+	other := Queue{John, Jimmy, Colin}
+
+	assert.Equal(t, false, q.Equal(other))
+}
 
 func TestCreateQueue(t *testing.T) {
 	q := Queue{}
 	assert.Equal(t, 0, len(q))
+}
 
-	defer func() {
-		assert.NotNil(t, recover(), "Expected no active user but found one")
-	}()
-	q.Active()
+func TestActiveIsEmptyIfQueueIsEmpty(t *testing.T) {
+	q := Queue{}
+	assert.Equal(t, Item{}, q.Active())
 }
 
 func TestCreateQueueWithEntries(t *testing.T) {
@@ -50,7 +71,7 @@ func TestAddDuplicate(t *testing.T) {
 
 func TestAddWithDifferentReason(t *testing.T) {
 	q := Queue{Mick}
-	q = q.Add(Item{"mick", "wrote tests"})
+	q = q.Add(Item{ID: "mick", Reason: "wrote tests"})
 	assert.Equal(t, 2, len(q))
 }
 
