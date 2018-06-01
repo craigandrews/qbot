@@ -10,9 +10,8 @@ type Item struct {
 type Queue []Item
 
 func (q Queue) clone() Queue {
-	nq := make(Queue, len(q))
-	copy(nq, q)
-	return nq
+	nq := make(Queue, 0, len(q))
+	return append(nq, q...)
 }
 
 // Equal checks if the queue is the same as another queue
