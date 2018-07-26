@@ -47,15 +47,35 @@ Note that it is not possible to manage multiple queues with a single instance.
 
 Address each command to the bot (`<bot name>: <command>`)
 
+*If you don't have the token and need it:*
+
 * `join <reason>` - Join the queue and give a reason why
-* `leave` - Leave the queue (your most recent entry is removed)
-* `leave <reason>` - Leave the queue (your most recent entry starting with <reason> is removed)
-* `done` - Release the token once you are done with it
-* `drop` - Drop the token and leave the queue (alias of `done`)
-* `yield` - Release the token and swap places with next in line
 * `barge <reason>` - Barge to the front of the queue so you get the token next (only with good reason!)
+
+*If you have the token and have done with it:*
+
+* `done` - Release the token once you are done with it
+* `drop` - Drop the token and leave the queue (note: actually just an alias of `done`)
+* `yield` - Release the token and swap places with next in line
+
+*If you are in the queue and need to change something:*
+
+* `delegate <user>` - Delegate your place to someone else (your most recent entry is delegated)
+* `delegate <user> <reason prefix>` - Delegate your place to someone else (match the entry with reason that starts with <reason prefix>)
+* `replace <position> <reason>` - Replace the reason of a queue entry you own
+
+*If you are in the queue and need to leave:*
+
+* `leave` - Leave the queue (your most recent entry is removed)
+* `leave <position>` - Leave the queue (match the entry at the given position)
+
+*If you need to get rid of somebody who is in the way:*
+
+* `oust <name>` - Force the token holder to yield to the next in line
 * `boot <name>` - Kick somebody out of the waiting list (their most recent entry is removed)
-* `boot <name> <reason>` - Kick somebody out of the waiting list (their most recent entry starting with <reason> is removed)
-* `oust` - Force the token holder to yield to the next in line
+* `boot <position> <name>` - Kick somebody out of the waiting list (match the entry at the given position)
+
+*Other useful things to know:*
+
 * `list` - Show who has the token and who is waiting
-* `help` - Show the help text
+* `help` - Show this text
