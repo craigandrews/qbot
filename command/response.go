@@ -93,9 +93,9 @@ func (n responses) LeaveActive(i queue.Item) string {
 	return fmt.Sprintf("%s You have the token, did you mean `done` or `drop`?", n.link(i.ID))
 }
 
-// LeaveNoEntry tells the user that an entry with the requested reason does not exist
-func (n responses) LeaveNoEntry(id, reason string) string {
-	return fmt.Sprintf("%s No entry with a reason that starts with '%s' was found", n.link(id), reason)
+// LeaveNoEntry tells the user that an entry does not exist
+func (n responses) LeaveNoEntry(id string) string {
+	return fmt.Sprintf("%s No entry was found", n.link(id))
 }
 
 // Done is a successful drop of the token
