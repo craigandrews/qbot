@@ -148,14 +148,14 @@ func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, No
 	s += "\n*If you are in the queue and need to leave:*\n"
 	s += cmdList([][]string{
 		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
-		[]string{"leave <reason prefix>", "Leave the queue (match the entry with reason that starts with <reason prefix>)"},
+		[]string{"leave <position>", "Leave the queue (match the entry at the given position)"},
 	})
 
 	s += "\n*If you need to get rid of somebody who is in the way:*\n"
 	s += cmdList([][]string{
 		[]string{"oust <name>", "Force the token holder to yield to the next in line"},
 		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
-		[]string{"boot <name> <reason prefix>", "Kick somebody out of the waiting list (match the entry with reason that starts with <reason prefix>)"},
+		[]string{"boot <position> <name>", "Kick somebody out of the waiting list (match the entry at the given position)"},
 	})
 
 	s += "\n*Other useful things to know:*\n"
