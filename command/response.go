@@ -47,15 +47,15 @@ func (n responses) ousted(ouster string, i queue.Item) string {
 }
 
 // BadIndex is an attempt to manipulate the queue with an out of range index
-func (n responses) BadIndex(i queue.Item, position int) string {
-	return fmt.Sprintf("%s That's not a valid position in the queue", n.link(i.ID))
+func (n responses) BadIndex(id string) string {
+	return fmt.Sprintf("%s That's not a valid position in the queue", n.link(id))
 }
 
 // NotOwned is an attempt to change a queue entry that the user does not own
-func (n responses) NotOwned(i queue.Item, position int, o queue.Item) string {
+func (n responses) NotOwned(id string, position int, owner string) string {
 	suffix := util.Suffix(position)
 	ordinal := fmt.Sprintf("%d%s", position, suffix)
-	return fmt.Sprintf("%s Not replacing because %s is %s in line", n.link(i.ID), n.link(o.ID), ordinal)
+	return fmt.Sprintf("%s Not replacing because %s is %s in line", n.link(id), n.link(owner), ordinal)
 }
 
 // Join is a successful join to the queue
@@ -142,9 +142,9 @@ func (n responses) Boot(booter string, i queue.Item) string {
 	return fmt.Sprintf("%s booted %s from the list", n.link(booter), n.item(i))
 }
 
-// BootNoEntry tells the user that an entry with the requested user and reason does not exist
-func (n responses) BootNoEntry(id, name, reason string) string {
-	return fmt.Sprintf("%s No entry with for %s with a reason that starts with '%s' was found", n.link(id), name, reason)
+// BootNoEntry tells the user that an entry with the requested user does not exist
+func (n responses) BootNoEntry(id, name string) string {
+	return fmt.Sprintf("%s No entry for %s was found", n.link(id), name)
 }
 
 // OustNotBoot tells the user that they can't boot the token holder

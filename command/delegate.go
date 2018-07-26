@@ -2,7 +2,6 @@ package command
 
 import (
 	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/util"
 )
 
 // Delegate hands over a place in the queue to someone else
@@ -11,15 +10,25 @@ func (c QueueCommands) Delegate(q queue.Queue, ch, owner, args string) (queue.Qu
 		return q, Notification{ch, c.response.DelegateNoEntry(owner)}
 	}
 
-	name, reason := util.StringPop(args)
+	position, name, ok := c.parsePosition(args)
+	if !ok {
+	}
+
 	id := c.getIDFromName(name)
 	if id == "" {
 		return q, Notification{ch, c.response.DelegateNoSuchUser(owner, name)}
 	}
 
-	i, ok := c.findItemReverse(q, owner, reason)
+	i, ok := c.findByPosition(q, position)
 	if !ok {
-		return q, Notification{ch, c.response.DelegateNoEntry(owner)}
+		i, ok = c.findItemReverse(q, owner)
+		if !ok {
+			return q, Notification{ch, c.response.DelegateNoEntry(owner)}
+		}
+	}
+
+	if i.ID != owner {
+		return q, Notification{ch, c.response.NotOwned(owner, position, i.ID)}
 	}
 
 	isActive := q.Active() == i

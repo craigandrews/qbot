@@ -34,25 +34,20 @@ func New(id string, name string, uc usercache.UserCache) QueueCommands {
 	return c
 }
 
-func (c QueueCommands) isFuzzyMatch(i queue.Item, id, reason string) (match bool) {
-	match = i.ID == id && strings.HasPrefix(i.Reason, reason)
-	return
-}
-
-func (c QueueCommands) findItemReverse(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
+func (c QueueCommands) findItemReverse(q queue.Queue, id string) (item queue.Item, ok bool) {
 	for ix := len(q) - 1; ix >= 0; ix-- {
-		if c.isFuzzyMatch(q[ix], id, reason) {
+		if q[ix].ID == id {
 			ok = true
 			item = q[ix]
-			break
+			return
 		}
 	}
 	return
 }
 
-func (c QueueCommands) findItem(q queue.Queue, id, reason string) (item queue.Item, ok bool) {
+func (c QueueCommands) findItem(q queue.Queue, id string) (item queue.Item, ok bool) {
 	for _, i := range q {
-		if c.isFuzzyMatch(i, id, reason) {
+		if i.ID == id {
 			ok = true
 			item = i
 			break
@@ -69,7 +64,7 @@ func (c QueueCommands) findByPosition(q queue.Queue, position int) (item queue.I
 	return q[position-1], true
 }
 
-func (c QueueCommands) parsePosition(args string) (position int, remainder string) {
+func (c QueueCommands) parsePosition(args string) (position int, remainder string, ok bool) {
 	remainder = args
 	fields := strings.Fields(args)
 
@@ -83,6 +78,9 @@ func (c QueueCommands) parsePosition(args string) (position int, remainder strin
 	if err != nil {
 		return
 	}
+
+	// Anything after this point is OK
+	ok = true
 
 	// If the integer is the only field, return an empty string
 	if len(fields) == 1 {
@@ -140,12 +138,17 @@ func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, No
 		[]string{"yield", "Release the token and swap places with next in line"},
 	})
 
+	s += "\n*If you are in the queue and need to change something:*\n"
+	s += cmdList([][]string{
+		[]string{"delegate <user>", "Delegate your place to someone else (your most recent entry is delegated)"},
+		[]string{"delegate <user> <reason prefix>", "Delegate your place to someone else (match the entry with reason that starts with <reason prefix>)"},
+		[]string{"replace <position> <reason>", "Replace the reason of a queue entry you own"},
+	})
+
 	s += "\n*If you are in the queue and need to leave:*\n"
 	s += cmdList([][]string{
 		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
 		[]string{"leave <reason prefix>", "Leave the queue (match the entry with reason that starts with <reason prefix>)"},
-		[]string{"delegate <user>", "Delegate your place to someone else (your most recent entry is delegated)"},
-		[]string{"delegate <user> <reason prefix>", "Delegate your place to someone else (match the entry with reason that starts with <reason prefix>)"},
 	})
 
 	s += "\n*If you need to get rid of somebody who is in the way:*\n"

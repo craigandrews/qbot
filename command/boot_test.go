@@ -11,7 +11,7 @@ func TestBoot(t *testing.T) {
 	cmd := command.New(id, name, userCache)
 	testCommand(t, cmd.Boot, []CommandTest{
 		{
-			test:             "remove last entry with matching prefix is reason provided",
+			test:             "remove last entry if no position provided",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U456", "Last"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
@@ -20,16 +20,16 @@ func TestBoot(t *testing.T) {
 			expectedResponse: "<@U789|andrew> booted <@U456|edward> (Last) from the list",
 		},
 		{
-			test:             "remove last entry with matching prefix if reason provided",
+			test:             "remove entry at position if provided",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U456", "Fitbit"}, {"U456", "Last"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
-			args:             "edward Fi",
+			args:             "2 edward",
 			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U456", "Last"}}),
 			expectedResponse: "<@U789|andrew> booted <@U456|edward> (Fitbit) from the list",
 		},
 		{
-			test:             "remove last entry with matching prefix is reason provided",
+			test:             "advise to use oust if target has the token",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
@@ -38,11 +38,20 @@ func TestBoot(t *testing.T) {
 			expectedResponse: "<@U789|andrew> You must oust the token holder",
 		},
 		{
-			test:             "advise to use oust if target has the token",
+			test:             "do not boot if target does not own entry",
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
 			channel:          "C1A2B3C",
 			user:             "U456",
-			args:             "andrew something",
+			args:             "2 andrew",
+			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
+			expectedResponse: "<@U456|edward> No entry with for andrew with a reason that starts with 'something' was found",
+		},
+		{
+			test:             "do not boot if target does not have an entry and no position specified",
+			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
+			channel:          "C1A2B3C",
+			user:             "U456",
+			args:             "andrew",
 			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
 			expectedResponse: "<@U456|edward> No entry with for andrew with a reason that starts with 'something' was found",
 		},

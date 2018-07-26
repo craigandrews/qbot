@@ -2,7 +2,6 @@ package command
 
 import (
 	"github.com/doozr/qbot/queue"
-	"github.com/doozr/qbot/util"
 )
 
 // Boot kicks someone from the waiting list
@@ -11,11 +10,25 @@ func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue
 		return q, Notification{ch, ""}
 	}
 
-	name, reason := util.StringPop(args)
-	id := c.getIDFromName(name)
-	i, ok := c.findItemReverse(q, id, reason)
+	position, name, ok := c.parsePosition(args)
 	if !ok {
-		return q, Notification{ch, c.response.BootNoEntry(booter, name, reason)}
+	}
+
+	id := c.getIDFromName(name)
+	if id == "" {
+		return q, Notification{ch, c.response.BootNoEntry(booter, name)}
+	}
+
+	i, ok := c.findByPosition(q, position)
+	if !ok {
+		i, ok = c.findItemReverse(q, booter)
+		if !ok {
+			return q, Notification{ch, c.response.BootNoEntry(booter, name)}
+		}
+	}
+
+	if i.ID != id {
+		return q, Notification{ch, c.response.NotOwned(booter, position, i.ID)}
 	}
 
 	if q.Active() == i {
@@ -23,6 +36,6 @@ func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue
 	}
 
 	q = q.Remove(i)
-	c.logActivity(id, reason, "booted by "+c.getNameIDPair(booter))
+	c.logActivity(id, i.Reason, "booted by "+c.getNameIDPair(booter))
 	return q, Notification{ch, c.response.Boot(booter, i)}
 }
