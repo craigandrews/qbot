@@ -24,7 +24,7 @@ func (c QueueCommands) Leave(q queue.Queue, ch, id, args string) (queue.Queue, N
 	}
 
 	if i.ID != id {
-		return q, Notification{ch, c.response.NotOwned(id, position, i.ID)}
+		return q, Notification{ch, c.response.NotOwned(id, position)}
 	}
 
 	if q.Active() == i {

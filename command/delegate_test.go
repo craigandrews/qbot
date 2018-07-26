@@ -52,7 +52,7 @@ func TestDelegate(t *testing.T) {
 				{ID: "U123", Reason: "Banana"},
 				{ID: "U456", Reason: "Apple"},
 				{ID: "U456", Reason: "Lemon"}}),
-			expectedResponse: "<@U123|craig> Not replacing because <@U456|edward> is 2nd in line",
+			expectedResponse: "<@U123|craig> You are not 2nd in line",
 		},
 		{
 			test: "delegate when active",

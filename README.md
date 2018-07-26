@@ -51,6 +51,7 @@ Address each command to the bot (`<bot name>: <command>`)
 
 * `join <reason>` - Join the queue and give a reason why
 * `barge <reason>` - Barge to the front of the queue so you get the token next (only with good reason!)
+* `barge <position>` - Barge the entry at the given position to the front of the queue
 
 *If you have the token and have done with it:*
 

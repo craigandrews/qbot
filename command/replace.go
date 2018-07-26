@@ -17,7 +17,7 @@ func (c QueueCommands) Replace(q queue.Queue, ch, id, args string) (queue.Queue,
 	}
 
 	if i.ID != o.ID {
-		return q, Notification{ch, c.response.NotOwned(i.ID, position, o.ID)}
+		return q, Notification{ch, c.response.NotOwned(i.ID, position)}
 	}
 
 	if reason == "" {

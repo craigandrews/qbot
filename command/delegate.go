@@ -28,7 +28,7 @@ func (c QueueCommands) Delegate(q queue.Queue, ch, owner, args string) (queue.Qu
 	}
 
 	if i.ID != owner {
-		return q, Notification{ch, c.response.NotOwned(owner, position, i.ID)}
+		return q, Notification{ch, c.response.NotOwned(owner, position)}
 	}
 
 	isActive := q.Active() == i

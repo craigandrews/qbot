@@ -4,12 +4,25 @@ import "github.com/doozr/qbot/queue"
 
 // Barge adds a user to the front of the queue
 func (c QueueCommands) Barge(q queue.Queue, ch, id, args string) (queue.Queue, Notification) {
-	i := queue.Item{ID: id, Reason: args}
+	var i queue.Item
+	i = queue.Item{ID: id, Reason: args}
 
-	if found, ok := c.findItem(q, id); ok {
-		i = found
-	} else if args == "" {
-		return q, Notification{ch, c.response.JoinNoReason(i)}
+	position, _, ok := c.parsePosition(args)
+	if ok {
+		i, ok = c.findByPosition(q, position)
+		if !ok {
+			return q, Notification{ch, c.response.BadIndex(id)}
+		}
+	} else if i.Reason == "" {
+		n, ok := c.findItem(q, id)
+		if !ok {
+			return q, Notification{ch, c.response.JoinNoReason(i)}
+		}
+		i = n
+	}
+
+	if i.ID != id {
+		return q, Notification{ch, c.response.NotOwned(id, position)}
 	}
 
 	q = q.Barge(i)

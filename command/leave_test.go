@@ -79,7 +79,7 @@ func TestLeave(t *testing.T) {
 				{ID: "U456", Reason: "Already here"},
 				{ID: "U789", Reason: "First"},
 				{ID: "U123", Reason: "Last"}}),
-			expectedResponse: "<@U123|craig> Not replacing because <@U789|andrew> is 2nd in line",
+			expectedResponse: "<@U123|craig> You are not 2nd in line",
 		},
 		{
 			test: "warns if entry to leave is active",

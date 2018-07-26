@@ -34,23 +34,23 @@ func New(id string, name string, uc usercache.UserCache) QueueCommands {
 	return c
 }
 
-func (c QueueCommands) findItemReverse(q queue.Queue, id string) (item queue.Item, ok bool) {
-	for ix := len(q) - 1; ix >= 0; ix-- {
-		if q[ix].ID == id {
-			ok = true
-			item = q[ix]
-			return
-		}
-	}
-	return
-}
-
 func (c QueueCommands) findItem(q queue.Queue, id string) (item queue.Item, ok bool) {
 	for _, i := range q {
 		if i.ID == id {
 			ok = true
 			item = i
 			break
+		}
+	}
+	return
+}
+
+func (c QueueCommands) findItemReverse(q queue.Queue, id string) (item queue.Item, ok bool) {
+	for ix := len(q) - 1; ix >= 0; ix-- {
+		if q[ix].ID == id {
+			ok = true
+			item = q[ix]
+			return
 		}
 	}
 	return
@@ -129,6 +129,7 @@ func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, No
 	s += cmdList([][]string{
 		[]string{"join <reason>", "Join the queue and give a reason why"},
 		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
+		[]string{"barge <position>", "Barge the entry at the given position to the front of the queue"},
 	})
 
 	s += "\n*If you have the token and have done with it:*\n"

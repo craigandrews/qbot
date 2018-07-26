@@ -60,7 +60,7 @@ func TestReplace(t *testing.T) {
 			expectedQueue: queue.Queue([]queue.Item{
 				{ID: "U456", Reason: "I have it"},
 				{ID: "U123", Reason: "Already here"}}),
-			expectedResponse: "<@U123|craig> Not replacing because <@U456|edward> is 1st in line",
+			expectedResponse: "<@U123|craig> You are not 1st in line",
 		},
 		{
 			test: "replace when position lower than 1",

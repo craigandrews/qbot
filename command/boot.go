@@ -26,7 +26,7 @@ func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue
 	}
 
 	if i.ID != id {
-		return q, Notification{ch, c.response.NotOwned(booter, position, i.ID)}
+		return q, Notification{ch, c.response.NotOwned(booter, position)}
 	}
 
 	if q.Active() == i {

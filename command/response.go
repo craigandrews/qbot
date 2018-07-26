@@ -52,10 +52,10 @@ func (n responses) BadIndex(id string) string {
 }
 
 // NotOwned is an attempt to change a queue entry that the user does not own
-func (n responses) NotOwned(id string, position int, owner string) string {
+func (n responses) NotOwned(id string, position int) string {
 	suffix := util.Suffix(position)
 	ordinal := fmt.Sprintf("%d%s", position, suffix)
-	return fmt.Sprintf("%s Not replacing because %s is %s in line", n.link(id), n.link(owner), ordinal)
+	return fmt.Sprintf("%s You are not %s in line", n.link(id), ordinal)
 }
 
 // Join is a successful join to the queue

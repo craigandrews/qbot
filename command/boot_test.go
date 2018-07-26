@@ -64,7 +64,7 @@ func TestBoot(t *testing.T) {
 			expectedQueue: queue.Queue([]queue.Item{
 				{ID: "U123", Reason: "Active"},
 				{ID: "U456", Reason: "First"}}),
-			expectedResponse: "<@U456|edward> Not replacing because <@U456|edward> is 2nd in line",
+			expectedResponse: "<@U456|edward> You are not 2nd in line",
 		},
 		{
 			test: "do not boot if target does not have an entry and no position specified",
