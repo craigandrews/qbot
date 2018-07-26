@@ -10,6 +10,7 @@ func tensDigit(num int) (digit int) {
 	return
 }
 
+// Suffix calculates the textual suffix for an integer
 func Suffix(num int) (suffix string) {
 	if tensDigit(num) == 1 {
 		suffix = "th"

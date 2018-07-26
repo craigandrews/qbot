@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/doozr/qbot/queue"
@@ -57,6 +58,41 @@ func (c QueueCommands) findItem(q queue.Queue, id, reason string) (item queue.It
 			break
 		}
 	}
+	return
+}
+
+func (c QueueCommands) findByPosition(q queue.Queue, position int) (item queue.Item, ok bool) {
+	if position < 1 || position > len(q) {
+		return
+	}
+
+	return q[position-1], true
+}
+
+func (c QueueCommands) parsePosition(args string) (position int, remainder string) {
+	remainder = args
+	fields := strings.Fields(args)
+
+	// No fields? Quit now
+	if len(fields) == 0 {
+		return
+	}
+
+	// First field is not an integer? Again, stop
+	position, err := strconv.Atoi(fields[0])
+	if err != nil {
+		return
+	}
+
+	// If the integer is the only field, return an empty string
+	if len(fields) == 1 {
+		remainder = ""
+		return
+	}
+
+	// String the position part from the start of the string
+	positionLength := len(fields[0])
+	remainder = strings.Trim(args[positionLength:], " ")
 	return
 }
 

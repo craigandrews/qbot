@@ -33,8 +33,8 @@ func (c QueueCommands) Delegate(q queue.Queue, ch, owner, args string) (queue.Qu
 	}
 
 	q = q.Delegate(i, n)
-
 	c.logActivity(owner, i.Reason, "delegated to "+c.getNameIDPair(id))
+
 	if isActive {
 		c.logActivity(n.ID, n.Reason, "is active")
 		return q, Notification{ch, c.response.DelegateActive(i, n)}

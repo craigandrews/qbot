@@ -13,9 +13,9 @@ func (c QueueCommands) Barge(q queue.Queue, ch, id, args string) (queue.Queue, N
 	}
 
 	q = q.Barge(i)
+	c.logActivity(id, args, "barged")
 	if q.Active() == i {
 		return q, Notification{ch, c.response.JoinActive(i)}
 	}
-	c.logActivity(id, args, "barged")
 	return q, Notification{ch, c.response.Barge(i, q.Active())}
 }

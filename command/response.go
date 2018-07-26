@@ -46,6 +46,18 @@ func (n responses) ousted(ouster string, i queue.Item) string {
 	return fmt.Sprintf("%s ousted %s", n.link(ouster), n.item(i))
 }
 
+// BadIndex is an attempt to manipulate the queue with an out of range index
+func (n responses) BadIndex(i queue.Item, position int) string {
+	return fmt.Sprintf("%s That's not a valid position in the queue", n.link(i.ID))
+}
+
+// NotOwned is an attempt to change a queue entry that the user does not own
+func (n responses) NotOwned(i queue.Item, position int, o queue.Item) string {
+	suffix := util.Suffix(position)
+	ordinal := fmt.Sprintf("%d%s", position, suffix)
+	return fmt.Sprintf("%s Not replacing because %s is %s in line", n.link(i.ID), n.link(o.ID), ordinal)
+}
+
 // Join is a successful join to the queue
 func (n responses) Join(i queue.Item, position int) string {
 	ordinal := "next"
@@ -54,6 +66,11 @@ func (n responses) Join(i queue.Item, position int) string {
 		ordinal = fmt.Sprintf("%d%s", position, suffix)
 	}
 	return fmt.Sprintf("%s is now %s in line", n.item(i), ordinal)
+}
+
+// ReplaceNoReason tells the user that a reason is required when replacing
+func (n responses) ReplaceNoReason(i queue.Item) string {
+	return fmt.Sprintf("%s You must provide a new reason", n.link(i.ID))
 }
 
 // JoinNoReason tells the user that a reason is required on join
