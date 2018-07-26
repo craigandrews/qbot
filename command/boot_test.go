@@ -24,7 +24,7 @@ func TestBoot(t *testing.T) {
 			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U456", "Fitbit"}, {"U456", "Last"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
-			args:             "2 edward",
+			args:             "3 edward",
 			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U456", "Last"}}),
 			expectedResponse: "<@U789|andrew> booted <@U456|edward> (Fitbit) from the list",
 		},
@@ -44,7 +44,7 @@ func TestBoot(t *testing.T) {
 			user:             "U456",
 			args:             "2 andrew",
 			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
-			expectedResponse: "<@U456|edward> No entry with for andrew with a reason that starts with 'something' was found",
+			expectedResponse: "<@U456|edward> Not replacing because <@U456|edward> is 2nd in line",
 		},
 		{
 			test:             "do not boot if target does not have an entry and no position specified",
@@ -53,7 +53,7 @@ func TestBoot(t *testing.T) {
 			user:             "U456",
 			args:             "andrew",
 			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}}),
-			expectedResponse: "<@U456|edward> No entry with for andrew with a reason that starts with 'something' was found",
+			expectedResponse: "<@U456|edward> No entry for andrew was found",
 		},
 		{
 			test:             "do nothing if the queue is empty",

@@ -10,9 +10,7 @@ func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue
 		return q, Notification{ch, ""}
 	}
 
-	position, name, ok := c.parsePosition(args)
-	if !ok {
-	}
+	position, name, _ := c.parsePosition(args)
 
 	id := c.getIDFromName(name)
 	if id == "" {
@@ -21,7 +19,7 @@ func (c QueueCommands) Boot(q queue.Queue, ch, booter, args string) (queue.Queue
 
 	i, ok := c.findByPosition(q, position)
 	if !ok {
-		i, ok = c.findItemReverse(q, booter)
+		i, ok = c.findItemReverse(q, id)
 		if !ok {
 			return q, Notification{ch, c.response.BootNoEntry(booter, name)}
 		}
