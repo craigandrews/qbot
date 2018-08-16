@@ -1,5 +1,7 @@
 # qbot
 
+<img align="right" width="180" style="margin: 12px" src="https://cdn.rawgit.com/doozr/qbot/master/qbot.svg">
+
 Qbot is a slackbot that helps manage a contended resource amongst your team members. This might be a merge token,
 a release dongle or a tea-run doodad. When the token comes free and somebody gets it, the bot mentions the new
 recipient so they know immediately that it's their turn to merge, release, make tea ...
