@@ -159,6 +159,12 @@ func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, No
 		[]string{"boot <position> <name>", "Kick somebody out of the waiting list (match the entry at the given position)"},
 	})
 
+	s += "\n*Notifications (from automated systems):*\n"
+	s += cmdList([][]string{
+		[]string{"success", "Notify the token holder and next in line of success and remove the token holder"},
+		[]string{"failure <message>", "Notify the token holder and next in line of failure with a custom error message"},
+	})
+
 	s += "\n*Other useful things to know:*\n"
 	s += cmdList([][]string{
 		[]string{"list", "Show who has the token and who is waiting"},
