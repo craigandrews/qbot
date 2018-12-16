@@ -197,5 +197,21 @@ func (n responses) RefuseTokenActive(i queue.Item, ni queue.Item) string {
 }
 
 func (n responses) SuccessNotification(id string, message string) string {
-	return fmt.Sprintf("%s sent a success notification\n%s", n.link(id), message)
+	response := fmt.Sprintf("Received a success notification from %s", n.link(id))
+	if message == "" {
+		return response
+	}
+	return fmt.Sprintf("%s\n%s", response, message)
+}
+
+func (n responses) FailureNotificationEmptyQueue(id string, message string) string {
+	return fmt.Sprintf("Received a failure notification from %s: %s", n.link(id), message)
+}
+
+func (n responses) FailureNotification(id string, ids []string, message string) string {
+	users := ""
+	for _, i := range ids {
+		users += fmt.Sprintf("%s ", n.link(i))
+	}
+	return fmt.Sprintf("%sReceived a failure notification from %s: %s", users, n.link(id), message)
 }
