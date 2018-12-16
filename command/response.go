@@ -195,3 +195,7 @@ func (n responses) RefuseToken() string {
 func (n responses) RefuseTokenActive(i queue.Item, ni queue.Item) string {
 	return fmt.Sprintf("%s\n:zap: :zap: AT LAST! ULTIMATE POWER! :zap: :zap:\n\nJust kidding ... I don't need the token, you can have it back\n%s", n.DelegateActive(i, ni), n.DelegateActive(ni, i))
 }
+
+func (n responses) SuccessNotification(id string, message string) string {
+	return fmt.Sprintf("%s sent a success notification\n%s", n.link(id), message)
+}

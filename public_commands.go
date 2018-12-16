@@ -10,6 +10,7 @@ func PublicCommands(commands command.QueueCommands) (commandMap CommandMap) {
 		"done":     commands.Done,
 		"drop":     commands.Done,
 		"yield":    commands.Yield,
+		"success":  commands.Success,
 		"barge":    commands.Barge,
 		"replace":  commands.Replace,
 		"delegate": commands.Delegate,
