@@ -99,7 +99,7 @@ func TestDoesNotPersistOnError(t *testing.T) {
 	_, err := handler(queue.Queue{}, event)
 
 	if calls != 0 {
-		t.Fatal("Expected 0 calls, recieved ", calls)
+		t.Fatal("Expected 0 calls, received ", calls)
 	}
 
 	if err == nil {
