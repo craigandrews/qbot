@@ -17,7 +17,7 @@ func TestAddsNewEntry(t *testing.T) {
 }
 
 func TestUpdatesExistingEntry(t *testing.T) {
-	cache := New([]guac.UserInfo{guac.UserInfo{ID: "test", Name: "Old Testy"}})
+	cache := New([]guac.UserInfo{{ID: "test", Name: "Old Testy"}})
 	cache.UpdateUserName("test", "Mr Test")
 	name := cache.GetUserName("test")
 	if name != "Mr Test" {
@@ -26,7 +26,7 @@ func TestUpdatesExistingEntry(t *testing.T) {
 }
 
 func GetsIDFromName(t *testing.T) {
-	cache := New([]guac.UserInfo{guac.UserInfo{ID: "test", Name: "Old Testy"}})
+	cache := New([]guac.UserInfo{{ID: "test", Name: "Old Testy"}})
 	id := cache.GetUserID("Old Testy")
 	if id != "test" {
 		t.Fatal("Incorrect ID ", id)

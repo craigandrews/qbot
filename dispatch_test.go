@@ -244,7 +244,7 @@ func TestDispatcherSwallowsUnknownEvents(t *testing.T) {
 func TestDispatcherPassesUpdatedQueueToMessageHandler(t *testing.T) {
 	done := make(DoneChan)
 	events := make(guac.EventChan)
-	expectedQueue := queue.Queue([]queue.Item{queue.Item{ID: "U123", Reason: "Tomato"}})
+	expectedQueue := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 	var receivedQueue queue.Queue
 
 	called := false

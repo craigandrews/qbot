@@ -43,7 +43,7 @@ func TestPrivateMessageIsRouted(t *testing.T) {
 func TestPrivateMessageDoesNotGetNewQueue(t *testing.T) {
 	var expected = queue.Queue{}
 	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
-		return queue.Queue([]queue.Item{{"U123", "Tomato"}}), nil
+		return queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}}), nil
 	}
 	publicHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to public handler")
@@ -119,7 +119,7 @@ func TestPublicMessageWithIDIsRouted(t *testing.T) {
 }
 
 func TestPublicMessageGetsNewQueue(t *testing.T) {
-	expected := queue.Queue([]queue.Item{{"U123", "Tomato"}})
+	expected := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to private handler")
 		return q, nil
@@ -170,7 +170,7 @@ func TestPublicMessageWithoutNameOrIDIsNotRouted(t *testing.T) {
 }
 
 func TestPublicMessageWithoutNameOrIDReturnsSameQueue(t *testing.T) {
-	q := queue.Queue([]queue.Item{{"U123", "Tomato"}})
+	q := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 	privateHandler := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		t.Fatal("Unexpected call to private handler")
 		return q, nil

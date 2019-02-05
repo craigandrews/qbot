@@ -54,7 +54,7 @@ func TestDispatchesMessage(t *testing.T) {
 	}
 
 	expectedQueue := queue.Queue([]queue.Item{
-		queue.Item{ID: "U1234", Reason: "the args"},
+		{ID: "U1234", Reason: "the args"},
 	})
 	if !receivedQueue.Equal(expectedQueue) {
 		t.Fatal("Received unexpected queue", expectedQueue, receivedQueue)
@@ -86,7 +86,7 @@ func TestDispatchCaseInsensitive(t *testing.T) {
 }
 
 func TestDoesNothingIfNoMatchingCommand(t *testing.T) {
-	initialQueue := queue.Queue([]queue.Item{{"U123", "Tomato"}})
+	initialQueue := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 	event := makeTestEvent("NOT FOUND")
 
 	commands := map[string]command.Command{

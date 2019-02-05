@@ -24,7 +24,7 @@ func TestPassesOnParameters(t *testing.T) {
 	}
 
 	event := makeTestEvent("text")
-	expectedQueue := queue.Queue([]queue.Item{{"U123", "Tomato"}})
+	expectedQueue := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 
 	handler := CreatePersistedMessageHandler(fn, persist)
 	handler(expectedQueue, event)
@@ -39,7 +39,7 @@ func TestPassesOnParameters(t *testing.T) {
 }
 
 func TestPersistsReturnedQueue(t *testing.T) {
-	expectedQueue := queue.Queue([]queue.Item{{"U123", "Tomato"}})
+	expectedQueue := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 
 	fn := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		return expectedQueue, nil
@@ -62,7 +62,7 @@ func TestPersistsReturnedQueue(t *testing.T) {
 }
 
 func TestReturnsReturnedQueue(t *testing.T) {
-	expectedQueue := queue.Queue([]queue.Item{{"U123", "Tomato"}})
+	expectedQueue := queue.Queue([]queue.Item{{ID: "U123", Reason: "Tomato"}})
 
 	fn := func(q queue.Queue, m guac.MessageEvent) (queue.Queue, error) {
 		return expectedQueue, nil

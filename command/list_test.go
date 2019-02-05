@@ -12,18 +12,18 @@ func TestList(t *testing.T) {
 	testCommand(t, cmd.List, []CommandTest{
 		{
 			test:             "list all users who are waiting",
-			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U789", "Last"}}),
+			startQueue:       queue.Queue([]queue.Item{{ID: "U123", Reason: "Active"}, {ID: "U456", Reason: "First"}, {ID: "U789", Reason: "Last"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
-			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}, {"U456", "First"}, {"U789", "Last"}}),
+			expectedQueue:    queue.Queue([]queue.Item{{ID: "U123", Reason: "Active"}, {ID: "U456", Reason: "First"}, {ID: "U789", Reason: "Last"}}),
 			expectedResponse: "*1: craig (Active) has the token*\n2: edward (First)\n3: andrew (Last)",
 		},
 		{
 			test:             "list active users if nobody waiting",
-			startQueue:       queue.Queue([]queue.Item{{"U123", "Active"}}),
+			startQueue:       queue.Queue([]queue.Item{{ID: "U123", Reason: "Active"}}),
 			channel:          "C1A2B3C",
 			user:             "U789",
-			expectedQueue:    queue.Queue([]queue.Item{{"U123", "Active"}}),
+			expectedQueue:    queue.Queue([]queue.Item{{ID: "U123", Reason: "Active"}}),
 			expectedResponse: "*1: craig (Active) has the token*",
 		},
 		{

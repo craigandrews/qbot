@@ -127,48 +127,48 @@ func (c QueueCommands) Help(q queue.Queue, ch, id, args string) (queue.Queue, No
 
 	s += "*If you don't have the token and need it:*\n"
 	s += cmdList([][]string{
-		[]string{"join <reason>", "Join the queue and give a reason why"},
-		[]string{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
-		[]string{"barge <position>", "Barge the entry at the given position to the front of the queue"},
+		{"join <reason>", "Join the queue and give a reason why"},
+		{"barge <reason>", "Barge to the front of the queue so you get the token next (only with good reason!)"},
+		{"barge <position>", "Barge the entry at the given position to the front of the queue"},
 	})
 
 	s += "\n*If you have the token and have done with it:*\n"
 	s += cmdList([][]string{
-		[]string{"done", "Release the token once you are done with it"},
-		[]string{"drop", "Drop the token and leave the queue (note: actually just an alias of `done`)"},
-		[]string{"yield", "Release the token and swap places with next in line"},
+		{"done", "Release the token once you are done with it"},
+		{"drop", "Drop the token and leave the queue (note: actually just an alias of `done`)"},
+		{"yield", "Release the token and swap places with next in line"},
 	})
 
 	s += "\n*If you are in the queue and need to change something:*\n"
 	s += cmdList([][]string{
-		[]string{"delegate <user>", "Delegate your place to someone else (your most recent entry is delegated)"},
-		[]string{"delegate <user> <reason prefix>", "Delegate your place to someone else (match the entry with reason that starts with <reason prefix>)"},
-		[]string{"replace <position> <reason>", "Replace the reason of a queue entry you own"},
+		{"delegate <user>", "Delegate your place to someone else (your most recent entry is delegated)"},
+		{"delegate <user> <reason prefix>", "Delegate your place to someone else (match the entry with reason that starts with <reason prefix>)"},
+		{"replace <position> <reason>", "Replace the reason of a queue entry you own"},
 	})
 
 	s += "\n*If you are in the queue and need to leave:*\n"
 	s += cmdList([][]string{
-		[]string{"leave", "Leave the queue (your most recent entry is removed)"},
-		[]string{"leave <position>", "Leave the queue (match the entry at the given position)"},
+		{"leave", "Leave the queue (your most recent entry is removed)"},
+		{"leave <position>", "Leave the queue (match the entry at the given position)"},
 	})
 
 	s += "\n*If you need to get rid of somebody who is in the way:*\n"
 	s += cmdList([][]string{
-		[]string{"oust <name>", "Force the token holder to yield to the next in line"},
-		[]string{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
-		[]string{"boot <position> <name>", "Kick somebody out of the waiting list (match the entry at the given position)"},
+		{"oust <name>", "Force the token holder to yield to the next in line"},
+		{"boot <name>", "Kick somebody out of the waiting list (their most recent entry is removed)"},
+		{"boot <position> <name>", "Kick somebody out of the waiting list (match the entry at the given position)"},
 	})
 
 	s += "\n*Notifications (from automated systems):*\n"
 	s += cmdList([][]string{
-		[]string{"success", "Notify the token holder and next in line of success and remove the token holder"},
-		[]string{"failure <message>", "Notify the token holder and next in line of failure with a custom error message"},
+		{"success", "Notify the token holder and next in line of success and remove the token holder"},
+		{"failure <message>", "Notify the token holder and next in line of failure with a custom error message"},
 	})
 
 	s += "\n*Other useful things to know:*\n"
 	s += cmdList([][]string{
-		[]string{"list", "Show who has the token and who is waiting"},
-		[]string{"help", "Show this text"},
+		{"list", "Show who has the token and who is waiting"},
+		{"help", "Show this text"},
 	})
 	return q, Notification{id, s}
 }
